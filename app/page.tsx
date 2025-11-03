@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Map, Lot, LotStatus } from '@/types';
 import { getMaps, getLots } from '@/lib/storage';
 import InteractiveMap from '@/components/InteractiveMap';
@@ -9,24 +9,27 @@ import PurchaseModal from '@/components/PurchaseModal';
 export default function PublicMapPage() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
-  const [lots, setLots] = useState<Lot[]>([]);
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Carrega dados do localStorage apenas no cliente
+  // Este é um caso legítimo de setState em useEffect para carregar dados iniciais
   useEffect(() => {
     const mapsData = getMaps();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMaps(mapsData);
     if (mapsData.length > 0) {
       setSelectedMap(mapsData[0]);
     }
+    setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (selectedMap) {
-      const lotsData = getLots().filter((lot) => lot.mapId === selectedMap.id);
-      setLots(lotsData);
-    }
-  }, [selectedMap]);
+  // Deriva os lotes do mapa selecionado usando useMemo
+  const lots = useMemo(() => {
+    if (!selectedMap || isLoading) return [];
+    return getLots().filter((lot) => lot.mapId === selectedMap.id);
+  }, [selectedMap, isLoading]);
 
   const handleLotClick = (lot: Lot) => {
     if (lot.status === LotStatus.AVAILABLE) {
@@ -44,6 +47,27 @@ export default function PublicMapPage() {
   const availableLotsCount = lots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
   const reservedLotsCount = lots.filter((lot) => lot.status === LotStatus.RESERVED).length;
   const soldLotsCount = lots.filter((lot) => lot.status === LotStatus.SOLD).length;
+
+  // Renderiza loading no servidor e primeira renderização do cliente
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="container mx-auto px-4 py-6">
+            <h1 className="text-3xl font-bold text-gray-900">Chácara Jardim Ypiranga</h1>
+            <p className="text-gray-600 mt-2">
+              Encontre o lote perfeito para você. Clique nos lotes disponíveis para mais informações.
+            </p>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-gray-500">Carregando mapas...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
