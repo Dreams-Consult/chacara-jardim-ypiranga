@@ -107,10 +107,10 @@ export default function MapManagement() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gerenciamento de Mapas</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Mapas</h1>
         <button
           onClick={() => setIsCreating(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
         >
           Novo Mapa
         </button>
@@ -118,45 +118,45 @@ export default function MapManagement() {
 
       {isCreating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Novo Mapa</h2>
+          <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Novo Mapa</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Nome</label>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">Nome</label>
                 <input
                   type="text"
                   value={editingMap?.name || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, name: e.target.value } as Map)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Nome do mapa"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Descrição</label>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">Descrição</label>
                 <textarea
                   value={editingMap?.description || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, description: e.target.value } as Map)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Descrição do mapa"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
                   Upload de Imagem ou PDF
                 </label>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={handleFileUpload}
-                  className="w-full"
+                  className="w-full text-gray-900"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  ⚠️ Tamanho máximo recomendado: 4MB. A imagem será automaticamente comprimida.
+                <p className="text-xs text-amber-700 mt-2 bg-amber-50 p-2 rounded border border-amber-200">
+                  ⚠️ <span className="font-medium">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
                   Para PDFs grandes, converta para imagem primeiro usando o script convert-pdf.sh
                 </p>
               </div>
@@ -167,7 +167,7 @@ export default function MapManagement() {
                   setIsCreating(false);
                   setEditingMap(null);
                 }}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancelar
               </button>
@@ -178,8 +178,8 @@ export default function MapManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {maps.map((map) => (
-          <div key={map.id} className="border border-gray-300 rounded-lg overflow-hidden">
-            <div className="h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+          <div key={map.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+            <div className="h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
               {map.imageType === 'image' ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -188,30 +188,30 @@ export default function MapManagement() {
                   className="max-w-full max-h-full object-contain"
                 />
               ) : (
-                <div className="text-gray-500">PDF: {map.name}</div>
+                <div className="text-gray-600 font-medium">PDF: {map.name}</div>
               )}
             </div>
             <div className="p-4">
-              <h3 className="font-bold text-lg mb-2">{map.name}</h3>
+              <h3 className="font-bold text-lg text-gray-900 mb-2">{map.name}</h3>
               {map.description && (
-                <p className="text-sm text-gray-600 mb-2">{map.description}</p>
+                <p className="text-sm text-gray-700 mb-3">{map.description}</p>
               )}
-              <p className="text-xs text-gray-500 mb-1">
-                {map.width} x {map.height}px
+              <p className="text-xs text-gray-600 mb-1">
+                <span className="font-medium">Dimensões:</span> {map.width} x {map.height}px
               </p>
-              <p className="text-xs text-gray-400 mb-4 font-mono">
+              <p className="text-xs text-gray-500 mb-4 font-mono">
                 ID: {map.id}
               </p>
               <div className="flex gap-2">
                 <a
                   href={`/admin/lots/${map.id}`}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-center"
+                  className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 text-center transition-colors shadow-sm hover:shadow-md"
                 >
                   Gerenciar Lotes
                 </a>
                 <button
                   onClick={() => handleDelete(map.id)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
                 >
                   Excluir
                 </button>
@@ -222,8 +222,8 @@ export default function MapManagement() {
       </div>
 
       {maps.length === 0 && !isCreating && (
-        <div className="text-center py-12 text-gray-500">
-          <p>Nenhum mapa cadastrado. Clique em &ldquo;Novo Mapa&rdquo; para começar.</p>
+        <div className="text-center py-12">
+          <p className="text-gray-600 text-lg">Nenhum mapa cadastrado. Clique em &ldquo;Novo Mapa&rdquo; para começar.</p>
         </div>
       )}
     </div>

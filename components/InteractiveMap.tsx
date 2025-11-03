@@ -23,11 +23,11 @@ export default function InteractiveMap({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const [drawingPoints, setDrawingPoints] = useState<{ x: number; y: number }[]>([]);
   const [hoveredLot, setHoveredLot] = useState<Lot | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -76,18 +76,6 @@ export default function InteractiveMap({
     ctx.strokeStyle = strokeColor;
     ctx.lineWidth = isHovered || isSelected ? 3 : 2;
     ctx.stroke();
-
-    // Desenhar número do lote no centro
-    const centerX =
-      lot.area.points.reduce((sum, p) => sum + p.x, 0) / lot.area.points.length;
-    const centerY =
-      lot.area.points.reduce((sum, p) => sum + p.y, 0) / lot.area.points.length;
-
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(lot.lotNumber, centerX, centerY);
   };
 
   const redraw = React.useCallback(() => {
@@ -97,6 +85,10 @@ export default function InteractiveMap({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Configurar renderização de alta qualidade
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -141,8 +133,28 @@ export default function InteractiveMap({
     if (!ctx) return;
 
     img.onload = () => {
+      // Suportar telas de alta densidade (Retina/HiDPI)
+      const dpr = window.devicePixelRatio || 1;
+
+      // Definir tamanho do canvas baseado na imagem original
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
+
+      // Ajustar para alta densidade se necessário
+      if (dpr > 1) {
+        const displayWidth = canvas.width;
+        const displayHeight = canvas.height;
+
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+
+        canvas.style.width = `${displayWidth}px`;
+        canvas.style.height = `${displayHeight}px`;
+
+        // Escalar o contexto para compensar o aumento de pixels
+        ctx.scale(dpr, dpr);
+      }
+
       setImageLoaded(true);
     };
 
@@ -252,7 +264,7 @@ export default function InteractiveMap({
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      
+
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -269,7 +281,7 @@ export default function InteractiveMap({
 
       const zoomIntensity = 0.1;
       const delta = e.deltaY > 0 ? -zoomIntensity : zoomIntensity;
-      
+
       setScale((prevScale) => {
         const newScale = Math.min(Math.max(0.5, prevScale + delta), 5);
         const scaleChange = newScale / prevScale;
@@ -328,21 +340,21 @@ export default function InteractiveMap({
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
           onClick={() => setScale((prev) => Math.min(prev + 0.2, 5))}
-          className="bg-white hover:bg-gray-100 text-gray-700 font-bold py-2 px-3 rounded shadow-md border border-gray-300 transition-colors"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl"
           title="Zoom In"
         >
           +
         </button>
         <button
           onClick={() => setScale((prev) => Math.max(prev - 0.2, 0.5))}
-          className="bg-white hover:bg-gray-100 text-gray-700 font-bold py-2 px-3 rounded shadow-md border border-gray-300 transition-colors"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl"
           title="Zoom Out"
         >
           −
         </button>
         <button
           onClick={handleResetZoom}
-          className="bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded shadow-md border border-gray-300 text-xs transition-colors"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-2 px-3 rounded-lg shadow-lg border border-gray-200 text-xs transition-all hover:shadow-xl"
           title="Reset Zoom"
         >
           100%
@@ -353,27 +365,38 @@ export default function InteractiveMap({
         <div className="absolute top-4 left-4 flex gap-2">
           <button
             onClick={handleFinishDrawing}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-lg transition-all hover:shadow-xl disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={drawingPoints.length < 3}
           >
             Finalizar Área ({drawingPoints.length} pontos)
           </button>
           <button
             onClick={handleCancelDrawing}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 shadow-lg transition-all hover:shadow-xl"
           >
             Cancelar
           </button>
         </div>
       )}
       {hoveredLot && !isEditMode && (
-        <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg">
-          <h3 className="font-bold text-lg">Lote {hoveredLot.lotNumber}</h3>
-          <p className="text-sm text-gray-600">
-            Status: {hoveredLot.status === LotStatus.AVAILABLE ? 'Disponível' : hoveredLot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
+        <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-xl border border-gray-200">
+          <h3 className="font-bold text-lg text-gray-900 mb-2">Lote {hoveredLot.lotNumber}</h3>
+          <p className="text-sm text-gray-700 mb-1">
+            <span className="font-medium">Status:</span>{' '}
+            <span className={
+              hoveredLot.status === LotStatus.AVAILABLE
+                ? 'font-semibold text-green-700'
+                : hoveredLot.status === LotStatus.RESERVED
+                  ? 'font-semibold text-amber-700'
+                  : 'font-semibold text-red-700'
+            }>
+              {hoveredLot.status === LotStatus.AVAILABLE ? 'Disponível' : hoveredLot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
+            </span>
           </p>
-          <p className="text-sm">Área: {hoveredLot.size}m²</p>
-          <p className="text-sm font-bold">
+          <p className="text-sm text-gray-700 mb-1">
+            <span className="font-medium">Área:</span> {hoveredLot.size}m²
+          </p>
+          <p className="text-base font-bold text-gray-900 mt-2">
             R$ {hoveredLot.price.toLocaleString('pt-BR')}
           </p>
         </div>

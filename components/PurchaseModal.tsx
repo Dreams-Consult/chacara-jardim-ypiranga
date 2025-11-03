@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lot } from '@/types';
-import { savePurchaseRequest } from '@/lib/storage';
+import { Lot, LotStatus } from '@/types';
+import { savePurchaseRequest, saveLot } from '@/lib/storage';
 
 interface PurchaseModalProps {
   lot: Lot;
@@ -31,6 +31,15 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
     };
 
     savePurchaseRequest(purchaseRequest);
+
+    // Reservar o lote automaticamente
+    const updatedLot = {
+      ...lot,
+      status: LotStatus.RESERVED,
+      updatedAt: new Date(),
+    };
+    saveLot(updatedLot);
+
     onSuccess();
   };
 

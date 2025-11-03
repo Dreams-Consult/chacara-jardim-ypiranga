@@ -12,10 +12,10 @@ export default function PublicMapPage() {
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const mapsData = getMaps();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMaps(mapsData);
     if (mapsData.length > 0) {
       setSelectedMap(mapsData[0]);
@@ -26,7 +26,8 @@ export default function PublicMapPage() {
   const lots = useMemo(() => {
     if (!selectedMap || isLoading) return [];
     return getLots().filter((lot) => lot.mapId === selectedMap.id);
-  }, [selectedMap, isLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMap, isLoading, refreshKey]);
 
   const handleLotClick = (lot: Lot) => {
     if (lot.status === LotStatus.AVAILABLE) {
@@ -37,7 +38,8 @@ export default function PublicMapPage() {
 
   const handlePurchaseSuccess = () => {
     setShowPurchaseModal(false);
-    alert('Seu interesse foi registrado com sucesso! Entraremos em contato em breve.');
+    setRefreshKey((prev) => prev + 1); // Força recarregar os lotes
+    alert('Seu interesse foi registrado com sucesso! O lote foi reservado. Entraremos em contato em breve.');
     setSelectedLot(null);
   };
 
@@ -70,7 +72,7 @@ export default function PublicMapPage() {
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-gray-900">Chácara Jardim Ypiranga</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-700 mt-2">
             Encontre o lote perfeito para você. Clique nos lotes disponíveis para mais informações.
           </p>
         </div>
@@ -79,14 +81,14 @@ export default function PublicMapPage() {
       <div className="container mx-auto px-4 py-8">
         {maps.length > 1 && (
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Selecione o Mapa</label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">Selecione o Mapa</label>
             <select
               value={selectedMap?.id || ''}
               onChange={(e) => {
                 const map = maps.find((m) => m.id === e.target.value);
                 setSelectedMap(map || null);
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {maps.map((map) => (
                 <option key={map.id} value={map.id}>
@@ -111,71 +113,71 @@ export default function PublicMapPage() {
 
             <div className="space-y-4">
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4">Estatísticas</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Estatísticas</h2>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-green-500 rounded"></div>
-                      <span className="text-sm">Disponíveis</span>
+                      <span className="text-sm text-gray-800">Disponíveis</span>
                     </div>
-                    <span className="font-bold">{availableLotsCount}</span>
+                    <span className="font-bold text-gray-900">{availableLotsCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                      <span className="text-sm">Reservados</span>
+                      <span className="text-sm text-gray-800">Reservados</span>
                     </div>
-                    <span className="font-bold">{reservedLotsCount}</span>
+                    <span className="font-bold text-gray-900">{reservedLotsCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-red-500 rounded"></div>
-                      <span className="text-sm">Vendidos</span>
+                      <span className="text-sm text-gray-800">Vendidos</span>
                     </div>
-                    <span className="font-bold">{soldLotsCount}</span>
+                    <span className="font-bold text-gray-900">{soldLotsCount}</span>
                   </div>
                   <div className="pt-3 border-t border-gray-200">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Total</span>
-                      <span className="font-bold">{lots.length}</span>
+                      <span className="text-sm font-semibold text-gray-800">Total</span>
+                      <span className="font-bold text-gray-900">{lots.length}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4">Legenda</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Legenda</h2>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-green-500 rounded opacity-50"></div>
-                    <span className="text-sm">Disponível para compra</span>
+                    <span className="text-sm text-gray-800">Disponível para compra</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-yellow-500 rounded opacity-50"></div>
-                    <span className="text-sm">Reservado</span>
+                    <span className="text-sm text-gray-800">Reservado</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-red-500 rounded opacity-50"></div>
-                    <span className="text-sm">Vendido</span>
+                    <span className="text-sm text-gray-800">Vendido</span>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-700">
                     Passe o mouse sobre os lotes para ver informações. Clique nos lotes disponíveis para manifestar interesse.
                   </p>
                 </div>
               </div>
 
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4">Contato</h2>
-                <div className="space-y-2 text-sm">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Contato</h2>
+                <div className="space-y-2 text-sm text-gray-800">
                   <p>
-                    <strong>Email:</strong> contato@chacaraypiranga.com
+                    <strong className="text-gray-900">Email:</strong> contato@chacaraypiranga.com
                   </p>
                   <p>
-                    <strong>Telefone:</strong> (00) 0000-0000
+                    <strong className="text-gray-900">Telefone:</strong> (00) 0000-0000
                   </p>
-                  <p className="text-gray-600 mt-4">
+                  <p className="text-gray-700 mt-4">
                     Entre em contato para mais informações sobre os lotes disponíveis.
                   </p>
                 </div>
@@ -186,7 +188,7 @@ export default function PublicMapPage() {
 
         {maps.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">Nenhum mapa disponível no momento.</p>
+            <p className="text-gray-600 text-lg">Nenhum mapa disponível no momento.</p>
           </div>
         )}
       </div>

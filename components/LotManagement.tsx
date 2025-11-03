@@ -93,18 +93,18 @@ export default function LotManagement() {
       <div className="mb-6">
         <button
           onClick={() => router.push('/admin/maps')}
-          className="text-blue-600 hover:underline mb-2"
+          className="text-blue-700 hover:text-blue-900 font-medium hover:underline mb-2 transition-colors"
         >
           ← Voltar para Mapas
         </button>
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{map.name}</h1>
-            {map.description && <p className="text-gray-600">{map.description}</p>}
+            <h1 className="text-3xl font-bold text-gray-900">{map.name}</h1>
+            {map.description && <p className="text-gray-700 mt-1">{map.description}</p>}
           </div>
           <button
             onClick={handleNewLot}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
           >
             Novo Lote
           </button>
@@ -129,25 +129,25 @@ export default function LotManagement() {
 
         <div className="space-y-4">
           {isCreating && editingLot && (
-            <div className="bg-white border border-gray-300 rounded-lg p-4">
-              <h2 className="text-xl font-bold mb-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 {editingLot.area.points.length > 0 ? 'Editar' : 'Novo'} Lote
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Número do Lote</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Número do Lote</label>
                   <input
                     type="text"
                     value={editingLot.lotNumber}
                     onChange={(e) =>
                       setEditingLot({ ...editingLot, lotNumber: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Ex: 01, A1, etc"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Área (m²)</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Área (m²)</label>
                   <input
                     type="number"
                     value={editingLot.size || ''}
@@ -157,12 +157,12 @@ export default function LotManagement() {
                         size: e.target.value === '' ? 0 : parseFloat(e.target.value)
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="300"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Preço (R$)</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Preço (R$)</label>
                   <input
                     type="number"
                     value={editingLot.price || ''}
@@ -172,12 +172,12 @@ export default function LotManagement() {
                         price: e.target.value === '' ? 0 : parseFloat(e.target.value)
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="50000"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Status</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
                   <select
                     value={editingLot.status}
                     onChange={(e) =>
@@ -186,7 +186,7 @@ export default function LotManagement() {
                         status: e.target.value as LotStatus,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
                     <option value={LotStatus.RESERVED}>Reservado</option>
@@ -194,19 +194,19 @@ export default function LotManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Descrição</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Descrição</label>
                   <textarea
                     value={editingLot.description}
                     onChange={(e) =>
                       setEditingLot({ ...editingLot, description: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     rows={3}
                     placeholder="Descrição do lote"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
                     Características (separadas por vírgula)
                   </label>
                   <input
@@ -218,21 +218,21 @@ export default function LotManagement() {
                         features: e.target.value.split(',').map((f) => f.trim()),
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Água, Luz, Portaria"
                   />
                 </div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <p className="text-sm text-yellow-800">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800 font-medium">
                     {editingLot.area.points.length === 0
-                      ? 'Clique no mapa para desenhar a área do lote'
-                      : `${editingLot.area.points.length} pontos desenhados`}
+                      ? '👆 Clique no mapa para desenhar a área do lote'
+                      : `✓ ${editingLot.area.points.length} pontos desenhados`}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveLot}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-sm transition-all hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
                     disabled={editingLot.area.points.length < 3}
                   >
                     Salvar
@@ -243,7 +243,7 @@ export default function LotManagement() {
                       setEditingLot(null);
                       setSelectedLotId(undefined);
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 shadow-sm transition-colors"
                   >
                     Cancelar
                   </button>
@@ -253,40 +253,50 @@ export default function LotManagement() {
           )}
 
           {!isCreating && (
-            <div className="bg-white border border-gray-300 rounded-lg p-4">
-              <h2 className="text-xl font-bold mb-4">Lotes Cadastrados</h2>
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Lotes Cadastrados</h2>
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
                 {lots.map((lot) => (
                   <div
                     key={lot.id}
-                    className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50"
+                    className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-bold">Lote {lot.lotNumber}</h3>
-                        <p className="text-sm text-gray-600">
-                          {lot.status === LotStatus.AVAILABLE
-                            ? 'Disponível'
-                            : lot.status === LotStatus.RESERVED
-                            ? 'Reservado'
-                            : 'Vendido'}
+                        <h3 className="font-bold text-gray-900">Lote {lot.lotNumber}</h3>
+                        <p className="text-sm font-medium">
+                          <span className={
+                            lot.status === LotStatus.AVAILABLE
+                              ? 'text-green-700'
+                              : lot.status === LotStatus.RESERVED
+                              ? 'text-amber-700'
+                              : 'text-red-700'
+                          }>
+                            {lot.status === LotStatus.AVAILABLE
+                              ? 'Disponível'
+                              : lot.status === LotStatus.RESERVED
+                              ? 'Reservado'
+                              : 'Vendido'}
+                          </span>
                         </p>
                       </div>
-                      <span className="text-sm font-bold">
+                      <span className="text-sm font-bold text-gray-900">
                         R$ {lot.price.toLocaleString('pt-BR')}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{lot.size}m²</p>
+                    <p className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium">Área:</span> {lot.size}m²
+                    </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEditLot(lot)}
-                        className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                        className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(lot.id)}
-                        className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                        className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
                       >
                         Excluir
                       </button>
@@ -294,7 +304,7 @@ export default function LotManagement() {
                   </div>
                 ))}
                 {lots.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">
+                  <p className="text-gray-600 text-sm text-center py-4">
                     Nenhum lote cadastrado
                   </p>
                 )}
