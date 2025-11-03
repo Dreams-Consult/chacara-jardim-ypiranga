@@ -14,24 +14,18 @@ export default function PublicMapPage() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
-      const mapsData = getMaps();
-      setMaps(mapsData);
-      if (mapsData.length > 0) {
-        setSelectedMap(mapsData[0]);
-      }
-    };
-    loadData();
+    const mapsData = getMaps();
+    setMaps(mapsData);
+    if (mapsData.length > 0) {
+      setSelectedMap(mapsData[0]);
+    }
   }, []);
 
   useEffect(() => {
-    const loadLots = () => {
-      if (selectedMap) {
-        const lotsData = getLots().filter((lot) => lot.mapId === selectedMap.id);
-        setLots(lotsData);
-      }
-    };
-    loadLots();
+    if (selectedMap) {
+      const lotsData = getLots().filter((lot) => lot.mapId === selectedMap.id);
+      setLots(lotsData);
+    }
   }, [selectedMap]);
 
   const handleLotClick = (lot: Lot) => {

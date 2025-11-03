@@ -8,7 +8,7 @@ const STORAGE_KEYS = {
 
 // Helper para serializar dados com datas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const serializeData = (data: any) => {
+const serializeData = (data: any) => {
   return JSON.stringify(data, (key, value) => {
     if (value instanceof Date) {
       return value.toISOString();
@@ -18,7 +18,7 @@ export const serializeData = (data: any) => {
 };
 
 // Helper para desserializar dados com datas
-export const deserializeData = (jsonString: string) => {
+const deserializeData = (jsonString: string) => {
   return JSON.parse(jsonString, (key, value) => {
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
       return new Date(value);

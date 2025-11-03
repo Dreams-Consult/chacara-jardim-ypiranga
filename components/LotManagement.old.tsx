@@ -150,12 +150,9 @@ export default function LotManagement() {
                   <label className="block text-sm font-medium mb-2">Área (m²)</label>
                   <input
                     type="number"
-                    value={editingLot.size || ''}
+                    value={editingLot.size}
                     onChange={(e) =>
-                      setEditingLot({ 
-                        ...editingLot, 
-                        size: e.target.value === '' ? 0 : parseFloat(e.target.value) 
-                      })
+                      setEditingLot({ ...editingLot, size: parseFloat(e.target.value) })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     placeholder="300"
@@ -165,12 +162,9 @@ export default function LotManagement() {
                   <label className="block text-sm font-medium mb-2">Preço (R$)</label>
                   <input
                     type="number"
-                    value={editingLot.price || ''}
+                    value={editingLot.price}
                     onChange={(e) =>
-                      setEditingLot({ 
-                        ...editingLot, 
-                        price: e.target.value === '' ? 0 : parseFloat(e.target.value) 
-                      })
+                      setEditingLot({ ...editingLot, price: parseFloat(e.target.value) })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     placeholder="50000"
