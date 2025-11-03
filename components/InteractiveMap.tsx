@@ -133,27 +133,9 @@ export default function InteractiveMap({
     if (!ctx) return;
 
     img.onload = () => {
-      // Suportar telas de alta densidade (Retina/HiDPI)
-      const dpr = window.devicePixelRatio || 1;
-
-      // Definir tamanho do canvas baseado na imagem original
+      // Definir tamanho do canvas igual ao tamanho natural da imagem
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-
-      // Ajustar para alta densidade se necessário
-      if (dpr > 1) {
-        const displayWidth = canvas.width;
-        const displayHeight = canvas.height;
-
-        canvas.width = displayWidth * dpr;
-        canvas.height = displayHeight * dpr;
-
-        canvas.style.width = `${displayWidth}px`;
-        canvas.style.height = `${displayHeight}px`;
-
-        // Escalar o contexto para compensar o aumento de pixels
-        ctx.scale(dpr, dpr);
-      }
 
       setImageLoaded(true);
     };
@@ -189,13 +171,22 @@ export default function InteractiveMap({
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
+    
+    // Coordenadas do mouse relativas ao elemento canvas (em pixels CSS)
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Escala entre o tamanho CSS e o tamanho real do canvas
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const clientX = (e.clientX - rect.left) * scaleX;
-    const clientY = (e.clientY - rect.top) * scaleY;
-
-    const x = (clientX - offset.x) / scale;
-    const y = (clientY - offset.y) / scale;
+    
+    // Converter para coordenadas do canvas (considerando a escala CSS)
+    const canvasX = mouseX * scaleX;
+    const canvasY = mouseY * scaleY;
+    
+    // Aplicar transformações de zoom e pan
+    const x = (canvasX - offset.x) / scale;
+    const y = (canvasY - offset.y) / scale;
 
     return { x, y };
   };
@@ -220,8 +211,12 @@ export default function InteractiveMap({
     if (!canvas) return;
 
     if (isPanning) {
-      const dx = e.clientX - panStart.x;
-      const dy = e.clientY - panStart.y;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
+      const dx = (e.clientX - panStart.x) * scaleX;
+      const dy = (e.clientY - panStart.y) * scaleY;
       setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
       setPanStart({ x: e.clientX, y: e.clientY });
       return;

@@ -46,8 +46,8 @@ export default function MapManagement() {
                 description: editingMap?.description || '',
                 imageUrl: compressedDataUrl,
                 imageType: 'image',
-                width: img.width,
-                height: img.height,
+                width: img.naturalWidth,
+                height: img.naturalHeight,
                 createdAt: new Date(),
                 updatedAt: new Date(),
               };
