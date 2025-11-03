@@ -19,7 +19,7 @@ export default function LotManagement() {
 
   useEffect(() => {
     if (!mapId) return;
-    
+
     const loadData = () => {
       const mapData = getMapById(mapId);
       if (mapData) {
