@@ -22,9 +22,16 @@ export default function InteractiveMap({
 }: InteractiveMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const [drawingPoints, setDrawingPoints] = useState<{ x: number; y: number }[]>([]);
   const [hoveredLot, setHoveredLot] = useState<Lot | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const drawLot = (
     ctx: CanvasRenderingContext2D,
@@ -91,18 +98,18 @@ export default function InteractiveMap({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Limpar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Desenhar imagem
+    ctx.save();
+    ctx.translate(offset.x, offset.y);
+    ctx.scale(scale, scale);
+
     ctx.drawImage(img, 0, 0);
 
-    // Desenhar lotes
     lots.forEach((lot) => {
       drawLot(ctx, lot, lot.id === hoveredLot?.id, lot.id === selectedLotId);
     });
 
-    // Desenhar pontos em criação
     if (isEditMode && drawingPoints.length > 0) {
       ctx.beginPath();
       ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
@@ -110,18 +117,19 @@ export default function InteractiveMap({
         ctx.lineTo(point.x, point.y);
       });
       ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / scale;
       ctx.stroke();
 
-      // Desenhar pontos
       drawingPoints.forEach((point) => {
         ctx.beginPath();
-        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+        ctx.arc(point.x, point.y, 5 / scale, 0, Math.PI * 2);
         ctx.fillStyle = '#3b82f6';
         ctx.fill();
       });
     }
-  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, isEditMode]);
+
+    ctx.restore();
+  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, isEditMode, scale, offset]);
 
   // Carregar e desenhar imagem
   useEffect(() => {
@@ -164,21 +172,30 @@ export default function InteractiveMap({
     return inside;
   };
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const clientX = (e.clientX - rect.left) * scaleX;
+    const clientY = (e.clientY - rect.top) * scaleY;
+
+    const x = (clientX - offset.x) / scale;
+    const y = (clientY - offset.y) / scale;
+
+    return { x, y };
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isPanning) return;
+
+    const { x, y } = getCanvasCoordinates(e);
 
     if (isEditMode) {
-      // Adicionar ponto ao desenho
       setDrawingPoints([...drawingPoints, { x, y }]);
     } else {
-      // Verificar clique em lote
       const clickedLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
       if (clickedLot && onLotClick) {
         onLotClick(clickedLot);
@@ -187,17 +204,20 @@ export default function InteractiveMap({
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isEditMode) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    if (isPanning) {
+      const dx = e.clientX - panStart.x;
+      const dy = e.clientY - panStart.y;
+      setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
 
+    if (isEditMode) return;
+
+    const { x, y } = getCanvasCoordinates(e);
     const hoveredLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
     setHoveredLot(hoveredLot || null);
 
@@ -206,6 +226,77 @@ export default function InteractiveMap({
     } else {
       canvas.style.cursor = 'default';
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button === 2) {
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = 'grabbing';
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = 'default';
+    }
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Verifica se o mouse está dentro dos limites do canvas
+      if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) {
+        return;
+      }
+
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const canvasX = mouseX * scaleX;
+      const canvasY = mouseY * scaleY;
+
+      const zoomIntensity = 0.1;
+      const delta = e.deltaY > 0 ? -zoomIntensity : zoomIntensity;
+      
+      setScale((prevScale) => {
+        const newScale = Math.min(Math.max(0.5, prevScale + delta), 5);
+        const scaleChange = newScale / prevScale;
+
+        setOffset((prev) => ({
+          x: canvasX - (canvasX - prev.x) * scaleChange,
+          y: canvasY - (canvasY - prev.y) * scaleChange,
+        }));
+
+        return newScale;
+      });
+    };
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+  };
+
+  const handleResetZoom = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
   };
 
   const handleFinishDrawing = () => {
@@ -220,17 +311,46 @@ export default function InteractiveMap({
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={imageRef} src={imageUrl} alt="Map" className="hidden" />
       <canvas
         ref={canvasRef}
         onClick={handleCanvasClick}
         onMouseMove={handleCanvasMouseMove}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onContextMenu={handleContextMenu}
         className="max-w-full h-auto border border-gray-300 rounded-lg"
       />
+
+      <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <button
+          onClick={() => setScale((prev) => Math.min(prev + 0.2, 5))}
+          className="bg-white hover:bg-gray-100 text-gray-700 font-bold py-2 px-3 rounded shadow-md border border-gray-300 transition-colors"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button
+          onClick={() => setScale((prev) => Math.max(prev - 0.2, 0.5))}
+          className="bg-white hover:bg-gray-100 text-gray-700 font-bold py-2 px-3 rounded shadow-md border border-gray-300 transition-colors"
+          title="Zoom Out"
+        >
+          −
+        </button>
+        <button
+          onClick={handleResetZoom}
+          className="bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded shadow-md border border-gray-300 text-xs transition-colors"
+          title="Reset Zoom"
+        >
+          100%
+        </button>
+      </div>
+
       {isEditMode && drawingPoints.length > 0 && (
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 left-4 flex gap-2">
           <button
             onClick={handleFinishDrawing}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
