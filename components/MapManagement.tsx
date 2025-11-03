@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Map } from '@/types';
 import { getMaps, saveMap, deleteMap } from '@/lib/storage';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
@@ -108,12 +109,20 @@ export default function MapManagement() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Mapas</h1>
-        <button
-          onClick={() => setIsCreating(true)}
-          className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
-        >
-          Novo Mapa
-        </button>
+        <div className="flex gap-2">
+          <a
+            href="/admin/data"
+            className="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 shadow-md transition-all hover:shadow-lg"
+          >
+            📦 Exportar/Importar
+          </a>
+          <button
+            onClick={() => setIsCreating(true)}
+            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
+          >
+            Novo Mapa
+          </button>
+        </div>
       </div>
 
       {isCreating && (
@@ -203,12 +212,12 @@ export default function MapManagement() {
                 ID: {map.id}
               </p>
               <div className="flex gap-2">
-                <a
+                <Link
                   href={`/admin/lot-management?mapId=${map.id}`}
                   className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 text-center transition-colors shadow-sm hover:shadow-md"
                 >
                   Gerenciar Lotes
-                </a>
+                </Link>
                 <button
                   onClick={() => handleDelete(map.id)}
                   className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"

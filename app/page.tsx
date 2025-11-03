@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { Map, Lot, LotStatus } from '@/types';
 import { getMaps, getLots } from '@/lib/storage';
 import InteractiveMap from '@/components/InteractiveMap';
@@ -77,6 +78,24 @@ export default function PublicMapPage() {
           </p>
         </div>
       </header>
+
+      {/* Banner de Dados de Exemplo */}
+      {maps.length === 1 && maps[0].id === '1762192028364' && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="container mx-auto px-4 py-3">
+            <p className="text-yellow-800 text-sm">
+              ℹ️ <strong>Modo de Demonstração:</strong> Você está visualizando dados de exemplo. 
+              Para acessar a área administrativa, visite{' '}
+              <Link 
+                href="/admin/maps" 
+                className="underline font-semibold hover:text-yellow-900"
+              >
+                /admin/maps
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-8">
         {maps.length > 1 && (
