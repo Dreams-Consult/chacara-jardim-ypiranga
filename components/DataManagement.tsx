@@ -23,7 +23,7 @@ export default function DataManagement() {
     link.download = `chacara-backup-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    
+
     setMessage('✅ Dados exportados com sucesso!');
     setTimeout(() => setMessage(''), 3000);
   };
@@ -31,7 +31,7 @@ export default function DataManagement() {
   const handleImport = () => {
     try {
       const data = JSON.parse(importData);
-      
+
       if (!data.maps || !data.lots) {
         setMessage('❌ Formato de dados inválido');
         return;

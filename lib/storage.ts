@@ -10,7 +10,7 @@ const STORAGE_KEYS = {
 // Dados de exemplo para testes
 const initializeSampleData = (): void => {
   if (typeof window === 'undefined') return;
-  
+
   const isInitialized = localStorage.getItem(STORAGE_KEYS.INITIALIZED);
   if (isInitialized) return;
 
@@ -119,10 +119,10 @@ export const deserializeData = (jsonString: string) => {
 // Maps
 export const getMaps = (): Map[] => {
   if (typeof window === 'undefined') return [];
-  
+
   // Inicializar dados de exemplo se necessário
   initializeSampleData();
-  
+
   const data = localStorage.getItem(STORAGE_KEYS.MAPS);
   return data ? deserializeData(data) : [];
 };

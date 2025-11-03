@@ -84,10 +84,10 @@ export default function PublicMapPage() {
         <div className="bg-yellow-50 border-b border-yellow-200">
           <div className="container mx-auto px-4 py-3">
             <p className="text-yellow-800 text-sm">
-              ℹ️ <strong>Modo de Demonstração:</strong> Você está visualizando dados de exemplo. 
+              <strong>Modo de Demonstração:</strong> Você está visualizando dados de exemplo.
               Para acessar a área administrativa, visite{' '}
-              <Link 
-                href="/admin/maps" 
+              <Link
+                href="/admin/maps"
                 className="underline font-semibold hover:text-yellow-900"
               >
                 /admin/maps
