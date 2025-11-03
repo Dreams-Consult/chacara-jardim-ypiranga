@@ -6,7 +6,6 @@ const STORAGE_KEYS = {
   PURCHASES: 'lot_platform_purchases',
 };
 
-// Helper para serializar dados com datas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const serializeData = (data: any) => {
   return JSON.stringify(data, (key, value) => {
@@ -17,7 +16,6 @@ export const serializeData = (data: any) => {
   });
 };
 
-// Helper para desserializar dados com datas
 export const deserializeData = (jsonString: string) => {
   return JSON.parse(jsonString, (key, value) => {
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
@@ -43,7 +41,7 @@ export const saveMap = (map: Map): void => {
   } else {
     maps.push(map);
   }
-  
+
   try {
     const serializedData = serializeData(maps);
     localStorage.setItem(STORAGE_KEYS.MAPS, serializedData);
@@ -61,7 +59,6 @@ export const deleteMap = (id: string): void => {
   const maps = getMaps().filter((m) => m.id !== id);
   localStorage.setItem(STORAGE_KEYS.MAPS, serializeData(maps));
 
-  // Deletar lotes associados
   const lots = getLots().filter((l) => l.mapId !== id);
   localStorage.setItem(STORAGE_KEYS.LOTS, serializeData(lots));
 };
@@ -70,7 +67,6 @@ export const getMapById = (id: string): Map | undefined => {
   return getMaps().find((m) => m.id === id);
 };
 
-// Lots
 export const getLots = (): Lot[] => {
   if (typeof window === 'undefined') return [];
   const data = localStorage.getItem(STORAGE_KEYS.LOTS);
@@ -103,7 +99,6 @@ export const getLotById = (id: string): Lot | undefined => {
   return getLots().find((l) => l.id === id);
 };
 
-// Purchase Requests
 export const getPurchaseRequests = (): PurchaseRequest[] => {
   if (typeof window === 'undefined') return [];
   const data = localStorage.getItem(STORAGE_KEYS.PURCHASES);

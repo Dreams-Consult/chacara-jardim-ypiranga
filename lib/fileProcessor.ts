@@ -30,7 +30,7 @@ async function processImageFile(file: File): Promise<ProcessedFile> {
         );
 
         const size = getBase64Size(compressedDataUrl);
-        
+
         if (size > MAX_FILE_SIZE_MB) {
           reject(new Error(
             'Imagem muito grande! Por favor, use uma imagem menor ou de menor qualidade.'

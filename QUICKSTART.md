@@ -108,7 +108,7 @@ verInteressados();
 
 ## ⚠️ Notas Importantes
 
-1. **Dados no localStorage**: 
+1. **Dados no localStorage**:
    - Os dados são salvos no navegador
    - Não limpe o cache/cookies do navegador
    - Para produção, implemente um backend

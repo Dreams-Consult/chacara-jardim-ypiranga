@@ -13,8 +13,6 @@ export default function PublicMapPage() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carrega dados do localStorage apenas no cliente
-  // Este é um caso legítimo de setState em useEffect para carregar dados iniciais
   useEffect(() => {
     const mapsData = getMaps();
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -25,7 +23,6 @@ export default function PublicMapPage() {
     setIsLoading(false);
   }, []);
 
-  // Deriva os lotes do mapa selecionado usando useMemo
   const lots = useMemo(() => {
     if (!selectedMap || isLoading) return [];
     return getLots().filter((lot) => lot.mapId === selectedMap.id);
@@ -48,7 +45,6 @@ export default function PublicMapPage() {
   const reservedLotsCount = lots.filter((lot) => lot.status === LotStatus.RESERVED).length;
   const soldLotsCount = lots.filter((lot) => lot.status === LotStatus.SOLD).length;
 
-  // Renderiza loading no servidor e primeira renderização do cliente
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">

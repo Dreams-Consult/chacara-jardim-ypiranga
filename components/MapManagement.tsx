@@ -28,12 +28,9 @@ export default function MapManagement() {
       try {
         // Criar uma imagem temporária para obter dimensões
         if (file.type.startsWith('image/')) {
-          // Comprimir imagem antes de salvar
           const compressedDataUrl = await compressImage(dataUrl, 1920, 1080, 0.7);
           const size = getBase64Size(compressedDataUrl);
-          
-          console.log(`Tamanho da imagem: ${size.toFixed(2)} MB`);
-          
+
           if (size > 4) {
             alert('Imagem muito grande! Por favor, use uma imagem menor ou de menor qualidade.');
             return;
@@ -65,14 +62,12 @@ export default function MapManagement() {
           img.src = compressedDataUrl;
         } else if (file.type === 'application/pdf') {
           const size = getBase64Size(dataUrl);
-          console.log(`Tamanho do PDF: ${size.toFixed(2)} MB`);
-          
+
           if (size > 4) {
             alert('PDF muito grande! Por favor, converta para imagem primeiro usando o script convert-pdf.sh ou use uma ferramenta online.');
             return;
           }
 
-          // Para PDFs, usar dimensões padrão
           try {
             const newMap: Map = {
               id: Date.now().toString(),

@@ -152,9 +152,9 @@ export default function LotManagement() {
                     type="number"
                     value={editingLot.size || ''}
                     onChange={(e) =>
-                      setEditingLot({ 
-                        ...editingLot, 
-                        size: e.target.value === '' ? 0 : parseFloat(e.target.value) 
+                      setEditingLot({
+                        ...editingLot,
+                        size: e.target.value === '' ? 0 : parseFloat(e.target.value)
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -167,9 +167,9 @@ export default function LotManagement() {
                     type="number"
                     value={editingLot.price || ''}
                     onChange={(e) =>
-                      setEditingLot({ 
-                        ...editingLot, 
-                        price: e.target.value === '' ? 0 : parseFloat(e.target.value) 
+                      setEditingLot({
+                        ...editingLot,
+                        price: e.target.value === '' ? 0 : parseFloat(e.target.value)
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"

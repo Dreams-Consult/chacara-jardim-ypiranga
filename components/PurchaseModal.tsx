@@ -39,7 +39,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4">Manifestar Interesse - Lote {lot.lotNumber}</h2>
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="grid grid-cols-2 gap-4">
               <div>

@@ -7,11 +7,11 @@ export const compressImage = (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
         reject(new Error('Failed to get canvas context'));
         return;
@@ -40,7 +40,7 @@ export const compressImage = (
 
       // Converter para base64 com compressão
       const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-      
+
       resolve(compressedDataUrl);
     };
 
@@ -55,7 +55,7 @@ export const compressImage = (
 // Função para calcular tamanho em MB de uma string base64
 export const getBase64Size = (base64String: string): number => {
   const base64Length = base64String.length - (base64String.indexOf(',') + 1);
-  const padding = (base64String.charAt(base64String.length - 2) === '=' ? 2 : 
+  const padding = (base64String.charAt(base64String.length - 2) === '=' ? 2 :
                    base64String.charAt(base64String.length - 1) === '=' ? 1 : 0);
   return ((base64Length * 3 / 4) - padding) / (1024 * 1024); // Retorna em MB
 };

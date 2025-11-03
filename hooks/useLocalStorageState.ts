@@ -14,7 +14,7 @@ export function useLocalStorageState<T>(
   // Carregar dados iniciais
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const loadData = () => {
       try {
         const stored = localStorage.getItem(key);
