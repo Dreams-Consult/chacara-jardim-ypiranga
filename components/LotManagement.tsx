@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Map, Lot, LotStatus, LotArea } from '@/types';
 import { getMapById, getLotsByMapId, saveLot, deleteLot } from '@/lib/storage';
 import InteractiveMap from '@/components/InteractiveMap';
 
 export default function LotManagement() {
-  const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const mapId = params.mapId as string;
+  const mapId = searchParams.get('mapId') || '';
 
   const [map, setMap] = useState<Map | null>(null);
   const [lots, setLots] = useState<Lot[]>([]);
@@ -18,6 +18,8 @@ export default function LotManagement() {
   const [selectedLotId, setSelectedLotId] = useState<string | undefined>();
 
   useEffect(() => {
+    if (!mapId) return;
+    
     const loadData = () => {
       const mapData = getMapById(mapId);
       if (mapData) {

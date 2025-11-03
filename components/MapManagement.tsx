@@ -204,7 +204,7 @@ export default function MapManagement() {
               </p>
               <div className="flex gap-2">
                 <a
-                  href={`/admin/lots/${map.id}`}
+                  href={`/admin/lot-management?mapId=${map.id}`}
                   className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 text-center transition-colors shadow-sm hover:shadow-md"
                 >
                   Gerenciar Lotes
