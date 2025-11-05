@@ -53,7 +53,7 @@ export default function PublicMapPage() {
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b border-gray-200 shadow-sm">
           <div className="container mx-auto px-4 py-6">
-            <h1 className="text-3xl font-bold text-gray-900">Chácara Jardim Ypiranga</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Loteamento</h1>
             <p className="text-gray-600 mt-2">
               Encontre o lote perfeito para você. Clique nos lotes disponíveis para mais informações.
             </p>
@@ -72,7 +72,7 @@ export default function PublicMapPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Chácara Jardim Ypiranga</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Loteamento</h1>
           <p className="text-gray-700 mt-2">
             Encontre o lote perfeito para você. Clique nos lotes disponíveis para mais informações.
           </p>

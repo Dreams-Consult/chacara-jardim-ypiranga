@@ -171,19 +171,19 @@ export default function InteractiveMap({
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
-    
+
     // Coordenadas do mouse relativas ao elemento canvas (em pixels CSS)
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     // Escala entre o tamanho CSS e o tamanho real do canvas
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     // Converter para coordenadas do canvas (considerando a escala CSS)
     const canvasX = mouseX * scaleX;
     const canvasY = mouseY * scaleY;
-    
+
     // Aplicar transformações de zoom e pan
     const x = (canvasX - offset.x) / scale;
     const y = (canvasY - offset.y) / scale;
@@ -214,7 +214,7 @@ export default function InteractiveMap({
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
-      
+
       const dx = (e.clientX - panStart.x) * scaleX;
       const dy = (e.clientY - panStart.y) * scaleY;
       setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));

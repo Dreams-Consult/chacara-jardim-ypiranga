@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Lot, LotStatus } from '@/types';
 import { savePurchaseRequest, saveLot } from '@/lib/storage';
 
@@ -18,29 +19,99 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
     customerCPF: '',
     message: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-    const purchaseRequest = {
-      id: Date.now().toString(),
-      lotId: lot.id,
-      ...formData,
-      status: 'pending' as const,
-      createdAt: new Date(),
-    };
+    try {
+      // Preparar dados completos para envio
+      const requestData = {
+        // Dados do lote
+        lot: {
+          id: lot.id,
+          mapId: lot.mapId,
+          lotNumber: lot.lotNumber,
+          area: lot.area,
+          status: lot.status,
+          price: lot.price,
+          size: lot.size,
+          description: lot.description,
+          features: lot.features,
+          createdAt: lot.createdAt,
+          updatedAt: lot.updatedAt,
+        },
+        // Dados do cliente
+        customer: {
+          name: formData.customerName,
+          email: formData.customerEmail,
+          phone: formData.customerPhone,
+          cpf: formData.customerCPF || null,
+          message: formData.message || null,
+        },
+        // Metadados da requisição
+        purchaseRequest: {
+          id: Date.now().toString(),
+          lotId: lot.id,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        }
+      };
 
-    savePurchaseRequest(purchaseRequest);
+      // Fazer requisição POST para a API
+      // IMPORTANTE: Substitua pela URL real da sua API
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-    // Reservar o lote automaticamente
-    const updatedLot = {
-      ...lot,
-      status: LotStatus.RESERVED,
-      updatedAt: new Date(),
-    };
-    saveLot(updatedLot);
+      const response = await axios.post(`${API_URL}/reservar`, requestData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000, // 10 segundos
+      });
 
-    onSuccess();
+      console.log('Resposta da API:', response.data);
+
+      // Salvar localmente também (backup)
+      const purchaseRequest = {
+        id: requestData.purchaseRequest.id,
+        lotId: lot.id,
+        ...formData,
+        status: 'pending' as const,
+        createdAt: new Date(),
+      };
+      savePurchaseRequest(purchaseRequest);
+
+      // Reservar o lote automaticamente
+      const updatedLot = {
+        ...lot,
+        status: LotStatus.RESERVED,
+        updatedAt: new Date(),
+      };
+      saveLot(updatedLot);
+
+      onSuccess();
+    } catch (err) {
+      console.error('Erro ao enviar reserva:', err);
+
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          // Erro da API (4xx, 5xx)
+          setError(`Erro do servidor: ${err.response.data?.message || err.response.statusText}`);
+        } else if (err.request) {
+          // Sem resposta da API
+          setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
+        } else {
+          setError('Erro ao preparar requisição.');
+        }
+      } else {
+        setError('Erro inesperado ao enviar reserva.');
+      }
+
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -82,6 +153,12 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
               </div>
             )}
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-red-800 text-sm font-medium">❌ {error}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -145,14 +222,16 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
             <div className="flex gap-2 pt-2">
               <button
                 type="submit"
-                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold shadow-md transition-all hover:shadow-lg"
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold shadow-md transition-all hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:shadow-md"
               >
-                Enviar Interesse
+                {isSubmitting ? 'Enviando...' : 'Enviar Interesse'}
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold shadow-md transition-all hover:shadow-lg"
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold shadow-md transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
