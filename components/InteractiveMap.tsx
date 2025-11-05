@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { Lot, LotArea, LotStatus } from '@/types';
+import { useInteractiveMap } from '@/hooks/useInteractiveMap';
 
 interface InteractiveMapProps {
   imageUrl: string;
@@ -20,306 +21,34 @@ export default function InteractiveMap({
   onAreaDrawn,
   selectedLotId,
 }: InteractiveMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const [drawingPoints, setDrawingPoints] = useState<{ x: number; y: number }[]>([]);
-  const [hoveredLot, setHoveredLot] = useState<Lot | null>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-
-  const drawLot = (
-    ctx: CanvasRenderingContext2D,
-    lot: Lot,
-    isHovered: boolean,
-    isSelected: boolean
-  ) => {
-    if (lot.area.points.length < 3) return;
-
-    // Desenhar área
-    ctx.beginPath();
-    ctx.moveTo(lot.area.points[0].x, lot.area.points[0].y);
-    lot.area.points.forEach((point) => {
-      ctx.lineTo(point.x, point.y);
-    });
-    ctx.closePath();
-
-    // Cor baseada no status
-    let fillColor = 'rgba(34, 197, 94, 0.3)'; // Verde para disponível
-    let strokeColor = '#22c55e';
-
-    if (lot.status === LotStatus.RESERVED) {
-      fillColor = 'rgba(251, 191, 36, 0.3)'; // Amarelo para reservado
-      strokeColor = '#fbbf24';
-    } else if (lot.status === LotStatus.SOLD) {
-      fillColor = 'rgba(239, 68, 68, 0.3)'; // Vermelho para vendido
-      strokeColor = '#ef4444';
-    }
-
-    if (isHovered) {
-      fillColor = fillColor.replace('0.3', '0.5');
-      strokeColor = '#000';
-    }
-
-    if (isSelected) {
-      fillColor = 'rgba(59, 130, 246, 0.5)'; // Azul para selecionado
-      strokeColor = '#3b82f6';
-    }
-
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = isHovered || isSelected ? 3 : 2;
-    ctx.stroke();
-  };
-
-  const redraw = React.useCallback(() => {
-    const canvas = canvasRef.current;
-    const img = imageRef.current;
-    if (!canvas || !img || !imageLoaded) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Configurar renderização de alta qualidade
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(offset.x, offset.y);
-    ctx.scale(scale, scale);
-
-    ctx.drawImage(img, 0, 0);
-
-    lots.forEach((lot) => {
-      drawLot(ctx, lot, lot.id === hoveredLot?.id, lot.id === selectedLotId);
-    });
-
-    if (isEditMode && drawingPoints.length > 0) {
-      ctx.beginPath();
-      ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
-      drawingPoints.forEach((point) => {
-        ctx.lineTo(point.x, point.y);
-      });
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 2 / scale;
-      ctx.stroke();
-
-      drawingPoints.forEach((point) => {
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 5 / scale, 0, Math.PI * 2);
-        ctx.fillStyle = '#3b82f6';
-        ctx.fill();
-      });
-    }
-
-    ctx.restore();
-  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, isEditMode, scale, offset]);
-
-  // Carregar e desenhar imagem
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const img = imageRef.current;
-    if (!canvas || !img) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    img.onload = () => {
-      // Definir tamanho do canvas igual ao tamanho natural da imagem
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-
-      setImageLoaded(true);
-    };
-
-    img.src = imageUrl;
-  }, [imageUrl]);
-
-  // Redesenhar quando dependências mudarem
-  useEffect(() => {
-    redraw();
-  }, [redraw]);
-
-  const isPointInPolygon = (
-    x: number,
-    y: number,
-    points: { x: number; y: number }[]
-  ): boolean => {
-    let inside = false;
-    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-      const xi = points[i].x,
-        yi = points[i].y;
-      const xj = points[j].x,
-        yj = points[j].y;
-      const intersect =
-        yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  };
-
-  const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-
-    // Coordenadas do mouse relativas ao elemento canvas (em pixels CSS)
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    // Escala entre o tamanho CSS e o tamanho real do canvas
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    // Converter para coordenadas do canvas (considerando a escala CSS)
-    const canvasX = mouseX * scaleX;
-    const canvasY = mouseY * scaleY;
-
-    // Aplicar transformações de zoom e pan
-    const x = (canvasX - offset.x) / scale;
-    const y = (canvasY - offset.y) / scale;
-
-    return { x, y };
-  };
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isPanning) return;
-
-    const { x, y } = getCanvasCoordinates(e);
-
-    if (isEditMode) {
-      setDrawingPoints([...drawingPoints, { x, y }]);
-    } else {
-      const clickedLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
-      if (clickedLot && onLotClick) {
-        onLotClick(clickedLot);
-      }
-    }
-  };
-
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    if (isPanning) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-
-      const dx = (e.clientX - panStart.x) * scaleX;
-      const dy = (e.clientY - panStart.y) * scaleY;
-      setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-      setPanStart({ x: e.clientX, y: e.clientY });
-      return;
-    }
-
-    if (isEditMode) return;
-
-    const { x, y } = getCanvasCoordinates(e);
-    const hoveredLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
-    setHoveredLot(hoveredLot || null);
-
-    if (hoveredLot) {
-      canvas.style.cursor = 'pointer';
-    } else {
-      canvas.style.cursor = 'default';
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 2) {
-      e.preventDefault();
-      setIsPanning(true);
-      setPanStart({ x: e.clientX, y: e.clientY });
-      if (canvasRef.current) {
-        canvasRef.current.style.cursor = 'grabbing';
-      }
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsPanning(false);
-    if (canvasRef.current) {
-      canvasRef.current.style.cursor = 'default';
-    }
-  };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      // Verifica se o mouse está dentro dos limites do canvas
-      if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) {
-        return;
-      }
-
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const canvasX = mouseX * scaleX;
-      const canvasY = mouseY * scaleY;
-
-      const zoomIntensity = 0.1;
-      const delta = e.deltaY > 0 ? -zoomIntensity : zoomIntensity;
-
-      setScale((prevScale) => {
-        const newScale = Math.min(Math.max(0.5, prevScale + delta), 5);
-        const scaleChange = newScale / prevScale;
-
-        setOffset((prev) => ({
-          x: canvasX - (canvasX - prev.x) * scaleChange,
-          y: canvasY - (canvasY - prev.y) * scaleChange,
-        }));
-
-        return newScale;
-      });
-    };
-
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
-
-    return () => {
-      canvas.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
-
-  const handleContextMenu = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-  };
-
-  const handleResetZoom = () => {
-    setScale(1);
-    setOffset({ x: 0, y: 0 });
-  };
-
-  const handleFinishDrawing = () => {
-    if (drawingPoints.length >= 3 && onAreaDrawn) {
-      onAreaDrawn({ points: drawingPoints });
-      setDrawingPoints([]);
-    }
-  };
-
-  const handleCancelDrawing = () => {
-    setDrawingPoints([]);
-  };
+  const {
+    canvasRef,
+    imageRef,
+    containerRef,
+    hoveredLot,
+    drawingPoints,
+    scale,
+    handleCanvasClick,
+    handleCanvasMouseMove,
+    handleMouseDown,
+    handleMouseUp,
+    handleContextMenu,
+    handleZoomIn,
+    handleZoomOut,
+    handleResetZoom,
+    handleFinishDrawing,
+    handleCancelDrawing,
+  } = useInteractiveMap({
+    imageUrl,
+    lots,
+    onLotClick,
+    isEditMode,
+    onAreaDrawn,
+    selectedLotId,
+  });
 
   return (
     <div ref={containerRef} className="relative">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={imageRef} src={imageUrl} alt="Map" className="hidden" />
       <canvas
         ref={canvasRef}
@@ -334,30 +63,33 @@ export default function InteractiveMap({
 
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
-          onClick={() => setScale((prev) => Math.min(prev + 0.2, 5))}
+          onClick={handleZoomIn}
           className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl"
           title="Zoom In"
         >
           +
         </button>
         <button
-          onClick={() => setScale((prev) => Math.max(prev - 0.2, 0.5))}
+          onClick={handleZoomOut}
           className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl"
           title="Zoom Out"
         >
-          −
+          -
         </button>
         <button
           onClick={handleResetZoom}
-          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-2 px-3 rounded-lg shadow-lg border border-gray-200 text-xs transition-all hover:shadow-xl"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl text-xs"
           title="Reset Zoom"
         >
-          100%
+          Reset
         </button>
+        <div className="bg-white px-3 py-1 rounded-lg shadow-lg border border-gray-200 text-xs text-gray-700 text-center">
+          {Math.round(scale * 100)}%
+        </div>
       </div>
 
       {isEditMode && drawingPoints.length > 0 && (
-        <div className="absolute top-4 left-4 flex gap-2">
+        <div className="absolute bottom-4 left-4 flex gap-2">
           <button
             onClick={handleFinishDrawing}
             className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-lg transition-all hover:shadow-xl disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"

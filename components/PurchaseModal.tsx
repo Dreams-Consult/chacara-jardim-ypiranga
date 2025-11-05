@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import axios from 'axios';
-import { Lot, LotStatus } from '@/types';
-import { savePurchaseRequest, saveLot } from '@/lib/storage';
+import React from 'react';
+import { Lot } from '@/types';
+import { usePurchaseForm } from '@/hooks/usePurchaseForm';
 
 interface PurchaseModalProps {
   lot: Lot;
@@ -12,107 +11,7 @@ interface PurchaseModalProps {
 }
 
 export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModalProps) {
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
-    customerCPF: '',
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      // Preparar dados completos para envio
-      const requestData = {
-        // Dados do lote
-        lot: {
-          id: lot.id,
-          mapId: lot.mapId,
-          lotNumber: lot.lotNumber,
-          area: lot.area,
-          status: lot.status,
-          price: lot.price,
-          size: lot.size,
-          description: lot.description,
-          features: lot.features,
-          createdAt: lot.createdAt,
-          updatedAt: lot.updatedAt,
-        },
-        // Dados do cliente
-        customer: {
-          name: formData.customerName,
-          email: formData.customerEmail,
-          phone: formData.customerPhone,
-          cpf: formData.customerCPF || null,
-          message: formData.message || null,
-        },
-        // Metadados da requisição
-        purchaseRequest: {
-          id: Date.now().toString(),
-          lotId: lot.id,
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        }
-      };
-
-      // Fazer requisição POST para a API
-      // IMPORTANTE: Substitua pela URL real da sua API
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-      const response = await axios.post(`${API_URL}/reservar`, requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 10000, // 10 segundos
-      });
-
-      console.log('Resposta da API:', response.data);
-
-      // Salvar localmente também (backup)
-      const purchaseRequest = {
-        id: requestData.purchaseRequest.id,
-        lotId: lot.id,
-        ...formData,
-        status: 'pending' as const,
-        createdAt: new Date(),
-      };
-      savePurchaseRequest(purchaseRequest);
-
-      // Reservar o lote automaticamente
-      const updatedLot = {
-        ...lot,
-        status: LotStatus.RESERVED,
-        updatedAt: new Date(),
-      };
-      saveLot(updatedLot);
-
-      onSuccess();
-    } catch (err) {
-      console.error('Erro ao enviar reserva:', err);
-
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          // Erro da API (4xx, 5xx)
-          setError(`Erro do servidor: ${err.response.data?.message || err.response.statusText}`);
-        } else if (err.request) {
-          // Sem resposta da API
-          setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
-        } else {
-          setError('Erro ao preparar requisição.');
-        }
-      } else {
-        setError('Erro inesperado ao enviar reserva.');
-      }
-
-      setIsSubmitting(false);
-    }
-  };
+  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lot, onSuccess);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
