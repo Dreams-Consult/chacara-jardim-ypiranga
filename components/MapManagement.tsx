@@ -2,21 +2,87 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 import { Map } from '@/types';
-import { getMaps, saveMap, deleteMap } from '@/lib/storage';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+interface MapApiResponse {
+  mapId?: string;
+  id?: string;
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+  width?: number;
+  height?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  lots?: unknown[];
+}
 
 export default function MapManagement() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingMap, setEditingMap] = useState<Map | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadMaps = () => {
-      setMaps(getMaps());
-    };
     loadMaps();
   }, []);
+
+  const loadMaps = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/mapas`);
+      const mapsData = response.data;
+
+      const processedMaps = mapsData.map((mapData: MapApiResponse) => ({
+        id: mapData.mapId || mapData.id || '',
+        name: mapData.name || `Mapa ${mapData.mapId || mapData.id}`,
+        description: mapData.description || '',
+        imageUrl: mapData.imageUrl || '',
+        imageType: 'image' as const,
+        width: mapData.width || 800,
+        height: mapData.height || 600,
+        createdAt: mapData.createdAt ? new Date(mapData.createdAt) : new Date(),
+        updatedAt: mapData.updatedAt ? new Date(mapData.updatedAt) : new Date(),
+      }));
+
+      setMaps(processedMaps);
+    } catch (error) {
+      console.error('Erro ao buscar mapas:', error);
+      alert('Erro ao carregar mapas. Verifique se a API está rodando.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createMap = async (mapData: { name: string; description: string; imageUrl: string }) => {
+    try {
+      const response = await axios.post(`${API_URL}/criarMapa`, mapData, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      });
+      console.log('Mapa criado:', response.data);
+      await loadMaps();
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar mapa:', error);
+      throw error;
+    }
+  };
+
+  const deleteMapById = async (id: string) => {
+    try {
+      await axios.delete(`${API_URL}/deletarMapa/${id}`, {
+        timeout: 10000,
+      });
+      await loadMaps();
+    } catch (error) {
+      console.error('Erro ao deletar mapa:', error);
+      throw error;
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,21 +104,15 @@ export default function MapManagement() {
           }
 
           const img = new Image();
-          img.onload = () => {
+          img.onload = async () => {
             try {
-              const newMap: Map = {
-                id: Date.now().toString(),
+              const mapData = {
                 name: editingMap?.name || file.name,
                 description: editingMap?.description || '',
                 imageUrl: compressedDataUrl,
-                imageType: 'image',
-                width: img.naturalWidth,
-                height: img.naturalHeight,
-                createdAt: new Date(),
-                updatedAt: new Date(),
               };
-              saveMap(newMap);
-              setMaps(getMaps());
+
+              await createMap(mapData);
               setIsCreating(false);
               setEditingMap(null);
             } catch (error) {
@@ -70,19 +130,13 @@ export default function MapManagement() {
           }
 
           try {
-            const newMap: Map = {
-              id: Date.now().toString(),
+            const mapData = {
               name: editingMap?.name || file.name,
               description: editingMap?.description || '',
               imageUrl: dataUrl,
-              imageType: 'pdf',
-              width: 1920,
-              height: 1080,
-              createdAt: new Date(),
-              updatedAt: new Date(),
             };
-            saveMap(newMap);
-            setMaps(getMaps());
+
+            await createMap(mapData);
             setIsCreating(false);
             setEditingMap(null);
           } catch (error) {
@@ -98,10 +152,14 @@ export default function MapManagement() {
     reader.readAsDataURL(file);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este mapa e todos os lotes associados?')) {
-      deleteMap(id);
-      setMaps(getMaps());
+      try {
+        await deleteMapById(id);
+      } catch (err) {
+        console.error('Erro ao deletar:', err);
+        alert('Erro ao deletar mapa. Tente novamente.');
+      }
     }
   };
 
@@ -124,6 +182,17 @@ export default function MapManagement() {
           </button>
         </div>
       </div>
+
+      {isLoading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600">Carregando mapas...</p>
+        </div>
+      ) : maps.length === 0 && !isCreating ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <p className="text-gray-600 text-lg mb-2">Nenhum mapa cadastrado</p>
+          <p className="text-gray-500 text-sm">Clique em &quot;Novo Mapa&quot; para começar</p>
+        </div>
+      ) : null}
 
       {isCreating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -189,15 +258,24 @@ export default function MapManagement() {
         {maps.map((map) => (
           <div key={map.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
             <div className="h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
-              {map.imageType === 'image' ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={map.imageUrl}
-                  alt={map.name}
-                  className="max-w-full max-h-full object-contain"
-                />
+              {map.imageUrl && map.imageUrl.trim() !== '' ? (
+                map.imageType === 'image' ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={map.imageUrl}
+                    alt={map.name}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-gray-600 font-medium">PDF: {map.name}</div>
+                )
               ) : (
-                <div className="text-gray-600 font-medium">PDF: {map.name}</div>
+                <div className="text-gray-400 text-center p-4">
+                  <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-sm">Sem imagem</p>
+                </div>
               )}
             </div>
             <div className="p-4">

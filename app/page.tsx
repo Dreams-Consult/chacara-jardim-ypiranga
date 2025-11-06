@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 import { Map, Lot, LotStatus } from '@/types';
-import { getMaps, getLots } from '@/lib/storage';
 import InteractiveMap from '@/components/InteractiveMap';
 import PurchaseModal from '@/components/PurchaseModal';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 export default function PublicMapPage() {
   const [maps, setMaps] = useState<Map[]>([]);
+  const [lots, setLots] = useState<Lot[]>([]);
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -16,19 +19,50 @@ export default function PublicMapPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const mapsData = getMaps();
-    setMaps(mapsData);
-    if (mapsData.length > 0) {
-      setSelectedMap(mapsData[0]);
-    }
-    setIsLoading(false);
-  }, []);
+    const fetchMaps = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/mapas`);
+        const mapsData = response.data;
 
-  const lots = useMemo(() => {
-    if (!selectedMap || isLoading) return [];
-    return getLots().filter((lot) => lot.mapId === selectedMap.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMap, isLoading, refreshKey]);
+        if (mapsData.length > 0) {
+          const firstMapData = mapsData[0];
+
+          const map: Map = {
+            id: firstMapData.mapId,
+            name: `Mapa ${firstMapData.mapId}`,
+            imageUrl: '',
+            imageType: 'image',
+            width: 800,
+            height: 600,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          setMaps([map]);
+          setSelectedMap(map);
+
+          const lotsWithMapId = firstMapData.lots.map((lot: Lot) => ({
+            ...lot,
+            mapId: firstMapData.mapId,
+            createdAt: new Date(lot.createdAt),
+            updatedAt: new Date(lot.updatedAt),
+          }));
+
+          setLots(lotsWithMapId);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar mapas:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMaps();
+  }, [refreshKey]);
+
+  useEffect(() => {
+    if (!selectedMap || isLoading) return;
+  }, [selectedMap, isLoading]);
 
   const handleLotClick = (lot: Lot) => {
     if (lot.status === LotStatus.AVAILABLE) {
@@ -39,7 +73,7 @@ export default function PublicMapPage() {
 
   const handlePurchaseSuccess = () => {
     setShowPurchaseModal(false);
-    setRefreshKey((prev) => prev + 1); // Força recarregar os lotes
+    setRefreshKey((prev) => prev + 1);
     alert('Seu interesse foi registrado com sucesso! O lote foi reservado. Entraremos em contato em breve.');
     setSelectedLot(null);
   };

@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import axios from 'axios';
 import { Map, Lot, LotStatus, LotArea } from '@/types';
-import { getMapById, getLotsByMapId, saveLot, deleteLot } from '@/lib/storage';
 import InteractiveMap from '@/components/InteractiveMap';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function LotManagement() {
   const searchParams = useSearchParams();
@@ -16,19 +18,112 @@ export default function LotManagement() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingLot, setEditingLot] = useState<Lot | null>(null);
   const [selectedLotId, setSelectedLotId] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!mapId) return;
 
-    const loadData = () => {
-      const mapData = getMapById(mapId);
-      if (mapData) {
-        setMap(mapData);
-        setLots(getLotsByMapId(mapId));
+    const loadData = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/mapas`);
+        const mapsData = response.data;
+
+        const currentMapData = mapsData.find((m: { mapId: string }) => m.mapId === mapId);
+
+        if (currentMapData) {
+          const mapObj: Map = {
+            id: currentMapData.mapId,
+            name: `Mapa ${currentMapData.mapId}`,
+            imageUrl: '',
+            imageType: 'image',
+            width: 800,
+            height: 600,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          setMap(mapObj);
+
+          const lotsWithMapId = currentMapData.lots.map((lot: Lot) => ({
+            ...lot,
+            mapId: currentMapData.mapId,
+            createdAt: new Date(lot.createdAt),
+            updatedAt: new Date(lot.updatedAt),
+          }));
+
+          setLots(lotsWithMapId);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     loadData();
   }, [mapId]);
+
+  const reloadLots = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/mapas`);
+      const mapsData = response.data;
+      const currentMapData = mapsData.find((m: { mapId: string }) => m.mapId === mapId);
+
+      if (currentMapData) {
+        const lotsWithMapId = currentMapData.lots.map((lot: Lot) => ({
+          ...lot,
+          mapId: currentMapData.mapId,
+          createdAt: new Date(lot.createdAt),
+          updatedAt: new Date(lot.updatedAt),
+        }));
+
+        setLots(lotsWithMapId);
+      }
+    } catch (error) {
+      console.error('Erro ao recarregar lotes:', error);
+    }
+  };
+
+  const saveLotToAPI = async (lot: Lot) => {
+    try {
+      await axios.post(`${API_URL}/criarLote`, lot, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      });
+      await reloadLots();
+    } catch (error) {
+      console.error('Erro ao salvar lote:', error);
+      throw error;
+    }
+  };
+
+  const deleteLotFromAPI = async (lotId: string) => {
+    try {
+      await axios.delete(`${API_URL}/deletarLote/${lotId}`, {
+        timeout: 10000,
+      });
+      await reloadLots();
+    } catch (error) {
+      console.error('Erro ao deletar lote:', error);
+      throw error;
+    }
+  };
+
+  const updateLotStatus = async (lotId: string, status: LotStatus) => {
+    try {
+      await axios.put(`${API_URL}/atualizarStatusLote/${lotId}`,
+        { status },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        }
+      );
+      await reloadLots();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      throw error;
+    }
+  };
 
   const handleAreaDrawn = (area: LotArea) => {
     if (editingLot) {
@@ -36,7 +131,7 @@ export default function LotManagement() {
     }
   };
 
-  const handleSaveLot = () => {
+  const handleSaveLot = async () => {
     if (!editingLot || !editingLot.lotNumber || editingLot.area.points.length < 3) {
       alert('Preencha todos os campos e desenhe a área do lote');
       return;
@@ -48,21 +143,29 @@ export default function LotManagement() {
       updatedAt: new Date(),
     };
 
-    saveLot(lot);
-    setLots(getLotsByMapId(mapId));
-    setIsCreating(false);
-    setEditingLot(null);
-    setSelectedLotId(undefined);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este lote?')) {
-      deleteLot(id);
-      setLots(getLotsByMapId(mapId));
+    try {
+      await saveLotToAPI(lot);
+      setIsCreating(false);
+      setEditingLot(null);
+      setSelectedLotId(undefined);
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+      alert('Erro ao salvar lote. Tente novamente.');
     }
   };
 
-  const handleChangeStatus = (lotId: string, newStatus: LotStatus) => {
+  const handleDelete = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este lote?')) {
+      try {
+        await deleteLotFromAPI(id);
+      } catch (err) {
+        console.error('Erro ao deletar:', err);
+        alert('Erro ao deletar lote. Tente novamente.');
+      }
+    }
+  };
+
+  const handleChangeStatus = async (lotId: string, newStatus: LotStatus) => {
     const lot = lots.find(l => l.id === lotId);
     if (!lot) return;
 
@@ -73,13 +176,12 @@ export default function LotManagement() {
     };
 
     if (confirm(`Alterar status do lote ${lot.lotNumber} para "${statusLabels[newStatus]}"?`)) {
-      const updatedLot = {
-        ...lot,
-        status: newStatus,
-        updatedAt: new Date(),
-      };
-      saveLot(updatedLot);
-      setLots(getLotsByMapId(mapId));
+      try {
+        await updateLotStatus(lotId, newStatus);
+      } catch (err) {
+        console.error('Erro ao atualizar status:', err);
+        alert('Erro ao atualizar status. Tente novamente.');
+      }
     }
   };
 
@@ -107,8 +209,12 @@ export default function LotManagement() {
     setSelectedLotId(undefined);
   };
 
-  if (!map) {
-    return <div className="p-6">Carregando...</div>;
+  if (isLoading || !map) {
+    return (
+      <div className="p-6">
+        <p className="text-gray-600">Carregando...</p>
+      </div>
+    );
   }
 
   return (

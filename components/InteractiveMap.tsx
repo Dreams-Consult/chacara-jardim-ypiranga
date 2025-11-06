@@ -49,7 +49,10 @@ export default function InteractiveMap({
 
   return (
     <div ref={containerRef} className="relative">
-      <img ref={imageRef} src={imageUrl} alt="Map" className="hidden" />
+      {imageUrl && imageUrl.trim() !== '' && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img ref={imageRef} src={imageUrl} alt="Map" className="hidden" />
+      )}
       <canvas
         ref={canvasRef}
         onClick={handleCanvasClick}

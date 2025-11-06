@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Lot, LotStatus } from '@/types';
-import { savePurchaseRequest, saveLot } from '@/lib/storage';
+import { Lot } from '@/types';
 
 interface FormData {
   customerName: string;
@@ -67,22 +66,6 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
       });
 
       console.log('Resposta da API:', response.data);
-
-      const purchaseRequest = {
-        id: requestData.purchaseRequest.id,
-        lotId: lot.id,
-        ...formData,
-        status: 'pending' as const,
-        createdAt: new Date(),
-      };
-      savePurchaseRequest(purchaseRequest);
-
-      const updatedLot = {
-        ...lot,
-        status: LotStatus.RESERVED,
-        updatedAt: new Date(),
-      };
-      saveLot(updatedLot);
 
       onSuccess();
     } catch (err) {
