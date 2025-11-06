@@ -62,6 +62,27 @@ export default function LotManagement() {
     }
   };
 
+  const handleChangeStatus = (lotId: string, newStatus: LotStatus) => {
+    const lot = lots.find(l => l.id === lotId);
+    if (!lot) return;
+
+    const statusLabels = {
+      [LotStatus.AVAILABLE]: 'Disponível',
+      [LotStatus.RESERVED]: 'Reservado',
+      [LotStatus.SOLD]: 'Vendido',
+    };
+
+    if (confirm(`Alterar status do lote ${lot.lotNumber} para "${statusLabels[newStatus]}"?`)) {
+      const updatedLot = {
+        ...lot,
+        status: newStatus,
+        updatedAt: new Date(),
+      };
+      saveLot(updatedLot);
+      setLots(getLotsByMapId(mapId));
+    }
+  };
+
   const handleEditLot = (lot: Lot) => {
     setEditingLot(lot);
     setIsCreating(true);
@@ -147,6 +168,20 @@ export default function LotManagement() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Ex: 01, A1, etc"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
+                  <select
+                    value={editingLot.status}
+                    onChange={(e) =>
+                      setEditingLot({ ...editingLot, status: e.target.value as LotStatus })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={LotStatus.AVAILABLE}>Disponível</option>
+                    <option value={LotStatus.RESERVED}>Reservado</option>
+                    <option value={LotStatus.SOLD}>Vendido</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Área (m²)</label>
@@ -289,19 +324,57 @@ export default function LotManagement() {
                     <p className="text-sm text-gray-700 mb-2">
                       <span className="font-medium">Área:</span> {lot.size}m²
                     </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditLot(lot)}
-                        className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(lot.id)}
-                        className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
-                      >
-                        Excluir
-                      </button>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditLot(lot)}
+                          className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(lot.id)}
+                          className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                      {lot.status !== LotStatus.SOLD && (
+                        <div className="flex gap-2">
+                          {lot.status !== LotStatus.AVAILABLE && (
+                            <button
+                              onClick={() => handleChangeStatus(lot.id, LotStatus.AVAILABLE)}
+                              className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors"
+                            >
+                              ✓ Marcar Disponível
+                            </button>
+                          )}
+                          {lot.status !== LotStatus.RESERVED && (
+                            <button
+                              onClick={() => handleChangeStatus(lot.id, LotStatus.RESERVED)}
+                              className="flex-1 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded hover:bg-amber-200 transition-colors"
+                            >
+                              ⏸ Marcar Reservado
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleChangeStatus(lot.id, LotStatus.SOLD)}
+                            className="flex-1 px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded hover:bg-red-200 transition-colors"
+                          >
+                            ✕ Marcar Vendido
+                          </button>
+                        </div>
+                      )}
+                      {lot.status === LotStatus.SOLD && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleChangeStatus(lot.id, LotStatus.AVAILABLE)}
+                            className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors"
+                          >
+                            ↻ Reverter para Disponível
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
