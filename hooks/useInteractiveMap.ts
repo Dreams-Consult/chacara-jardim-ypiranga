@@ -122,17 +122,29 @@ export function useInteractiveMap({
     const img = imageRef.current;
     if (!canvas || !img) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!imageUrl || imageUrl.trim() === '') {
+      return;
+    }
 
-    img.onload = () => {
+    const handleLoad = () => {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-
       setImageLoaded(true);
     };
 
+    const handleError = () => {
+      console.error('Erro ao carregar imagem do mapa');
+    };
+
+    img.addEventListener('load', handleLoad);
+    img.addEventListener('error', handleError);
+
     img.src = imageUrl;
+
+    return () => {
+      img.removeEventListener('load', handleLoad);
+      img.removeEventListener('error', handleError);
+    };
   }, [imageUrl]);
 
   useEffect(() => {

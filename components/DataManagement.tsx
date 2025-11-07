@@ -37,12 +37,10 @@ export default function DataManagement() {
         return;
       }
 
-      // Importar mapas
       data.maps.forEach((map: Map) => {
         saveMap(map);
       });
 
-      // Importar lotes
       data.lots.forEach((lot: Lot) => {
         saveLot(lot);
       });

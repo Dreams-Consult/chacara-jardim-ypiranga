@@ -1,155 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import axios from 'axios';
 import { Map } from '@/types';
-import { compressImage, getBase64Size } from '@/lib/imageUtils';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
-interface MapApiResponse {
-  mapId?: string;
-  id?: string;
-  name?: string;
-  description?: string;
-  imageUrl?: string;
-  width?: number;
-  height?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  lots?: unknown[];
-}
+import { useMapOperations } from '@/hooks/useMapOperations';
 
 export default function MapManagement() {
-  const [maps, setMaps] = useState<Map[]>([]);
+  const { maps, isLoading, deleteMapById, processFileUpload } = useMapOperations();
   const [isCreating, setIsCreating] = useState(false);
   const [editingMap, setEditingMap] = useState<Map | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadMaps();
-  }, []);
-
-  const loadMaps = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/mapas`);
-      const mapsData = response.data;
-
-      const processedMaps = mapsData.map((mapData: MapApiResponse) => ({
-        id: mapData.mapId || mapData.id || '',
-        name: mapData.name || `Mapa ${mapData.mapId || mapData.id}`,
-        description: mapData.description || '',
-        imageUrl: mapData.imageUrl || '',
-        imageType: 'image' as const,
-        width: mapData.width || 800,
-        height: mapData.height || 600,
-        createdAt: mapData.createdAt ? new Date(mapData.createdAt) : new Date(),
-        updatedAt: mapData.updatedAt ? new Date(mapData.updatedAt) : new Date(),
-      }));
-
-      setMaps(processedMaps);
-    } catch (error) {
-      console.error('Erro ao buscar mapas:', error);
-      alert('Erro ao carregar mapas. Verifique se a API está rodando.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createMap = async (mapData: { name: string; description: string; imageUrl: string }) => {
-    try {
-      const response = await axios.post(`${API_URL}/criarMapa`, mapData, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 10000,
-      });
-      console.log('Mapa criado:', response.data);
-      await loadMaps();
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar mapa:', error);
-      throw error;
-    }
-  };
-
-  const deleteMapById = async (id: string) => {
-    try {
-      await axios.delete(`${API_URL}/deletarMapa/${id}`, {
-        timeout: 10000,
-      });
-      await loadMaps();
-    } catch (error) {
-      console.error('Erro ao deletar mapa:', error);
-      throw error;
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const dataUrl = event.target?.result as string;
-
-      try {
-        // Criar uma imagem temporária para obter dimensões
-        if (file.type.startsWith('image/')) {
-          const compressedDataUrl = await compressImage(dataUrl, 1920, 1080, 0.7);
-          const size = getBase64Size(compressedDataUrl);
-
-          if (size > 4) {
-            alert('Imagem muito grande! Por favor, use uma imagem menor ou de menor qualidade.');
-            return;
-          }
-
-          const img = new Image();
-          img.onload = async () => {
-            try {
-              const mapData = {
-                name: editingMap?.name || file.name,
-                description: editingMap?.description || '',
-                imageUrl: compressedDataUrl,
-              };
-
-              await createMap(mapData);
-              setIsCreating(false);
-              setEditingMap(null);
-            } catch (error) {
-              console.error('Erro ao salvar mapa:', error);
-              alert(error instanceof Error ? error.message : 'Erro ao salvar mapa. Tente com uma imagem menor.');
-            }
-          };
-          img.src = compressedDataUrl;
-        } else if (file.type === 'application/pdf') {
-          const size = getBase64Size(dataUrl);
-
-          if (size > 4) {
-            alert('PDF muito grande! Por favor, converta para imagem primeiro usando o script convert-pdf.sh ou use uma ferramenta online.');
-            return;
-          }
-
-          try {
-            const mapData = {
-              name: editingMap?.name || file.name,
-              description: editingMap?.description || '',
-              imageUrl: dataUrl,
-            };
-
-            await createMap(mapData);
-            setIsCreating(false);
-            setEditingMap(null);
-          } catch (error) {
-            console.error('Erro ao salvar PDF:', error);
-            alert(error instanceof Error ? error.message : 'Erro ao salvar PDF. Converta para imagem primeiro.');
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao processar arquivo:', error);
-        alert('Erro ao processar arquivo. Por favor, tente novamente com um arquivo menor.');
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      await processFileUpload(file, editingMap);
+      setIsCreating(false);
+      setEditingMap(null);
+    } catch (error) {
+      console.error('Erro ao processar arquivo:', error);
+    }
   };
 
   const handleDelete = async (id: string) => {

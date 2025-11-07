@@ -25,36 +25,57 @@ export default function LotManagement() {
 
     const loadData = async () => {
       try {
-        const response = await axios.get(`${API_URL}/mapas`);
-        const mapsData = response.data;
+        const response = await axios.get(`${API_URL}/mapas/lotes`, {
+          params: { mapId },
+          timeout: 10000,
+        });
 
-        const currentMapData = mapsData.find((m: { mapId: string }) => m.mapId === mapId);
+        const data = response.data[0];
 
-        if (currentMapData) {
+        if (data) {
           const mapObj: Map = {
-            id: currentMapData.mapId,
-            name: `Mapa ${currentMapData.mapId}`,
-            imageUrl: '',
+            id: data.mapId || data.id || mapId,
+            name: data.name || `Mapa ${data.mapId || mapId}`,
+            description: data.description || '',
+            imageUrl: data.imageUrl || '',
             imageType: 'image',
-            width: 800,
-            height: 600,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            width: data.width || 800,
+            height: data.height || 600,
+            createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+            updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
           };
 
           setMap(mapObj);
 
-          const lotsWithMapId = currentMapData.lots.map((lot: Lot) => ({
-            ...lot,
-            mapId: currentMapData.mapId,
-            createdAt: new Date(lot.createdAt),
-            updatedAt: new Date(lot.updatedAt),
-          }));
+          if (data.lots && Array.isArray(data.lots)) {
+            const lotsWithMapId = data.lots.map((lot: Lot) => ({
+              ...lot,
+              mapId: data.mapId || mapId,
+              createdAt: new Date(lot.createdAt),
+              updatedAt: new Date(lot.updatedAt),
+            }));
 
-          setLots(lotsWithMapId);
+            setLots(lotsWithMapId);
+          } else {
+            setLots([]);
+          }
         }
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
+        const defaultMap: Map = {
+          id: mapId,
+          name: `Mapa ${mapId}`,
+          description: '',
+          imageUrl: '',
+          imageType: 'image',
+          width: 800,
+          height: 600,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setMap(defaultMap);
+        setLots([]);
+        alert('Erro ao carregar dados do mapa. Usando valores padrão.');
       } finally {
         setIsLoading(false);
       }
@@ -65,19 +86,26 @@ export default function LotManagement() {
 
   const reloadLots = async () => {
     try {
-      const response = await axios.get(`${API_URL}/mapas`);
-      const mapsData = response.data;
-      const currentMapData = mapsData.find((m: { mapId: string }) => m.mapId === mapId);
+      const response = await axios.get(`${API_URL}/mapas/lotes`, {
+        params: { mapId },
+        timeout: 10000,
+      });
 
-      if (currentMapData) {
-        const lotsWithMapId = currentMapData.lots.map((lot: Lot) => ({
-          ...lot,
-          mapId: currentMapData.mapId,
-          createdAt: new Date(lot.createdAt),
-          updatedAt: new Date(lot.updatedAt),
-        }));
+      const data = response.data;
 
-        setLots(lotsWithMapId);
+      if (data) {
+        if (data.lots && Array.isArray(data.lots)) {
+          const lotsWithMapId = data.lots.map((lot: Lot) => ({
+            ...lot,
+            mapId: data.mapId || mapId,
+            createdAt: new Date(lot.createdAt),
+            updatedAt: new Date(lot.updatedAt),
+          }));
+
+          setLots(lotsWithMapId);
+        } else {
+          setLots([]);
+        }
       }
     } catch (error) {
       console.error('Erro ao recarregar lotes:', error);

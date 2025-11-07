@@ -176,7 +176,152 @@ interface Lot {
 
 ---
 
-### 2. Criar Novo Mapa
+### 2. Buscar Mapa e Lotes por ID
+
+**Endpoint:** `GET /mapas/lotes?mapId={mapId}`
+
+**Descrição:** Retorna as informações de um mapa específico com todos os seus lotes.
+
+**Query Parameters:**
+- `mapId` (string, obrigatório): ID do mapa a ser buscado
+
+**Request:**
+```typescript
+const response = await axios.get(`${API_URL}/mapas/lotes`, {
+  params: { mapId: '1762192028364' },
+  timeout: 10000,
+});
+```
+
+**Response Example:**
+```json
+{
+  "mapId": "1762192028364",
+  "name": "Chácara Jardim Ypiranga",
+  "description": "Loteamento residencial",
+  "imageUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+  "width": 1920,
+  "height": 1080,
+  "createdAt": "2025-11-06 14:00:00",
+  "updatedAt": "2025-11-06 14:00:00",
+  "lots": [
+    {
+      "id": "1",
+      "lotNumber": "1",
+      "status": "available",
+      "price": 50000,
+      "size": 250,
+      "description": "Lote de exemplo 1",
+      "features": [
+        "Água encanada",
+        "Energia elétrica"
+      ],
+      "area": {
+        "points": [
+          { "x": 100, "y": 100 },
+          { "x": 200, "y": 100 },
+          { "x": 200, "y": 200 },
+          { "x": 100, "y": 200 }
+        ]
+      },
+      "createdAt": "2025-11-06 14:11:57",
+      "updatedAt": "2025-11-06 14:11:57"
+    },
+    {
+      "id": "2",
+      "lotNumber": "2",
+      "status": "reserved",
+      "price": 55000,
+      "size": 280,
+      "description": "Lote de exemplo 2",
+      "features": [
+        "Água encanada",
+        "Energia elétrica",
+        "Asfalto"
+      ],
+      "area": {
+        "points": [
+          { "x": 200, "y": 100 },
+          { "x": 300, "y": 100 },
+          { "x": 300, "y": 200 },
+          { "x": 200, "y": 200 }
+        ]
+      },
+      "createdAt": "2025-11-06 14:12:30",
+      "updatedAt": "2025-11-06 15:20:00"
+    }
+  ]
+}
+```
+
+**Response Example (Mapa sem lotes):**
+```json
+{
+  "mapId": "1762192028365",
+  "name": "Novo Loteamento",
+  "description": "Loteamento recém criado",
+  "imageUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+  "width": 1920,
+  "height": 1080,
+  "createdAt": "2025-11-06 16:00:00",
+  "updatedAt": "2025-11-06 16:00:00",
+  "lots": []
+}
+```
+
+**Campos Obrigatórios:**
+- `mapId` ou `id`: ID do mapa
+- `lots`: Array de lotes (**pode ser vazio `[]` se não houver lotes cadastrados**)
+
+**Campos Opcionais do Mapa:**
+- `name`: Nome do mapa (default: "Mapa {id}")
+- `description`: Descrição
+- `imageUrl`: Imagem em Base64
+- `width`: Largura (default: 800)
+- `height`: Altura (default: 600)
+- `createdAt`: Data de criação
+- `updatedAt`: Data de atualização
+
+**Uso no Frontend (LotManagement):**
+```typescript
+const response = await axios.get(`${API_URL}/mapas/lotes`, {
+  params: { mapId },
+  timeout: 10000,
+});
+
+const data = response.data;
+
+// Processar mapa
+const mapObj: Map = {
+  id: data.mapId || data.id || mapId,
+  name: data.name || `Mapa ${data.mapId || mapId}`,
+  description: data.description || '',
+  imageUrl: data.imageUrl || '',
+  imageType: 'image',
+  width: data.width || 800,
+  height: data.height || 600,
+  createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+  updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
+};
+
+// Processar lotes (pode ser array vazio)
+if (data.lots && Array.isArray(data.lots)) {
+  const lotsWithMapId = data.lots.map((lot: Lot) => ({
+    ...lot,
+    mapId: data.mapId || mapId,
+    createdAt: new Date(lot.createdAt),
+    updatedAt: new Date(lot.updatedAt),
+  }));
+
+  setLots(lotsWithMapId);
+} else {
+  setLots([]);
+}
+```
+
+---
+
+### 3. Criar Novo Mapa
 
 **Endpoint:** `POST /criarMapa`
 
@@ -220,7 +365,7 @@ const response = await axios.post(`${API_URL}/criarMapa`, requestData, {
 
 ---
 
-### 3. Deletar Mapa
+### 4. Deletar Mapa
 
 **Endpoint:** `DELETE /deletarMapa/{id}`
 
@@ -243,7 +388,7 @@ await axios.delete(`${API_URL}/deletarMapa/${mapId}`, {
 
 ---
 
-### 4. Criar Reserva de Lote
+### 5. Criar Reserva de Lote
 
 **Endpoint:** `POST /reservardb`
 
