@@ -114,7 +114,7 @@ export default function LotManagement() {
 
   const saveLotToAPI = async (lot: Lot) => {
     try {
-      await axios.post(`${API_URL}/criarLote`, lot, {
+      await axios.post(`${API_URL}/mapas/lotes/criar`, lot, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });
