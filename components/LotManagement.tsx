@@ -91,7 +91,7 @@ export default function LotManagement() {
         timeout: 10000,
       });
 
-      const data = response.data;
+      const data = response.data[0];
 
       if (data) {
         if (data.lots && Array.isArray(data.lots)) {
