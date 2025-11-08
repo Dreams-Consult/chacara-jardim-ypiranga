@@ -58,7 +58,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-      const response = await axios.post(`${API_URL}/reservardb`, requestData, {
+      const response = await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
           'Content-Type': 'application/json',
         },
