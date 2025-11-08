@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Map, Lot, LotStatus } from '@/types';
 
@@ -8,6 +8,7 @@ export const useMapSelection = () => {
   const [maps, setMaps] = useState<Map[]>([]);
   const [lots, setLots] = useState<Lot[]>([]);
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
+  const selectedMapIdRef = useRef<string | null>(null);
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,12 +42,19 @@ export const useMapSelection = () => {
           console.log(`${allMaps.length} mapas carregados`);
           setMaps(allMaps);
 
-          // Selecionar o primeiro mapa e carregar seus lotes
-          if (allMaps.length > 0) {
-            const firstMap = allMaps[0];
-            setSelectedMap(firstMap);
-            // Carregar lotes do primeiro mapa
-            await loadLotsForMap(firstMap.id);
+          // Se já existe um mapa selecionado (refresh após compra), manter o mesmo
+          if (selectedMapIdRef.current) {
+            console.log(`Mantendo mapa selecionado: ${selectedMapIdRef.current}`);
+            // Recarregar apenas os lotes do mapa atual
+            await loadLotsForMap(selectedMapIdRef.current);
+          } else {
+            // Primeira carga: selecionar o primeiro mapa
+            if (allMaps.length > 0) {
+              const firstMap = allMaps[0];
+              setSelectedMap(firstMap);
+              selectedMapIdRef.current = firstMap.id;
+              await loadLotsForMap(firstMap.id);
+            }
           }
         } else {
           console.log('Nenhum mapa retornado pela API');
@@ -130,6 +138,7 @@ export const useMapSelection = () => {
       console.log(`Selecionando mapa ${mapId}...`);
       const map = maps.find((m) => m.id === mapId);
       setSelectedMap(map || null);
+      selectedMapIdRef.current = map ? mapId : null;
 
       if (map) {
         await loadLotsForMap(mapId);
