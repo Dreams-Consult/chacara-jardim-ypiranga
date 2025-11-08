@@ -25,10 +25,12 @@ export default function LotManagement() {
 
     const loadData = async () => {
       try {
+        console.log(`[LotManagement] 🔄 Carregando dados do mapa ${mapId}...`);
         const response = await axios.get(`${API_URL}/mapas/lotes`, {
           params: { mapId },
           timeout: 10000,
         });
+        console.log('[LotManagement] ✅ Resposta recebida:', response.data);
 
         const data = response.data[0];
 
@@ -61,7 +63,7 @@ export default function LotManagement() {
           }
         }
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('[LotManagement] ❌ Erro ao buscar dados:', error);
         const defaultMap: Map = {
           id: mapId,
           name: `Mapa ${mapId}`,
@@ -86,10 +88,12 @@ export default function LotManagement() {
 
   const reloadLots = async () => {
     try {
+      console.log('[LotManagement] 🔄 Recarregando lotes...');
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId },
         timeout: 10000,
       });
+      console.log('[LotManagement] ✅ Lotes recarregados:', response.data);
 
       const data = response.data[0];
 
@@ -114,31 +118,36 @@ export default function LotManagement() {
 
   const saveLotToAPI = async (lot: Lot) => {
     try {
+      console.log('[LotManagement] 📤 Salvando lote:', lot);
       await axios.post(`${API_URL}/mapas/lotes/criar`, lot, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });
+      console.log('[LotManagement] ✅ Lote salvo com sucesso');
       await reloadLots();
     } catch (error) {
-      console.error('Erro ao salvar lote:', error);
+      console.error('[LotManagement] ❌ Erro ao salvar lote:', error);
       throw error;
     }
   };
 
   const deleteLotFromAPI = async (lotId: string) => {
     try {
+      console.log(`[LotManagement] 🗑️ Deletando lote ${lotId}...`);
       await axios.delete(`${API_URL}/deletarLote/${lotId}`, {
         timeout: 10000,
       });
+      console.log('[LotManagement] ✅ Lote deletado com sucesso');
       await reloadLots();
     } catch (error) {
-      console.error('Erro ao deletar lote:', error);
+      console.error('[LotManagement] ❌ Erro ao deletar lote:', error);
       throw error;
     }
   };
 
   const updateLotStatus = async (lotId: string, status: LotStatus) => {
     try {
+      console.log(`[LotManagement] 🔄 Atualizando status do lote ${lotId} para ${status}...`);
       await axios.put(`${API_URL}/atualizarStatusLote/${lotId}`,
         { status },
         {
@@ -146,9 +155,10 @@ export default function LotManagement() {
           timeout: 10000,
         }
       );
+      console.log('[LotManagement] ✅ Status atualizado com sucesso');
       await reloadLots();
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('[LotManagement] ❌ Erro ao atualizar status:', error);
       throw error;
     }
   };

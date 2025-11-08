@@ -33,7 +33,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           mapId: lot.mapId,
           lotNumber: lot.lotNumber,
           area: lot.area,
-          status: lot.status,
+          status: 'reserved',
           price: lot.price,
           size: lot.size,
           description: lot.description,
