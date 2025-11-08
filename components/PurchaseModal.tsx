@@ -10,8 +10,114 @@ interface PurchaseModalProps {
   onSuccess: () => void;
 }
 
+// Funções auxiliares para validação e máscara de CPF
+const formatCPF = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+  if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+  return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+};
+
+const validateCPF = (cpf: string): boolean => {
+  const numbers = cpf.replace(/\D/g, '');
+
+  // CPF de desenvolvimento
+  if (numbers === '99999999998') return true;
+
+  if (numbers.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(numbers)) return false; // Todos os dígitos iguais
+
+  // Validação do primeiro dígito verificador
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(numbers.charAt(i)) * (10 - i);
+  }
+  let digit = 11 - (sum % 11);
+  if (digit >= 10) digit = 0;
+  if (digit !== parseInt(numbers.charAt(9))) return false;
+
+  // Validação do segundo dígito verificador
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(numbers.charAt(i)) * (11 - i);
+  }
+  digit = 11 - (sum % 11);
+  if (digit >= 10) digit = 0;
+  if (digit !== parseInt(numbers.charAt(10))) return false;
+
+  return true;
+};
+
 export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModalProps) {
   const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lot, onSuccess);
+  const [cpfError, setCpfError] = React.useState<string>('');
+  const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setFormData({ ...formData, customerCPF: formatted });
+
+    // Validar CPF quando tiver 14 caracteres (formato completo)
+    if (formatted.length === 14) {
+      if (!validateCPF(formatted)) {
+        setCpfError('CPF inválido');
+      } else {
+        setCpfError('');
+      }
+    } else {
+      setCpfError('');
+    }
+  };
+
+  const handleSellerCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setFormData({ ...formData, sellerCPF: formatted });
+
+    if (formatted.length === 14) {
+      if (!validateCPF(formatted)) {
+        setSellerCpfError('CPF inválido');
+      } else {
+        setSellerCpfError('');
+      }
+    } else {
+      setSellerCpfError('');
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numbers = e.target.value.replace(/\D/g, '');
+    let formatted = numbers;
+
+    if (numbers.length <= 2) {
+      formatted = numbers;
+    } else if (numbers.length <= 6) {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else if (numbers.length <= 10) {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    } else {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+
+    setFormData({ ...formData, customerPhone: formatted });
+  };
+
+  const handleSellerPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numbers = e.target.value.replace(/\D/g, '');
+    let formatted = numbers;
+
+    if (numbers.length <= 2) {
+      formatted = numbers;
+    } else if (numbers.length <= 6) {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else if (numbers.length <= 10) {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    } else {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+
+    setFormData({ ...formData, sellerPhone: formatted });
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -90,21 +196,93 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                 type="tel"
                 required
                 value={formData.customerPhone}
-                onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                onChange={handlePhoneChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="(00) 00000-0000"
+                maxLength={15}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">CPF</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">CPF *</label>
               <input
                 type="text"
+                required
                 value={formData.customerCPF}
-                onChange={(e) => setFormData({ ...formData, customerCPF: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={handleCPFChange}
+                className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  cpfError ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="000.000.000-00"
+                maxLength={14}
               />
+              {cpfError && (
+                <p className="text-red-600 text-sm mt-1">❌ {cpfError}</p>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">📋 Informações do Vendedor</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Preencha as informações do vendedor/corretor responsável pela venda
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Nome do Vendedor *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.sellerName || ''}
+                    onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nome completo do vendedor"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Email do Vendedor *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.sellerEmail || ''}
+                    onChange={(e) => setFormData({ ...formData, sellerEmail: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="email@vendedor.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Telefone do Vendedor *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.sellerPhone || ''}
+                    onChange={handleSellerPhoneChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">CPF do Vendedor *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.sellerCPF || ''}
+                    onChange={handleSellerCPFChange}
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      sellerCpfError ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {sellerCpfError && (
+                    <p className="text-red-600 text-sm mt-1">❌ {sellerCpfError}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>
@@ -121,7 +299,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
             <div className="flex gap-2 pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || cpfError !== '' || sellerCpfError !== ''}
                 className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold shadow-md transition-all hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:shadow-md"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Interesse'}

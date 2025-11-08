@@ -8,6 +8,10 @@ interface FormData {
   customerPhone: string;
   customerCPF: string;
   message: string;
+  sellerName: string;
+  sellerEmail: string;
+  sellerPhone: string;
+  sellerCPF: string;
 }
 
 export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
@@ -17,14 +21,61 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
     customerPhone: '',
     customerCPF: '',
     message: '',
+    sellerName: '',
+    sellerEmail: '',
+    sellerPhone: '',
+    sellerCPF: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Função para validar CPF
+  const validateCPF = (cpf: string): boolean => {
+    const numbers = cpf.replace(/\D/g, '');
+
+    // CPF de desenvolvimento
+    if (numbers === '99999999998') return true;
+
+    if (numbers.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(numbers)) return false;
+
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(numbers.charAt(i)) * (10 - i);
+    }
+    let digit = 11 - (sum % 11);
+    if (digit >= 10) digit = 0;
+    if (digit !== parseInt(numbers.charAt(9))) return false;
+
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(numbers.charAt(i)) * (11 - i);
+    }
+    digit = 11 - (sum % 11);
+    if (digit >= 10) digit = 0;
+    if (digit !== parseInt(numbers.charAt(10))) return false;
+
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    // Validar CPF do cliente (obrigatório)
+    if (!formData.customerCPF || !validateCPF(formData.customerCPF)) {
+      setError('CPF do cliente é obrigatório e deve ser válido.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar CPF do vendedor (obrigatório)
+    if (!formData.sellerCPF || !validateCPF(formData.sellerCPF)) {
+      setError('CPF do vendedor é obrigatório e deve ser válido.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const requestData = {
@@ -45,8 +96,14 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           name: formData.customerName,
           email: formData.customerEmail,
           phone: formData.customerPhone,
-          cpf: formData.customerCPF || null,
+          cpf: formData.customerCPF,
           message: formData.message || null,
+        },
+        seller: {
+          name: formData.sellerName,
+          email: formData.sellerEmail,
+          phone: formData.sellerPhone,
+          cpf: formData.sellerCPF,
         },
         purchaseRequest: {
           id: Date.now().toString(),

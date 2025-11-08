@@ -170,8 +170,29 @@ export default function LotManagement() {
   };
 
   const handleSaveLot = async () => {
-    if (!editingLot || !editingLot.lotNumber || editingLot.area.points.length < 3) {
-      alert('Preencha todos os campos e desenhe a área do lote');
+    if (!editingLot) {
+      alert('Nenhum lote em edição');
+      return;
+    }
+
+    // Validações obrigatórias
+    if (!editingLot.lotNumber || editingLot.lotNumber.trim() === '') {
+      alert('❌ Número do lote é obrigatório');
+      return;
+    }
+
+    if (editingLot.area.points.length < 3) {
+      alert('❌ Desenhe a área do lote no mapa (mínimo 3 pontos)');
+      return;
+    }
+
+    if (!editingLot.price || editingLot.price <= 0) {
+      alert('❌ Informe o preço do lote');
+      return;
+    }
+
+    if (!editingLot.size || editingLot.size <= 0) {
+      alert('❌ Informe o tamanho do lote (m²)');
       return;
     }
 
