@@ -2,24 +2,84 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 export default function MapManagement() {
-  const { maps, isLoading, deleteMapById, processFileUpload } = useMapOperations();
+  const { maps, isLoading, deleteMapById, createMap, loadMaps } = useMapOperations();
   const [isCreating, setIsCreating] = useState(false);
-  const [editingMap, setEditingMap] = useState<Map | null>(null);
+  const [editingMap, setEditingMap] = useState<Partial<Map>>({});
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Atualiza a lista de mapas a cada 3 segundos para todos os clientes
+  useRealtimeUpdates(() => {
+    loadMaps();
+  }, 3000);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      await processFileUpload(file, editingMap);
-      setIsCreating(false);
-      setEditingMap(null);
+      setIsUploading(true);
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setImagePreview(dataUrl);
+        setEditingMap(prev => ({
+          ...prev,
+          imageUrl: dataUrl,
+          imageType: 'image' as const
+        }));
+        setIsUploading(false);
+      };
+
+      reader.onerror = () => {
+        console.error('Erro ao ler arquivo');
+        setIsUploading(false);
+      };
+
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveMap = async () => {
+    if (!editingMap.name || !editingMap.imageUrl) {
+      alert('❌ Preencha o nome e faça upload da imagem');
+      return;
+    }
+
+    const mapDataToSend = {
+      name: editingMap.name,
+      description: editingMap.description || '',
+      imageUrl: editingMap.imageUrl
+    };
+
+    console.log('🗺️ MapManagement - Preparando dados:', {
+      editingMap,
+      mapDataToSend,
+      imageUrlLength: editingMap.imageUrl?.length,
+      nameLength: editingMap.name?.length
+    });
+
+    try {
+      setIsUploading(true);
+      await createMap(mapDataToSend);
+      setIsCreating(false);
+      setEditingMap({});
+      setImagePreview('');
+      setIsUploading(false);
+    } catch (error) {
+      console.error('Erro ao salvar mapa:', error);
+      alert('❌ Erro ao salvar mapa. Tente novamente.');
+      setIsUploading(false);
     }
   };
 
@@ -76,15 +136,15 @@ export default function MapManagement() {
       ) : null}
 
       {isCreating && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30 my-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
               <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
               Novo Mapa
             </h2>
-            <div className="space-y-5">
+            <div className="space-y-5 py-4">
               <div>
                 <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Nome</label>
                 <input
@@ -117,21 +177,42 @@ export default function MapManagement() {
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={handleFileUpload}
-                  className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20"
+                  disabled={isUploading}
+                  className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                {imagePreview && (
+                  <div className="mt-4 border-2 border-[var(--border)] rounded-xl overflow-hidden relative h-48">
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      fill
+                      className="object-contain bg-gray-50"
+                      unoptimized
+                    />
+                  </div>
+                )}
                 <p className="text-xs text-[var(--warning-dark)] mt-2 bg-[var(--warning)]/10 p-3 rounded-xl border-2 border-[var(--warning)]/30 font-medium">
                   ⚠️ <span className="font-bold">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
                   Para PDFs grandes, converta para imagem primeiro usando o script convert-pdf.sh
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 mt-6">
+            <div className="flex gap-2 pt-6 mt-6 border-t-2 border-[var(--border)]">
+              <button
+                onClick={handleSaveMap}
+                disabled={isUploading || !editingMap.name || !editingMap.imageUrl}
+                className="flex-1 px-4 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? 'Processando...' : 'Cadastrar'}
+              </button>
               <button
                 onClick={() => {
                   setIsCreating(false);
-                  setEditingMap(null);
+                  setEditingMap({});
+                  setImagePreview('');
                 }}
-                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer"
+                disabled={isUploading}
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -143,14 +224,15 @@ export default function MapManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {maps.map((map) => (
           <div key={map.id} className="bg-white border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-[var(--surface)] to-[var(--surface-hover)] flex items-center justify-center overflow-hidden">
+            <div className="h-48 bg-gradient-to-br from-[var(--surface)] to-[var(--surface-hover)] flex items-center justify-center overflow-hidden relative">
               {map.imageUrl && map.imageUrl.trim() !== '' ? (
                 map.imageType === 'image' ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={map.imageUrl}
                     alt={map.name}
-                    className="max-w-full max-h-full object-contain"
+                    fill
+                    className="object-contain"
+                    unoptimized
                   />
                 ) : (
                   <div className="text-[var(--foreground)] font-bold">PDF: {map.name}</div>

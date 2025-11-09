@@ -27,6 +27,13 @@ export function useMapOperations() {
       const response = await axios.get(`${API_URL}/mapas`);
       const mapsData = response.data;
 
+      // Verifica se mapsData é um array válido
+      if (!Array.isArray(mapsData)) {
+        console.warn('API retornou dados inválidos ou sem mapas:', mapsData);
+        setMaps([]);
+        return;
+      }
+
       const processedMaps = mapsData.map((mapData: MapApiResponse) => ({
         id: mapData.mapId || mapData.id || '',
         name: mapData.name || `Mapa ${mapData.mapId || mapData.id}`,
@@ -42,6 +49,7 @@ export function useMapOperations() {
       setMaps(processedMaps);
     } catch (error) {
       console.error('Erro ao buscar mapas:', error);
+      setMaps([]);
       alert('Erro ao carregar mapas. Verifique se a API está rodando.');
     } finally {
       setIsLoading(false);
@@ -53,6 +61,12 @@ export function useMapOperations() {
   }, [loadMaps]);
 
   const createMap = useCallback(async (mapData: { name: string; description: string; imageUrl: string }) => {
+    console.log('📤 Enviando para API:', {
+      url: `${API_URL}/mapas/criar`,
+      body: mapData,
+      bodyKeys: Object.keys(mapData),
+      bodyStringified: JSON.stringify(mapData).substring(0, 200)
+    });
     try {
       const response = await axios.post(`${API_URL}/mapas/criar`, mapData, {
         headers: { 'Content-Type': 'application/json' },
@@ -68,9 +82,10 @@ export function useMapOperations() {
 
   const deleteMapById = useCallback(async (id: string) => {
     try {
-      await axios.delete(`${API_URL}/deletarMapa/${id}`, {
-        timeout: 10000,
-      });
+     await axios.delete(`${API_URL}/mapas/deletar`, {
+      params: { mapId: id },
+      timeout: 10000,
+    });
       await loadMaps();
     } catch (error) {
       console.error('Erro ao deletar mapa:', error);
