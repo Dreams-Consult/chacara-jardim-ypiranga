@@ -185,7 +185,8 @@ export default function LotManagement() {
   const deleteLotFromAPI = async (lotId: string) => {
     try {
       console.log(`[LotManagement] 🗑️ Deletando lote ${lotId}...`);
-      await axios.delete(`${API_URL}/deletarLote/${lotId}`, {
+      await axios.delete(`${API_URL}/mapas/lotes/deletar`, {
+        params: { lotId },
         timeout: 10000,
       });
       console.log('[LotManagement] ✅ Lote deletado com sucesso');
