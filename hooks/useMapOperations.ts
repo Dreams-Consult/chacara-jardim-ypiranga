@@ -61,12 +61,6 @@ export function useMapOperations() {
   }, [loadMaps]);
 
   const createMap = useCallback(async (mapData: { name: string; description: string; imageUrl: string }) => {
-    console.log('📤 Enviando para API:', {
-      url: `${API_URL}/mapas/criar`,
-      body: mapData,
-      bodyKeys: Object.keys(mapData),
-      bodyStringified: JSON.stringify(mapData).substring(0, 200)
-    });
     try {
       const response = await axios.post(`${API_URL}/mapas/criar`, mapData, {
         headers: { 'Content-Type': 'application/json' },
