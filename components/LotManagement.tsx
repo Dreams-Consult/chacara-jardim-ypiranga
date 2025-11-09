@@ -52,13 +52,37 @@ export default function LotManagement() {
           setMap(mapObj);
 
           if (data.lots && Array.isArray(data.lots)) {
-            const lotsWithMapId = data.lots.map((lot: Lot) => ({
-              ...lot,
-              mapId: data.mapId || mapId,
-              createdAt: new Date(lot.createdAt),
-              updatedAt: new Date(lot.updatedAt),
-            }));
+            const lotsWithMapId = data.lots.map((lot: Lot) => {
+              // Se area.points vem como string JSON, parsear
+              let parsedArea = lot.area;
+              if (lot.area && typeof lot.area.points === 'string') {
+                try {
+                  parsedArea = {
+                    ...lot.area,
+                    points: JSON.parse(lot.area.points as unknown as string)
+                  };
+                  console.log('[LotManagement] 🔧 Area.points parseado:', parsedArea.points);
+                } catch (e) {
+                  console.error('[LotManagement] ❌ Erro ao parsear area.points:', e);
+                }
+              }
 
+              return {
+                ...lot,
+                area: parsedArea,
+                mapId: data.mapId || mapId,
+                createdAt: new Date(lot.createdAt),
+                updatedAt: new Date(lot.updatedAt),
+              };
+            });
+
+            console.log('[LotManagement] 📍 Lotes carregados:', lotsWithMapId.map((l: Lot) => ({
+              id: l.id,
+              lotNumber: l.lotNumber,
+              pointsCount: l.area?.points?.length || 0,
+              firstPoint: l.area?.points?.[0],
+              lastPoint: l.area?.points?.[l.area?.points?.length - 1]
+            })));
             setLots(lotsWithMapId);
           } else {
             setLots([]);
@@ -101,12 +125,28 @@ export default function LotManagement() {
 
       if (data) {
         if (data.lots && Array.isArray(data.lots)) {
-          const lotsWithMapId = data.lots.map((lot: Lot) => ({
-            ...lot,
-            mapId: data.mapId || mapId,
-            createdAt: new Date(lot.createdAt),
-            updatedAt: new Date(lot.updatedAt),
-          }));
+          const lotsWithMapId = data.lots.map((lot: Lot) => {
+            // Se area.points vem como string JSON, parsear
+            let parsedArea = lot.area;
+            if (lot.area && typeof lot.area.points === 'string') {
+              try {
+                parsedArea = {
+                  ...lot.area,
+                  points: JSON.parse(lot.area.points as unknown as string)
+                };
+              } catch (e) {
+                console.error('[LotManagement] ❌ Erro ao parsear area.points no reload:', e);
+              }
+            }
+
+            return {
+              ...lot,
+              area: parsedArea,
+              mapId: data.mapId || mapId,
+              createdAt: new Date(lot.createdAt),
+              updatedAt: new Date(lot.updatedAt),
+            };
+          });
 
           setLots(lotsWithMapId);
         } else {
@@ -167,6 +207,13 @@ export default function LotManagement() {
 
   const handleAreaDrawn = (area: LotArea) => {
     if (editingLot) {
+      console.log(`📐 Área desenhada recebida (modo: ${drawingMode}):`, {
+        mode: drawingMode,
+        pointsCount: area.points.length,
+        points: area.points,
+        firstPoint: area.points[0],
+        lastPoint: area.points[area.points.length - 1]
+      });
       setEditingLot({ ...editingLot, area });
       setPreviewArea(area); // Salva a área para pré-visualização
     }
@@ -195,9 +242,10 @@ export default function LotManagement() {
         },
       });
 
-      const isValid = response.data.isValid === 1;
-      console.log(`✅ Resultado da validação:`, isValid);
-      return isValid;
+      // Se lotExists é 0, significa que o lote NÃO existe e pode ser criado
+      const lotDoesNotExist = response.data.lotExists === 0;
+      console.log(`✅ Resultado da validação (lotExists: ${response.data.lotExists}):`, lotDoesNotExist ? 'Número disponível' : 'Número já existe');
+      return lotDoesNotExist;
     } catch (error) {
       console.error('❌ Erro ao validar número do lote:', error);
       alert('Erro ao validar o número do lote. Tente novamente.');
@@ -221,11 +269,11 @@ export default function LotManagement() {
     const existingLot = lots.find(l => l.id === editingLot.id);
     const lotNumberChanged = !existingLot || existingLot.lotNumber !== editingLot.lotNumber;
 
-    // Validar se o número do lote é válido na API (apenas se mudou ou é novo)
+    // Validar se o número do lote está disponível na API (apenas se mudou ou é novo)
     if (lotNumberChanged) {
-      const isValidNumber = await validateLotNumber(editingLot.lotNumber);
-      if (!isValidNumber) {
-        alert(`❌ O número do lote "${editingLot.lotNumber}" não é válido ou já está em uso.`);
+      const isNumberAvailable = await validateLotNumber(editingLot.lotNumber);
+      if (!isNumberAvailable) {
+        alert(`❌ O número do lote "${editingLot.lotNumber}" já está em uso. Escolha outro número.`);
         return;
       }
     }
@@ -250,6 +298,15 @@ export default function LotManagement() {
       mapId,
       updatedAt: new Date(),
     };
+
+    console.log('💾 Salvando lote:', {
+      id: lot.id,
+      lotNumber: lot.lotNumber,
+      pointsCount: lot.area.points.length,
+      points: lot.area.points,
+      firstPoint: lot.area.points[0],
+      lastPoint: lot.area.points[lot.area.points.length - 1]
+    });
 
     try {
       await saveLotToAPI(lot);

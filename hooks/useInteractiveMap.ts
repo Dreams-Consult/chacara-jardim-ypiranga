@@ -309,18 +309,21 @@ export function useInteractiveMap({
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsPanning(false);
     if (canvasRef.current) {
       canvasRef.current.style.cursor = 'default';
     }
 
     // Finaliza o desenho do retângulo
-    if (isDrawingRect && rectStart && rectEnd && onAreaDrawn) {
-      const minX = Math.min(rectStart.x, rectEnd.x);
-      const maxX = Math.max(rectStart.x, rectEnd.x);
-      const minY = Math.min(rectStart.y, rectEnd.y);
-      const maxY = Math.max(rectStart.y, rectEnd.y);
+    if (isDrawingRect && rectStart && onAreaDrawn) {
+      // Captura a posição final do mouse no momento do mouseup
+      const finalPosition = getCanvasCoordinates(e);
+
+      const minX = Math.min(rectStart.x, finalPosition.x);
+      const maxX = Math.max(rectStart.x, finalPosition.x);
+      const minY = Math.min(rectStart.y, finalPosition.y);
+      const maxY = Math.max(rectStart.y, finalPosition.y);
 
       // Verifica se o retângulo tem tamanho mínimo (evita cliques acidentais)
       const width = maxX - minX;
@@ -335,6 +338,12 @@ export function useInteractiveMap({
           { x: minX, y: maxY },
         ];
 
+        console.log('📐 Retângulo criado:', {
+          start: rectStart,
+          end: finalPosition,
+          points: rectanglePoints
+        });
+
         onAreaDrawn({ points: rectanglePoints });
       }
 
@@ -342,9 +351,7 @@ export function useInteractiveMap({
       setRectStart(null);
       setRectEnd(null);
     }
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
+  };  const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
   };
 
