@@ -169,6 +169,27 @@ export default function LotManagement() {
     }
   };
 
+  // Função para validar o número do lote
+  const validateLotNumber = async (lotNumber: string): Promise<boolean> => {
+    try {
+      console.log(`🔍 Validando número do lote ${lotNumber} para o mapa ${mapId}...`);
+      const response = await axios.get(`${API_URL}/mapas/lotes/numero-valido`, {
+        params: {
+          mapId,
+          lotNumber,
+        },
+      });
+
+      const isValid = response.data.isValid === 1;
+      console.log(`✅ Resultado da validação:`, isValid);
+      return isValid;
+    } catch (error) {
+      console.error('❌ Erro ao validar número do lote:', error);
+      alert('Erro ao validar o número do lote. Tente novamente.');
+      return false;
+    }
+  };
+
   const handleSaveLot = async () => {
     if (!editingLot) {
       alert('Nenhum lote em edição');
@@ -179,6 +200,19 @@ export default function LotManagement() {
     if (!editingLot.lotNumber || editingLot.lotNumber.trim() === '') {
       alert('❌ Número do lote é obrigatório');
       return;
+    }
+
+    // Verificar se o número do lote foi alterado (ao editar) ou se é um novo lote
+    const existingLot = lots.find(l => l.id === editingLot.id);
+    const lotNumberChanged = !existingLot || existingLot.lotNumber !== editingLot.lotNumber;
+
+    // Validar se o número do lote é válido na API (apenas se mudou ou é novo)
+    if (lotNumberChanged) {
+      const isValidNumber = await validateLotNumber(editingLot.lotNumber);
+      if (!isValidNumber) {
+        alert(`❌ O número do lote "${editingLot.lotNumber}" não é válido ou já está em uso.`);
+        return;
+      }
     }
 
     if (editingLot.area.points.length < 3) {
