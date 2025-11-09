@@ -33,6 +33,9 @@ export default function InteractiveMap({
     handleMouseDown,
     handleMouseUp,
     handleContextMenu,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     handleZoomIn,
     handleZoomOut,
     handleResetZoom,
@@ -61,6 +64,9 @@ export default function InteractiveMap({
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onContextMenu={handleContextMenu}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             className="border border-gray-300 rounded-lg shadow-lg cursor-crosshair max-w-full"
           />
         </>

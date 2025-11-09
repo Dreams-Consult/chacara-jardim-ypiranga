@@ -29,6 +29,8 @@ export function useInteractiveMap({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
+  const [initialScale, setInitialScale] = useState(1);
 
   const drawLot = (
     ctx: CanvasRenderingContext2D,
@@ -260,6 +262,52 @@ export function useInteractiveMap({
     setScale((prev) => Math.max(0.5, Math.min(prev + delta, 5)));
   }, []);
 
+  // Calcula distância entre dois pontos de touch (para pinch-to-zoom)
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Pinch-to-zoom: salva distância inicial
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      setInitialPinchDistance(distance);
+      setInitialScale(scale);
+    } else if (e.touches.length === 1 && !isEditMode) {
+      // Pan: salva posição inicial
+      setIsPanning(true);
+      setPanStart({
+        x: e.touches[0].clientX - offset.x,
+        y: e.touches[0].clientY - offset.y,
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDistance !== null) {
+      // Pinch-to-zoom
+      e.preventDefault();
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      const scaleChange = distance / initialPinchDistance;
+      const newScale = Math.max(0.5, Math.min(initialScale * scaleChange, 5));
+      setScale(newScale);
+    } else if (e.touches.length === 1 && isPanning && !isEditMode) {
+      // Pan
+      e.preventDefault();
+      setOffset({
+        x: e.touches[0].clientX - panStart.x,
+        y: e.touches[0].clientY - panStart.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setInitialPinchDistance(null);
+    setIsPanning(false);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -307,6 +355,9 @@ export function useInteractiveMap({
     handleMouseDown,
     handleMouseUp,
     handleContextMenu,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     handleZoomIn,
     handleZoomOut,
     handleResetZoom,
