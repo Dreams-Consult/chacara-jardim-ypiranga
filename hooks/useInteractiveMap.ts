@@ -258,11 +258,42 @@ export function useInteractiveMap({
     e.preventDefault();
   };
 
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setScale((prev) => Math.max(0.5, Math.min(prev + delta, 5)));
-  }, []);
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+
+      // Posição do mouse relativa ao canvas (viewport coordinates)
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Converte para coordenadas do canvas
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const canvasMouseX = mouseX * scaleX;
+      const canvasMouseY = mouseY * scaleY;
+
+      // Calcula o ponto na imagem original sob o cursor do mouse
+      const imagePointX = (canvasMouseX - offset.x) / scale;
+      const imagePointY = (canvasMouseY - offset.y) / scale;
+
+      // Calcula a nova escala
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newScale = Math.max(0.5, Math.min(scale + delta, 5));
+
+      // Calcula o novo offset para manter o ponto da imagem sob o cursor
+      const newOffsetX = canvasMouseX - imagePointX * newScale;
+      const newOffsetY = canvasMouseY - imagePointY * newScale;
+
+      setScale(newScale);
+      setOffset({ x: newOffsetX, y: newOffsetY });
+    },
+    [scale, offset]
+  );
 
   // Calcula distância entre dois pontos de touch (para pinch-to-zoom)
   const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
@@ -284,16 +315,16 @@ export function useInteractiveMap({
       // Pinch-to-zoom: salva distância inicial e centro do pinch
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
       const center = getTouchCenter(e.touches[0], e.touches[1]);
-      
+
       const canvas = canvasRef.current;
       if (!canvas) return;
-      
+
       const rect = canvas.getBoundingClientRect();
-      
+
       // Centro em coordenadas do viewport relativo ao canvas
       const centerX = center.x - rect.left;
       const centerY = center.y - rect.top;
-      
+
       setInitialPinchDistance(distance);
       setInitialScale(scale);
       setInitialOffset({ x: offset.x, y: offset.y });
@@ -312,40 +343,40 @@ export function useInteractiveMap({
     if (e.touches.length === 2 && initialPinchDistance !== null && pinchCenter) {
       // Pinch-to-zoom com ponto focal preciso
       e.preventDefault();
-      
+
       const canvas = canvasRef.current;
       if (!canvas) return;
-      
+
       const rect = canvas.getBoundingClientRect();
       const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
-      
+
       // Centro atual em coordenadas do viewport relativo ao canvas
       const currentCenterX = currentCenter.x - rect.left;
       const currentCenterY = currentCenter.y - rect.top;
-      
+
       // Calcula nova escala
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
       const scaleRatio = distance / initialPinchDistance;
       const newScale = Math.max(0.5, Math.min(initialScale * scaleRatio, 5));
-      
+
       // Converte coordenadas do viewport para coordenadas do canvas
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
-      
+
       const canvasCenterX = pinchCenter.x * scaleX;
       const canvasCenterY = pinchCenter.y * scaleY;
-      
+
       // Ponto na imagem original (antes de qualquer transformação)
       const imagePointX = (canvasCenterX - initialOffset.x) / initialScale;
       const imagePointY = (canvasCenterY - initialOffset.y) / initialScale;
-      
+
       // Novo offset para manter o ponto da imagem fixo sob o centro atual do pinch
       const currentCanvasCenterX = currentCenterX * scaleX;
       const currentCanvasCenterY = currentCenterY * scaleY;
-      
+
       const newOffsetX = currentCanvasCenterX - imagePointX * newScale;
       const newOffsetY = currentCanvasCenterY - imagePointY * newScale;
-      
+
       setScale(newScale);
       setOffset({ x: newOffsetX, y: newOffsetY });
     } else if (e.touches.length === 1 && isPanning && !isEditMode) {
