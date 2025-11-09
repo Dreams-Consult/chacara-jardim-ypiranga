@@ -11,6 +11,8 @@ interface InteractiveMapProps {
   isEditMode?: boolean;
   onAreaDrawn?: (area: LotArea) => void;
   selectedLotId?: string;
+  drawingMode?: 'polygon' | 'rectangle';
+  previewArea?: LotArea | null;
 }
 
 export default function InteractiveMap({
@@ -20,6 +22,8 @@ export default function InteractiveMap({
   isEditMode = false,
   onAreaDrawn,
   selectedLotId,
+  drawingMode = 'polygon',
+  previewArea = null,
 }: InteractiveMapProps) {
   const {
     canvasRef,
@@ -48,6 +52,8 @@ export default function InteractiveMap({
     isEditMode,
     onAreaDrawn,
     selectedLotId,
+    drawingMode,
+    previewArea,
   });
 
   return (
@@ -107,7 +113,7 @@ export default function InteractiveMap({
         </div>
       </div>
 
-      {isEditMode && drawingPoints.length > 0 && (
+      {isEditMode && drawingMode === 'polygon' && drawingPoints.length > 0 && (
         <div className="absolute bottom-4 left-4 flex gap-2">
           <button
             onClick={handleFinishDrawing}
@@ -124,6 +130,19 @@ export default function InteractiveMap({
           </button>
         </div>
       )}
+
+      {isEditMode && drawingMode === 'rectangle' && !previewArea && (
+        <div className="absolute bottom-4 left-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          <p className="font-medium">🔲 Modo Retângulo: Clique e arraste para desenhar</p>
+        </div>
+      )}
+
+      {isEditMode && previewArea && previewArea.points.length >= 3 && (
+        <div className="absolute bottom-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          <p className="font-medium">✅ Área selecionada - Complete as informações do lote</p>
+        </div>
+      )}
+
       {hoveredLot && !isEditMode && (
         <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-xl border border-gray-200">
           <h3 className="font-bold text-lg text-gray-900 mb-2">Lote {hoveredLot.lotNumber}</h3>

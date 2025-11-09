@@ -8,6 +8,8 @@ interface UseInteractiveMapProps {
   isEditMode?: boolean;
   onAreaDrawn?: (area: LotArea) => void;
   selectedLotId?: string;
+  drawingMode?: 'polygon' | 'rectangle';
+  previewArea?: LotArea | null;
 }
 
 export function useInteractiveMap({
@@ -17,6 +19,8 @@ export function useInteractiveMap({
   isEditMode = false,
   onAreaDrawn,
   selectedLotId,
+  drawingMode = 'polygon',
+  previewArea = null,
 }: UseInteractiveMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -33,6 +37,11 @@ export function useInteractiveMap({
   const [initialScale, setInitialScale] = useState(1);
   const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 });
   const [pinchCenter, setPinchCenter] = useState<{ x: number; y: number } | null>(null);
+
+  // Estados para desenho de retângulo
+  const [isDrawingRect, setIsDrawingRect] = useState(false);
+  const [rectStart, setRectStart] = useState<{ x: number; y: number } | null>(null);
+  const [rectEnd, setRectEnd] = useState<{ x: number; y: number } | null>(null);
 
   const drawLot = (
     ctx: CanvasRenderingContext2D,
@@ -100,7 +109,8 @@ export function useInteractiveMap({
       drawLot(ctx, lot, lot.id === hoveredLot?.id, lot.id === selectedLotId);
     });
 
-    if (isEditMode && drawingPoints.length > 0) {
+    // Desenho de polígono (modo antigo)
+    if (isEditMode && drawingMode === 'polygon' && drawingPoints.length > 0) {
       ctx.beginPath();
       ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
       drawingPoints.forEach((point) => {
@@ -118,8 +128,47 @@ export function useInteractiveMap({
       });
     }
 
+    // Desenho de retângulo em progresso
+    if (isEditMode && drawingMode === 'rectangle' && isDrawingRect && rectStart && rectEnd) {
+      const width = rectEnd.x - rectStart.x;
+      const height = rectEnd.y - rectStart.y;
+
+      ctx.strokeStyle = '#3b82f6';
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+      ctx.lineWidth = 2 / scale;
+      ctx.strokeRect(rectStart.x, rectStart.y, width, height);
+      ctx.fillRect(rectStart.x, rectStart.y, width, height);
+    }
+
+    // Desenho da área de pré-visualização (área selecionada que será salva)
+    if (isEditMode && previewArea && previewArea.points.length >= 3) {
+      ctx.beginPath();
+      ctx.moveTo(previewArea.points[0].x, previewArea.points[0].y);
+      previewArea.points.forEach((point) => {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.closePath();
+
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.3)'; // Verde semi-transparente
+      ctx.fill();
+      ctx.strokeStyle = '#22c55e'; // Verde
+      ctx.lineWidth = 3 / scale;
+      ctx.stroke();
+
+      // Desenhar pontos da área
+      previewArea.points.forEach((point) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 6 / scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2 / scale;
+        ctx.stroke();
+      });
+    }
+
     ctx.restore();
-  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, isEditMode, scale, offset]);
+  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, isEditMode, scale, offset, drawingMode, isDrawingRect, rectStart, rectEnd, previewArea]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -193,13 +242,13 @@ export function useInteractiveMap({
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isPanning) return;
+    if (isPanning || isDrawingRect) return;
 
     const { x, y } = getCanvasCoordinates(e);
 
-    if (isEditMode) {
+    if (isEditMode && drawingMode === 'polygon') {
       setDrawingPoints([...drawingPoints, { x, y }]);
-    } else {
+    } else if (!isEditMode) {
       const clickedLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
       if (clickedLot && onLotClick) {
         onLotClick(clickedLot);
@@ -220,6 +269,13 @@ export function useInteractiveMap({
       const dy = (e.clientY - panStart.y) * scaleY;
       setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
       setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
+
+    // Atualiza o retângulo enquanto arrasta
+    if (isDrawingRect && rectStart) {
+      const { x, y } = getCanvasCoordinates(e);
+      setRectEnd({ x, y });
       return;
     }
 
@@ -244,6 +300,12 @@ export function useInteractiveMap({
       if (canvasRef.current) {
         canvasRef.current.style.cursor = 'grabbing';
       }
+    } else if (e.button === 0 && isEditMode && drawingMode === 'rectangle') {
+      // Botão esquerdo no modo retângulo
+      const { x, y } = getCanvasCoordinates(e);
+      setIsDrawingRect(true);
+      setRectStart({ x, y });
+      setRectEnd({ x, y });
     }
   };
 
@@ -251,6 +313,34 @@ export function useInteractiveMap({
     setIsPanning(false);
     if (canvasRef.current) {
       canvasRef.current.style.cursor = 'default';
+    }
+
+    // Finaliza o desenho do retângulo
+    if (isDrawingRect && rectStart && rectEnd && onAreaDrawn) {
+      const minX = Math.min(rectStart.x, rectEnd.x);
+      const maxX = Math.max(rectStart.x, rectEnd.x);
+      const minY = Math.min(rectStart.y, rectEnd.y);
+      const maxY = Math.max(rectStart.y, rectEnd.y);
+
+      // Verifica se o retângulo tem tamanho mínimo (evita cliques acidentais)
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      if (width > 10 && height > 10) {
+        // Cria os 4 pontos do retângulo
+        const rectanglePoints = [
+          { x: minX, y: minY },
+          { x: maxX, y: minY },
+          { x: maxX, y: maxY },
+          { x: minX, y: maxY },
+        ];
+
+        onAreaDrawn({ points: rectanglePoints });
+      }
+
+      setIsDrawingRect(false);
+      setRectStart(null);
+      setRectEnd(null);
     }
   };
 
@@ -420,7 +510,7 @@ export function useInteractiveMap({
   };
 
   const handleFinishDrawing = () => {
-    if (drawingPoints.length >= 3 && onAreaDrawn) {
+    if (drawingMode === 'polygon' && drawingPoints.length >= 3 && onAreaDrawn) {
       onAreaDrawn({ points: drawingPoints });
       setDrawingPoints([]);
     }
@@ -428,6 +518,9 @@ export function useInteractiveMap({
 
   const handleCancelDrawing = () => {
     setDrawingPoints([]);
+    setIsDrawingRect(false);
+    setRectStart(null);
+    setRectEnd(null);
   };
 
   return {

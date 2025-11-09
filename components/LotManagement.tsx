@@ -19,6 +19,8 @@ export default function LotManagement() {
   const [editingLot, setEditingLot] = useState<Lot | null>(null);
   const [selectedLotId, setSelectedLotId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle'>('rectangle');
+  const [previewArea, setPreviewArea] = useState<LotArea | null>(null);
 
   useEffect(() => {
     if (!mapId) return;
@@ -166,6 +168,19 @@ export default function LotManagement() {
   const handleAreaDrawn = (area: LotArea) => {
     if (editingLot) {
       setEditingLot({ ...editingLot, area });
+      setPreviewArea(area); // Salva a área para pré-visualização
+    }
+  };
+
+  // Função para trocar o modo de desenho e resetar pontos
+  const handleDrawingModeChange = (mode: 'polygon' | 'rectangle') => {
+    if (mode !== drawingMode) {
+      // Limpa a área desenhada e a pré-visualização ao trocar de modo
+      if (editingLot) {
+        setEditingLot({ ...editingLot, area: { points: [] } });
+      }
+      setPreviewArea(null);
+      setDrawingMode(mode);
     }
   };
 
@@ -241,6 +256,7 @@ export default function LotManagement() {
       setIsCreating(false);
       setEditingLot(null);
       setSelectedLotId(undefined);
+      setPreviewArea(null); // Limpa a pré-visualização após salvar
     } catch (err) {
       console.error('Erro ao salvar:', err);
       alert('Erro ao salvar lote. Tente novamente.');
@@ -300,6 +316,7 @@ export default function LotManagement() {
     });
     setIsCreating(true);
     setSelectedLotId(undefined);
+    setPreviewArea(null); // Limpa a pré-visualização ao criar novo lote
   };
 
   if (isLoading || !map) {
@@ -324,12 +341,40 @@ export default function LotManagement() {
             <h1 className="text-3xl font-bold text-gray-900">{map.name}</h1>
             {map.description && <p className="text-gray-700 mt-1">{map.description}</p>}
           </div>
-          <button
-            onClick={handleNewLot}
-            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
-          >
-            Novo Lote
-          </button>
+          <div className="flex gap-3 items-center">
+            {isCreating && (
+              <div className="flex gap-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
+                <button
+                  onClick={() => handleDrawingModeChange('rectangle')}
+                  className={`px-3 py-1.5 rounded font-medium text-sm transition-all ${
+                    drawingMode === 'rectangle'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                  title="Desenhar retângulo (clicar e arrastar)"
+                >
+                  🔲 Retângulo
+                </button>
+                <button
+                  onClick={() => handleDrawingModeChange('polygon')}
+                  className={`px-3 py-1.5 rounded font-medium text-sm transition-all ${
+                    drawingMode === 'polygon'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                  title="Desenhar polígono (clicar ponto a ponto)"
+                >
+                  📐 Polígono
+                </button>
+              </div>
+            )}
+            <button
+              onClick={handleNewLot}
+              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
+            >
+              Novo Lote
+            </button>
+          </div>
         </div>
       </div>
 
@@ -341,6 +386,8 @@ export default function LotManagement() {
             isEditMode={isCreating}
             onAreaDrawn={handleAreaDrawn}
             selectedLotId={selectedLotId}
+            drawingMode={drawingMode}
+            previewArea={previewArea}
             onLotClick={(lot) => {
               if (!isCreating) {
                 handleEditLot(lot);
@@ -478,6 +525,7 @@ export default function LotManagement() {
                       setIsCreating(false);
                       setEditingLot(null);
                       setSelectedLotId(undefined);
+                      setPreviewArea(null); // Limpa a pré-visualização ao cancelar
                     }}
                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 shadow-sm transition-colors"
                   >
