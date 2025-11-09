@@ -389,7 +389,7 @@ export default function LotManagement() {
       <div className="mb-6">
         <button
           onClick={() => router.push('/admin/maps')}
-          className="text-blue-700 hover:text-blue-900 font-medium hover:underline mb-2 transition-colors"
+          className="text-blue-700 hover:text-blue-900 font-medium hover:underline mb-2 transition-colors cursor-pointer"
         >
           ← Voltar para Mapas
         </button>
@@ -403,7 +403,7 @@ export default function LotManagement() {
               <div className="flex gap-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
                 <button
                   onClick={() => handleDrawingModeChange('rectangle')}
-                  className={`px-3 py-1.5 rounded font-medium text-sm transition-all ${
+                  className={`px-3 py-1.5 rounded font-medium text-sm transition-all cursor-pointer ${
                     drawingMode === 'rectangle'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -414,7 +414,7 @@ export default function LotManagement() {
                 </button>
                 <button
                   onClick={() => handleDrawingModeChange('polygon')}
-                  className={`px-3 py-1.5 rounded font-medium text-sm transition-all ${
+                  className={`px-3 py-1.5 rounded font-medium text-sm transition-all cursor-pointer ${
                     drawingMode === 'polygon'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -427,7 +427,7 @@ export default function LotManagement() {
             )}
             <button
               onClick={handleNewLot}
-              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
+              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
             >
               Novo Lote
             </button>
@@ -479,7 +479,7 @@ export default function LotManagement() {
                     onChange={(e) =>
                       setEditingLot({ ...editingLot, status: e.target.value as LotStatus })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
                     <option value={LotStatus.RESERVED}>Reservado</option>
@@ -526,7 +526,7 @@ export default function LotManagement() {
                         status: e.target.value as LotStatus,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
                     <option value={LotStatus.RESERVED}>Reservado</option>
@@ -572,7 +572,7 @@ export default function LotManagement() {
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveLot}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-sm transition-all hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-sm transition-all hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                     disabled={editingLot.area.points.length < 3}
                   >
                     Salvar
@@ -584,7 +584,7 @@ export default function LotManagement() {
                       setSelectedLotId(undefined);
                       setPreviewArea(null); // Limpa a pré-visualização ao cancelar
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 shadow-sm transition-colors"
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 shadow-sm transition-colors cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -632,13 +632,13 @@ export default function LotManagement() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditLot(lot)}
-                          className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                          className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => handleDelete(lot.id)}
-                          className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
+                          className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
                         >
                           Excluir
                         </button>
@@ -648,7 +648,7 @@ export default function LotManagement() {
                           {lot.status !== LotStatus.AVAILABLE && (
                             <button
                               onClick={() => handleChangeStatus(lot.id, LotStatus.AVAILABLE)}
-                              className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors"
+                              className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors cursor-pointer"
                             >
                               ✓ Marcar Disponível
                             </button>
@@ -656,14 +656,14 @@ export default function LotManagement() {
                           {lot.status !== LotStatus.RESERVED && (
                             <button
                               onClick={() => handleChangeStatus(lot.id, LotStatus.RESERVED)}
-                              className="flex-1 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded hover:bg-amber-200 transition-colors"
+                              className="flex-1 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded hover:bg-amber-200 transition-colors cursor-pointer"
                             >
                               ⏸ Marcar Reservado
                             </button>
                           )}
                           <button
                             onClick={() => handleChangeStatus(lot.id, LotStatus.SOLD)}
-                            className="flex-1 px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded hover:bg-red-200 transition-colors"
+                            className="flex-1 px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded hover:bg-red-200 transition-colors cursor-pointer"
                           >
                             ✕ Marcar Vendido
                           </button>
@@ -673,7 +673,7 @@ export default function LotManagement() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleChangeStatus(lot.id, LotStatus.AVAILABLE)}
-                            className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors"
+                            className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors cursor-pointer"
                           >
                             ↻ Reverter para Disponível
                           </button>

@@ -89,21 +89,21 @@ export default function InteractiveMap({
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
           onClick={handleZoomIn}
-          className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl cursor-pointer"
           title="Zoom In"
         >
           +
         </button>
         <button
           onClick={handleZoomOut}
-          className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl cursor-pointer"
           title="Zoom Out"
         >
           -
         </button>
         <button
           onClick={handleResetZoom}
-          className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl text-xs"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl text-xs cursor-pointer"
           title="Reset Zoom"
         >
           Reset
@@ -117,14 +117,14 @@ export default function InteractiveMap({
         <div className="absolute bottom-4 left-4 flex gap-2">
           <button
             onClick={handleFinishDrawing}
-            className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-lg transition-all hover:shadow-xl disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
+            className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-lg transition-all hover:shadow-xl disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
             disabled={drawingPoints.length < 3}
           >
             Finalizar Área ({drawingPoints.length} pontos)
           </button>
           <button
             onClick={handleCancelDrawing}
-            className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 shadow-lg transition-all hover:shadow-xl"
+            className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 shadow-lg transition-all hover:shadow-xl cursor-pointer"
           >
             Cancelar
           </button>

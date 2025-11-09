@@ -137,7 +137,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
             </div>
             <button
               onClick={onClose}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
               type="button"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +162,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
             {lot.description && (
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)] mb-4">
                 <p className="text-xs font-medium text-[var(--foreground)]/60 mb-2">Descrição</p>
-                <p className="text-sm text-[var(--foreground)]/80 leading-relaxed">{lot.description}</p>
+                <p className="text-sm text-[var(--foreground)] leading-relaxed">{lot.description}</p>
               </div>
             )}
             {lot.features && lot.features.length > 0 && (
@@ -236,8 +236,8 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                 required
                 value={formData.customerCPF}
                 onChange={handleCPFChange}
-                className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  cpfError ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
+                  cpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
                 }`}
                 placeholder="000.000.000-00"
                 maxLength={14}
@@ -247,9 +247,9 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
               )}
             </div>
 
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">📋 Informações do Vendedor</h3>
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="border-t border-[var(--border)] pt-4 mt-4">
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-3">📋 Informações do Vendedor</h3>
+              <p className="text-sm text-[var(--foreground)]/70 mb-4">
                 Preencha as informações do vendedor/corretor responsável pela venda
               </p>
 
@@ -298,8 +298,8 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                     required
                     value={formData.sellerCPF || ''}
                     onChange={handleSellerCPFChange}
-                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      sellerCpfError ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
+                      sellerCpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
                     }`}
                     placeholder="000.000.000-00"
                     maxLength={14}
@@ -326,7 +326,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
               <button
                 type="submit"
                 disabled={isSubmitting || cpfError !== '' || sellerCpfError !== ''}
-                className="flex-1 px-5 py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)]"
+                className="flex-1 px-5 py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] cursor-pointer"
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -342,7 +342,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="flex-1 px-5 py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-5 py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancelar
               </button>

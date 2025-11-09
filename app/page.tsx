@@ -113,7 +113,7 @@ export default function PublicMapPage() {
             <select
               value={selectedMap?.id || ''}
               onChange={(e) => selectMap(e.target.value)}
-              className="w-full sm:w-auto px-5 py-3 bg-white border-none rounded-xl text-[#1c1c1c] font-semibold shadow-[var(--shadow-md)] focus:ring-4 focus:ring-[var(--accent)]/30 transition-all"
+              className="w-full sm:w-auto px-5 py-3 bg-white border-none rounded-xl text-[#1c1c1c] font-semibold shadow-[var(--shadow-md)] focus:ring-4 focus:ring-[var(--accent)]/30 transition-all cursor-pointer"
             >
               {maps.map((map) => (
                 <option key={map.id} value={map.id}>

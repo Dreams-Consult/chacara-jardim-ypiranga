@@ -47,7 +47,7 @@ export default function MapManagement() {
           </a>
           <button
             onClick={() => setIsCreating(true)}
-            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
+            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
           >
             Novo Mapa
           </button>
@@ -131,7 +131,7 @@ export default function MapManagement() {
                   setIsCreating(false);
                   setEditingMap(null);
                 }}
-                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)]"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer"
               >
                 Cancelar
               </button>
@@ -180,13 +180,13 @@ export default function MapManagement() {
               <div className="flex gap-2">
                 <Link
                   href={`/admin/lot-management?mapId=${map.id}`}
-                  className="flex-1 px-4 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] text-center transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
+                  className="flex-1 px-4 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] text-center transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
                 >
                   Gerenciar Lotes
                 </Link>
                 <button
                   onClick={() => handleDelete(map.id)}
-                  className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
+                  className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
                 >
                   Excluir
                 </button>

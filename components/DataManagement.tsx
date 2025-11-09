@@ -84,7 +84,7 @@ export default function DataManagement() {
       <div className="mb-6">
         <button
           onClick={() => window.history.back()}
-          className="text-blue-700 hover:text-blue-900 font-medium hover:underline mb-2 transition-colors"
+          className="text-blue-700 hover:text-blue-900 font-medium hover:underline mb-2 transition-colors cursor-pointer"
         >
           ← Voltar
         </button>
@@ -108,7 +108,7 @@ export default function DataManagement() {
         </p>
         <button
           onClick={handleExport}
-          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
+          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
         >
           Exportar Todos os Dados
         </button>
@@ -150,7 +150,7 @@ export default function DataManagement() {
           <button
             onClick={handleImport}
             disabled={!importData}
-            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all hover:shadow-lg"
+            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all hover:shadow-lg cursor-pointer"
           >
             Importar Dados
           </button>
@@ -165,7 +165,7 @@ export default function DataManagement() {
         </p>
         <button
           onClick={handleClearAll}
-          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 shadow-md transition-all hover:shadow-lg"
+          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
         >
           Apagar Todos os Dados
         </button>
