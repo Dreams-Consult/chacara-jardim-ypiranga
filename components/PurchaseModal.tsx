@@ -151,23 +151,23 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
           <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-2xl p-5 mb-6">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--foreground)]/60 mb-1">Área</p>
-                <p className="text-lg font-bold text-[var(--foreground)]">{lot.size}m²</p>
+                <p className="text-xs font-medium text-[var(--surface)] mb-1">Área</p>
+                <p className="text-lg font-bold text-[var(--surface)]">{lot.size}m²</p>
               </div>
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--foreground)]/60 mb-1">Preço</p>
-                <p className="text-lg font-bold text-[var(--foreground)]">R$ {lot.price.toLocaleString('pt-BR')}</p>
+                <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço</p>
+                <p className="text-lg font-bold text-[var(--surface)]">R$ {lot.price.toLocaleString('pt-BR')}</p>
               </div>
             </div>
             {lot.description && (
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)] mb-4">
-                <p className="text-xs font-medium text-[var(--foreground)]/60 mb-2">Descrição</p>
-                <p className="text-sm text-[var(--foreground)] leading-relaxed">{lot.description}</p>
+                <p className="text-xs font-medium text-[var(--surface)] mb-2">Descrição</p>
+                <p className="text-sm text-[var(--surface)] leading-relaxed">{lot.description}</p>
               </div>
             )}
             {lot.features && lot.features.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-[var(--foreground)]/60 mb-2">Características</p>
+                <p className="text-xs font-medium text-[var(--foreground)] mb-2">Características</p>
                 <div className="flex flex-wrap gap-2">
                   {lot.features.map((feature, index) => (
                     <span
