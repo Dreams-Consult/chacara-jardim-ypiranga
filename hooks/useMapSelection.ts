@@ -16,22 +16,31 @@ export const useMapSelection = () => {
   const [isLoadingLots, setIsLoadingLots] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Atualização automática a cada 5 segundos para sincronizar reservas
+  // Atualização automática a cada 3 segundos para sincronizar reservas e novos mapas
   useRealtimeUpdates(() => {
-    console.log('🔄 Auto-refresh: verificando atualizações...');
+    console.log('🔄 Auto-refresh da página pública: recarregando mapas e lotes...');
     setRefreshKey(prev => prev + 1);
-  }, 5000);
+  }, 3000);
 
   // Buscar apenas informações dos mapas (sem lotes)
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        console.log('Buscando mapas da API...');
+        console.log('📍 [Página Pública] Buscando mapas da API... (refreshKey:', refreshKey, ')');
         const response = await axios.get(`${API_URL}/mapas`);
         const mapsData = response.data;
-        console.log('Resposta da API /mapas:', mapsData);
+        console.log('✅ [Página Pública] Resposta da API /mapas:', mapsData);
 
-        if (Array.isArray(mapsData) && mapsData.length > 0) {
+        // Validar se mapsData é um array
+        if (!Array.isArray(mapsData)) {
+          console.warn('⚠️ [Página Pública] API não retornou array de mapas:', mapsData);
+          setMaps([]);
+          setLots([]);
+          setSelectedMap(null);
+          return;
+        }
+
+        if (mapsData.length > 0) {
           // Processar apenas os mapas (sem lotes)
           const allMaps: Map[] = mapsData
             .filter((mapData) => mapData && mapData.mapId)
@@ -46,28 +55,32 @@ export const useMapSelection = () => {
               updatedAt: new Date(),
             }));
 
-          console.log(`${allMaps.length} mapas carregados`);
+          console.log(`✅ [Página Pública] ${allMaps.length} mapas carregados`);
           setMaps(allMaps);
 
-          // Se já existe um mapa selecionado (refresh após compra), manter o mesmo
-          if (selectedMapIdRef.current) {
-            console.log(`Mantendo mapa selecionado: ${selectedMapIdRef.current}`);
-            // Recarregar apenas os lotes do mapa atual
-            await loadLotsForMap(selectedMapIdRef.current);
-          } else {
-            // Primeira carga: selecionar o primeiro mapa
-            if (allMaps.length > 0) {
-              const firstMap = allMaps[0];
-              setSelectedMap(firstMap);
-              selectedMapIdRef.current = firstMap.id;
-              await loadLotsForMap(firstMap.id);
-            }
+          // Verificar se há um mapa selecionado válido
+          const currentMapId = selectedMapIdRef.current;
+          const currentMapExists = currentMapId &&
+            allMaps.some(m => m.id === currentMapId);
+
+          if (currentMapExists) {
+            // Mapa selecionado ainda existe, manter seleção
+            console.log(`📌 [Página Pública] Mantendo mapa selecionado: ${currentMapId}`);
+            await loadLotsForMap(currentMapId);
+          } else if (allMaps.length > 0) {
+            // Não há mapa selecionado OU o mapa não existe mais: selecionar o primeiro
+            const firstMap = allMaps[0];
+            console.log(`🎯 [Página Pública] Selecionando primeiro mapa: ${firstMap.id} - ${firstMap.name}`);
+            setSelectedMap(firstMap);
+            selectedMapIdRef.current = firstMap.id;
+            await loadLotsForMap(firstMap.id);
           }
         } else {
-          console.log('Nenhum mapa retornado pela API');
+          console.log('📭 [Página Pública] Nenhum mapa retornado pela API');
           setMaps([]);
           setLots([]);
           setSelectedMap(null);
+          selectedMapIdRef.current = null;
         }
       } catch (error) {
         console.error('Erro ao buscar mapas:', error);
@@ -86,14 +99,24 @@ export const useMapSelection = () => {
   const loadLotsForMap = async (mapId: string) => {
     setIsLoadingLots(true);
     try {
-      console.log(`Buscando lotes do mapa ${mapId}...`);
+      console.log(`📦 [Página Pública] Buscando lotes do mapa ${mapId}...`);
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId },
         timeout: 10000,
       });
 
-      const data = response.data[0]; // API retorna array, pegamos o primeiro elemento
-      console.log('Resposta da API /mapas/lotes:', data);
+      console.log('📦 [Página Pública] Resposta da API /mapas/lotes:', response.data);
+
+      // Validar se a resposta é válida
+      if (!response.data) {
+        console.warn('⚠️ [Página Pública] API retornou resposta vazia para /mapas/lotes');
+        setLots([]);
+        setIsLoadingLots(false);
+        return;
+      }
+
+      // API pode retornar array ou objeto único
+      const data = Array.isArray(response.data) ? response.data[0] : response.data;
 
       if (data && Array.isArray(data.lots)) {
         const lotsWithMapId = data.lots.map((lot: Lot) => ({
@@ -103,14 +126,14 @@ export const useMapSelection = () => {
           updatedAt: new Date(lot.updatedAt),
         }));
 
-        console.log(`${lotsWithMapId.length} lotes carregados para o mapa ${mapId}`);
+        console.log(`✅ [Página Pública] ${lotsWithMapId.length} lotes carregados para o mapa ${mapId}`);
         setLots(lotsWithMapId);
       } else {
-        console.log('Nenhum lote encontrado para o mapa', mapId);
+        console.log('📭 [Página Pública] Nenhum lote encontrado para o mapa', mapId);
         setLots([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar lotes do mapa:', error);
+      console.error('❌ [Página Pública] Erro ao carregar lotes do mapa:', error);
       setLots([]);
     } finally {
       setIsLoadingLots(false);

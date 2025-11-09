@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { Map, Lot, LotStatus, LotArea } from '@/types';
 import InteractiveMap from '@/components/InteractiveMap';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -22,12 +23,11 @@ export default function LotManagement() {
   const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle'>('rectangle');
   const [previewArea, setPreviewArea] = useState<LotArea | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!mapId) return;
 
-    const loadData = async () => {
-      try {
-        console.log(`[LotManagement] 🔄 Carregando dados do mapa ${mapId}...`);
+    try {
+      console.log(`[LotManagement] 🔄 Carregando dados do mapa ${mapId}...`);
         const response = await axios.get(`${API_URL}/mapas/lotes`, {
           params: { mapId },
           timeout: 10000,
@@ -107,10 +107,19 @@ export default function LotManagement() {
       } finally {
         setIsLoading(false);
       }
-    };
+    }, [mapId]);
 
+  // Carrega os dados inicialmente
+  useEffect(() => {
     loadData();
-  }, [mapId]);
+  }, [loadData]);
+
+  // Atualiza os dados a cada 3 segundos para todos os clientes
+  useRealtimeUpdates(() => {
+    if (!isCreating && !editingLot) {
+      loadData();
+    }
+  }, 3000);
 
   const reloadLots = async () => {
     try {
