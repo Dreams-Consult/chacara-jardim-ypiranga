@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Map, Lot, LotStatus } from '@/types';
+import { useRealtimeUpdates } from './useRealtimeUpdates';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -14,6 +15,12 @@ export const useMapSelection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingLots, setIsLoadingLots] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Atualização automática a cada 5 segundos para sincronizar reservas
+  useRealtimeUpdates(() => {
+    console.log('🔄 Auto-refresh: verificando atualizações...');
+    setRefreshKey(prev => prev + 1);
+  }, 5000);
 
   // Buscar apenas informações dos mapas (sem lotes)
   useEffect(() => {
