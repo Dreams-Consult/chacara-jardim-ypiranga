@@ -256,6 +256,111 @@ curl -X POST http://localhost:3001/api/reservations \
 
 ---
 
+## Endpoint de Validação de Lote
+
+### GET `/api/lots/valido?idLote={loteId}`
+
+Verifica se um lote está disponível para reserva antes de processar a compra.
+Previne reservas duplicadas e garante que o lote está realmente disponível.
+
+#### Query Parameters
+
+| Parâmetro | Tipo   | Obrigatório | Descrição                    |
+|-----------|--------|-------------|------------------------------|
+| idLote    | string | Sim         | ID único do lote a verificar |
+
+#### Exemplo de Request
+
+```bash
+GET /api/lots/valido?idLote=1730678400000
+```
+
+#### Response - Lote Disponível
+
+```json
+{
+  "isAvailable": 1
+}
+```
+
+#### Response - Lote Indisponível
+
+```json
+{
+  "isAvailable": 0
+}
+```
+
+#### Códigos de Status
+
+- `200 OK` - Verificação realizada com sucesso
+- `400 Bad Request` - Parâmetro idLote não fornecido
+- `500 Internal Server Error` - Erro ao verificar disponibilidade
+
+#### Exemplo com cURL
+
+```bash
+curl -X GET "http://localhost:3001/api/lots/valido?idLote=1730678400000"
+```
+
+#### Exemplo com JavaScript
+
+```javascript
+const checkLotAvailability = async (lotId) => {
+  try {
+    const response = await fetch(`/api/lots/valido?idLote=${lotId}`);
+    const data = await response.json();
+
+    if (data.isAvailable === 1) {
+      console.log('✅ Lote disponível');
+      return true;
+    } else {
+      console.log('❌ Lote não disponível');
+      return false;
+    }
+  } catch (error) {
+    console.error('Erro ao verificar lote:', error);
+    return false;
+  }
+};
+
+// Uso
+const isAvailable = await checkLotAvailability('1730678400000');
+```
+
+#### Fluxo de Validação no Frontend
+
+1. **Usuário preenche formulário de compra**
+2. **Usuário clica em "Reservar"**
+3. **Sistema valida CPFs (cliente + vendedor)**
+4. **🔍 Sistema verifica disponibilidade do lote** ← NOVO
+5. Se `isAvailable === 0`: Exibe erro e cancela
+6. Se `isAvailable === 1`: Prossegue com a reserva
+7. **Sistema envia dados para `/mapas/lotes/reservar`**
+
+#### Backend (n8n) - Lógica de Validação
+
+O backend deve verificar:
+
+```sql
+-- Verifica se o lote está disponível
+SELECT
+  CASE
+    WHEN status = 'available' THEN 1
+    ELSE 0
+  END AS isAvailable
+FROM lots
+WHERE id = {loteId};
+```
+
+**Regras de negócio:**
+- ✅ `status = 'available'` → `isAvailable: 1`
+- ❌ `status = 'reserved'` → `isAvailable: 0`
+- ❌ `status = 'sold'` → `isAvailable: 0`
+- ❌ Lote não encontrado → `isAvailable: 0`
+
+---
+
 ## Comportamento do Frontend
 
 1. **Requisição bem-sucedida (200):**

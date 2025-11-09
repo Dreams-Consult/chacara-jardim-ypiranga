@@ -2,6 +2,8 @@ import { useState } from 'react';
 import axios from 'axios';
 import { Lot } from '@/types';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 interface FormData {
   customerName: string;
   customerEmail: string;
@@ -78,6 +80,21 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
     }
 
     try {
+      // 🔍 VERIFICAR SE O LOTE ESTÁ DISPONÍVEL ANTES DE RESERVAR
+      console.log(`[usePurchaseForm] 🔍 Verificando disponibilidade do lote ${lot.id}...`);
+
+      const checkResponse = await axios.get(`${API_URL}/mapas/lotes/valido?idLote=${lot.id}`);
+
+      if (checkResponse.data.isAvailable === 0) {
+        setError('Este lote não está mais disponível. Por favor, escolha outro lote.');
+        setIsSubmitting(false);
+        console.log(`[usePurchaseForm] ❌ Lote ${lot.id} não está disponível`);
+        return;
+      }
+
+      console.log(`[usePurchaseForm] ✅ Lote ${lot.id} está disponível, prosseguindo com a reserva...`);
+
+      // Prosseguir com a reserva
       const requestData = {
         lot: {
           id: lot.id,
@@ -113,8 +130,6 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
         }
       };
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
       const response = await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
           'Content-Type': 'application/json',
@@ -122,15 +137,20 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
         timeout: 10000,
       });
 
-      console.log('Resposta da API:', response.data);
+      console.log('[usePurchaseForm] ✅ Reserva enviada com sucesso:', response.data);
 
       onSuccess();
     } catch (err) {
-      console.error('Erro ao enviar reserva:', err);
+      console.error('[usePurchaseForm] ❌ Erro ao enviar reserva:', err);
 
       if (axios.isAxiosError(err)) {
         if (err.response) {
-          setError(`Erro do servidor: ${err.response.data?.message || err.response.statusText}`);
+          // Verifica se o erro é de lote indisponível
+          if (err.response.status === 409 || err.response.data?.message?.includes('disponível')) {
+            setError('Este lote não está mais disponível. Por favor, escolha outro lote.');
+          } else {
+            setError(`Erro do servidor: ${err.response.data?.message || err.response.statusText}`);
+          }
         } else if (err.request) {
           setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
         } else {
