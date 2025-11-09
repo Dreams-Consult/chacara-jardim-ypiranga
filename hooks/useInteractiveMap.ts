@@ -31,6 +31,8 @@ export function useInteractiveMap({
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
   const [initialScale, setInitialScale] = useState(1);
+  const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 });
+  const [pinchCenter, setPinchCenter] = useState<{ x: number; y: number } | null>(null);
 
   const drawLot = (
     ctx: CanvasRenderingContext2D,
@@ -269,12 +271,33 @@ export function useInteractiveMap({
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  // Calcula o ponto central entre dois toques
+  const getTouchCenter = (touch1: React.Touch, touch2: React.Touch) => {
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2,
+    };
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      // Pinch-to-zoom: salva distância inicial
+      // Pinch-to-zoom: salva distância inicial e centro do pinch
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      const center = getTouchCenter(e.touches[0], e.touches[1]);
+      
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      
+      // Centro em coordenadas do viewport relativo ao canvas
+      const centerX = center.x - rect.left;
+      const centerY = center.y - rect.top;
+      
       setInitialPinchDistance(distance);
       setInitialScale(scale);
+      setInitialOffset({ x: offset.x, y: offset.y });
+      setPinchCenter({ x: centerX, y: centerY });
     } else if (e.touches.length === 1 && !isEditMode) {
       // Pan: salva posição inicial
       setIsPanning(true);
@@ -286,13 +309,45 @@ export function useInteractiveMap({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && initialPinchDistance !== null) {
-      // Pinch-to-zoom
+    if (e.touches.length === 2 && initialPinchDistance !== null && pinchCenter) {
+      // Pinch-to-zoom com ponto focal preciso
       e.preventDefault();
+      
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
+      
+      // Centro atual em coordenadas do viewport relativo ao canvas
+      const currentCenterX = currentCenter.x - rect.left;
+      const currentCenterY = currentCenter.y - rect.top;
+      
+      // Calcula nova escala
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
-      const scaleChange = distance / initialPinchDistance;
-      const newScale = Math.max(0.5, Math.min(initialScale * scaleChange, 5));
+      const scaleRatio = distance / initialPinchDistance;
+      const newScale = Math.max(0.5, Math.min(initialScale * scaleRatio, 5));
+      
+      // Converte coordenadas do viewport para coordenadas do canvas
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
+      const canvasCenterX = pinchCenter.x * scaleX;
+      const canvasCenterY = pinchCenter.y * scaleY;
+      
+      // Ponto na imagem original (antes de qualquer transformação)
+      const imagePointX = (canvasCenterX - initialOffset.x) / initialScale;
+      const imagePointY = (canvasCenterY - initialOffset.y) / initialScale;
+      
+      // Novo offset para manter o ponto da imagem fixo sob o centro atual do pinch
+      const currentCanvasCenterX = currentCenterX * scaleX;
+      const currentCanvasCenterY = currentCenterY * scaleY;
+      
+      const newOffsetX = currentCanvasCenterX - imagePointX * newScale;
+      const newOffsetY = currentCanvasCenterY - imagePointY * newScale;
+      
       setScale(newScale);
+      setOffset({ x: newOffsetX, y: newOffsetY });
     } else if (e.touches.length === 1 && isPanning && !isEditMode) {
       // Pan
       e.preventDefault();
@@ -305,6 +360,7 @@ export function useInteractiveMap({
 
   const handleTouchEnd = () => {
     setInitialPinchDistance(null);
+    setPinchCenter(null);
     setIsPanning(false);
   };
 
