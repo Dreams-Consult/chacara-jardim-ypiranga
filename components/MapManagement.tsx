@@ -35,19 +35,19 @@ export default function MapManagement() {
   };
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-[var(--background)] p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Mapas</h1>
+        <h1 className="text-3xl font-bold text-white">Gerenciamento de Mapas</h1>
         <div className="flex gap-2">
           <a
             href="/admin/data"
-            className="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 shadow-md transition-all hover:shadow-lg"
+            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
           >
             📦 Exportar/Importar
           </a>
           <button
             onClick={() => setIsCreating(true)}
-            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg"
+            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
           >
             Novo Mapa
           </button>
@@ -56,56 +56,71 @@ export default function MapManagement() {
 
       {isLoading ? (
         <div className="text-center py-12">
-          <p className="text-gray-600">Carregando mapas...</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
+            <svg className="w-8 h-8 text-[var(--accent)] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-white font-semibold">Carregando mapas...</p>
         </div>
       ) : maps.length === 0 && !isCreating ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <p className="text-gray-600 text-lg mb-2">Nenhum mapa cadastrado</p>
-          <p className="text-gray-500 text-sm">Clique em &quot;Novo Mapa&quot; para começar</p>
+        <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-[var(--accent)]/40 shadow-[var(--shadow-md)]">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
+            <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <p className="text-white text-lg font-semibold mb-2">Nenhum mapa cadastrado</p>
+          <p className="text-white/70 text-sm font-medium">Clique em &quot;Novo Mapa&quot; para começar</p>
         </div>
       ) : null}
 
       {isCreating && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Novo Mapa</h2>
-            <div className="space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Novo Mapa
+            </h2>
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">Nome</label>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Nome</label>
                 <input
                   type="text"
                   value={editingMap?.name || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, name: e.target.value } as Map)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
                   placeholder="Nome do mapa"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">Descrição</label>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Descrição</label>
                 <textarea
                   value={editingMap?.description || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, description: e.target.value } as Map)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
                   placeholder="Descrição do mapa"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
                   Upload de Imagem ou PDF
                 </label>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={handleFileUpload}
-                  className="w-full text-gray-900"
+                  className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20"
                 />
-                <p className="text-xs text-amber-700 mt-2 bg-amber-50 p-2 rounded border border-amber-200">
-                  ⚠️ <span className="font-medium">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
+                <p className="text-xs text-[var(--warning-dark)] mt-2 bg-[var(--warning)]/10 p-3 rounded-xl border-2 border-[var(--warning)]/30 font-medium">
+                  ⚠️ <span className="font-bold">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
                   Para PDFs grandes, converta para imagem primeiro usando o script convert-pdf.sh
                 </p>
               </div>
@@ -116,7 +131,7 @@ export default function MapManagement() {
                   setIsCreating(false);
                   setEditingMap(null);
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)]"
               >
                 Cancelar
               </button>
@@ -127,8 +142,8 @@ export default function MapManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {maps.map((map) => (
-          <div key={map.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
+          <div key={map.id} className="bg-white border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
+            <div className="h-48 bg-gradient-to-br from-[var(--surface)] to-[var(--surface-hover)] flex items-center justify-center overflow-hidden">
               {map.imageUrl && map.imageUrl.trim() !== '' ? (
                 map.imageType === 'image' ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -138,38 +153,40 @@ export default function MapManagement() {
                     className="max-w-full max-h-full object-contain"
                   />
                 ) : (
-                  <div className="text-gray-600 font-medium">PDF: {map.name}</div>
+                  <div className="text-[var(--foreground)] font-bold">PDF: {map.name}</div>
                 )
               ) : (
-                <div className="text-gray-400 text-center p-4">
-                  <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div className="text-[var(--foreground)]/60 text-center p-4">
+                  <svg className="w-16 h-16 mx-auto mb-2 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-sm">Sem imagem</p>
+                  <p className="text-sm font-semibold">Sem imagem</p>
                 </div>
               )}
             </div>
-            <div className="p-4">
-              <h3 className="font-bold text-lg text-gray-900 mb-2">{map.name}</h3>
+            <div className="p-5">
+              <h3 className="font-bold text-lg text-[var(--foreground)] mb-2">{map.name}</h3>
               {map.description && (
-                <p className="text-sm text-gray-700 mb-3">{map.description}</p>
+                <p className="text-sm text-[var(--foreground)] font-medium mb-3">{map.description}</p>
               )}
-              <p className="text-xs text-gray-600 mb-1">
-                <span className="font-medium">Dimensões:</span> {map.width} x {map.height}px
-              </p>
-              <p className="text-xs text-gray-500 mb-4 font-mono">
-                ID: {map.id}
-              </p>
+              <div className="space-y-1 mb-4">
+                <p className="text-xs text-[var(--foreground)]/80 font-semibold">
+                  <span className="font-bold">Dimensões:</span> {map.width} x {map.height}px
+                </p>
+                <p className="text-xs text-[var(--foreground)]/60 font-mono bg-[var(--surface)] px-2 py-1 rounded">
+                  ID: {map.id}
+                </p>
+              </div>
               <div className="flex gap-2">
                 <Link
                   href={`/admin/lot-management?mapId=${map.id}`}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 text-center transition-colors shadow-sm hover:shadow-md"
+                  className="flex-1 px-4 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] text-center transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
                 >
                   Gerenciar Lotes
                 </Link>
                 <button
                   onClick={() => handleDelete(map.id)}
-                  className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
+                  className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
                 >
                   Excluir
                 </button>
@@ -181,7 +198,7 @@ export default function MapManagement() {
 
       {maps.length === 0 && !isCreating && (
         <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">Nenhum mapa cadastrado. Clique em &ldquo;Novo Mapa&rdquo; para começar.</p>
+          <p className="text-[var(--foreground)] text-lg font-semibold">Nenhum mapa cadastrado. Clique em &ldquo;Novo Mapa&rdquo; para começar.</p>
         </div>
       )}
     </div>
