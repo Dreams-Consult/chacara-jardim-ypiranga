@@ -165,12 +165,12 @@ export default function MapManagement() {
               )}
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg text-[var(--foreground)] mb-2">{map.name}</h3>
+              <h3 className="font-bold text-lg text-[var(--surface)] mb-2">{map.name}</h3>
               {map.description && (
-                <p className="text-sm text-[var(--foreground)] font-medium mb-3">{map.description}</p>
+                <p className="text-sm text-[var(--surface)] font-medium mb-3">{map.description}</p>
               )}
               <div className="space-y-1 mb-4">
-                <p className="text-xs text-[var(--foreground)]/80 font-semibold">
+                <p className="text-xs text-[var(--surface)]/80 font-semibold">
                   <span className="font-bold">Dimensões:</span> {map.width} x {map.height}px
                 </p>
                 <p className="text-xs text-[var(--foreground)]/60 font-mono bg-[var(--surface)] px-2 py-1 rounded">
