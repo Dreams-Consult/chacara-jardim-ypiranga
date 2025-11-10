@@ -16,6 +16,7 @@ export enum LotStatus {
 export interface Lot {
   id: string;
   mapId: string;
+  mapName?: string; // Nome do mapa associado (opcional)
   lotNumber: string;
   area: LotArea;
   status: LotStatus;
