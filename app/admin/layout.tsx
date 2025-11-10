@@ -15,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   // Verificar se já visitou (apenas no cliente)
-  const hasVisitedMapManagement = typeof window !== 'undefined' 
+  const hasVisitedMapManagement = typeof window !== 'undefined'
     ? localStorage.getItem('hasVisitedMapManagement') === 'true' || pathname === '/admin/map-management'
     : false;
 
@@ -77,7 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
           </div>
-          
+
           <nav className="p-4 space-y-2">
             {menuItems.map((item) => (
               <Link
