@@ -24,7 +24,7 @@ export default function DashboardPage() {
       const mapsData = Array.isArray(mapsResponse.data) ? mapsResponse.data : [];
 
       interface MapData {
-        id: string;
+        mapId: string;
         name: string;
         description?: string;
         imageUrl?: string;
@@ -35,7 +35,7 @@ export default function DashboardPage() {
       }
 
       const loadedMaps: Map[] = mapsData.map((data: MapData) => ({
-        id: data.id,
+        id: data.mapId,
         name: data.name,
         description: data.description || '',
         imageUrl: data.imageUrl || '',

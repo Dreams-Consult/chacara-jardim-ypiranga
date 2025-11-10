@@ -14,11 +14,11 @@ export default function ReservationsPage() {
   const loadData = useCallback(async () => {
     try {
       console.log('[Reservations] 🔄 Carregando dados...');
-      
+
       // Carregar mapas
       const mapsResponse = await axios.get(`${API_URL}/mapas`, { timeout: 10000 });
       const mapsData = Array.isArray(mapsResponse.data) ? mapsResponse.data : [];
-      
+
       interface MapData {
         id: string;
         name: string;
@@ -132,7 +132,7 @@ export default function ReservationsPage() {
         },
         { timeout: 10000 }
       );
-      
+
       alert(`✅ Lote ${lot.lotNumber} marcado como VENDIDO com sucesso!`);
       await loadData();
     } catch (error) {
@@ -155,7 +155,7 @@ export default function ReservationsPage() {
         },
         { timeout: 10000 }
       );
-      
+
       alert(`✅ Reserva do lote ${lot.lotNumber} revertida com sucesso!`);
       await loadData();
     } catch (error) {

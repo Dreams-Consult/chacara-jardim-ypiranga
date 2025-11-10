@@ -63,15 +63,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-xs text-white/80">Vale dos Carajás</p>
               </div>
             </div>
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span className="text-sm font-semibold">Página Pública</span>
-            </Link>
           </div>
         </div>
       </header>
@@ -106,17 +97,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-xs font-bold text-[var(--foreground)]/60 mb-2 px-4">FERRAMENTAS</p>
             <div className="space-y-1">
               <Link
-                href="/admin/data"
+                href="/admin/map-management"
                 className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                  pathname === '/admin/data'
+                  pathname === '/admin/map-management'
                     ? 'bg-[var(--surface)] text-[var(--primary)]'
                     : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
-                <span>Dados</span>
+                <span>Gerenciar Mapas</span>
               </Link>
               <Link
                 href="/admin/lot-management"
@@ -130,6 +121,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 <span>Editar Lotes</span>
+              </Link>
+              <Link
+                href="/admin/data"
+                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  pathname === '/admin/data'
+                    ? 'bg-[var(--surface)] text-[var(--primary)]'
+                    : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                <span>Dados</span>
               </Link>
             </div>
           </div>
