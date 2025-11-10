@@ -200,8 +200,11 @@ export default function LotManagement() {
   const updateLotStatus = async (lotId: string, status: LotStatus) => {
     try {
       console.log(`[LotManagement] 🔄 Atualizando status do lote ${lotId} para ${status}...`);
-      await axios.put(`${API_URL}/atualizarStatusLote/${lotId}`,
-        { status },
+      await axios.put(`${API_URL}/mapas/lotes/comprar`,
+        {
+          lotId,
+          status
+        },
         {
           headers: { 'Content-Type': 'application/json' },
           timeout: 10000,
