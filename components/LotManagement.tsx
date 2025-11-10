@@ -354,6 +354,12 @@ export default function LotManagement() {
       [LotStatus.SOLD]: 'Vendido',
     };
 
+    // Validar se está tentando marcar como vendido sem estar reservado
+    if (newStatus === LotStatus.SOLD && lot.status !== LotStatus.RESERVED) {
+      alert(`❌ Não é possível finalizar a compra do lote ${lot.lotNumber}.\n\nO lote precisa estar com status "Reservado" antes de ser marcado como "Vendido".`);
+      return;
+    }
+
     if (confirm(`Alterar status do lote ${lot.lotNumber} para "${statusLabels[newStatus]}"?`)) {
       try {
         await updateLotStatus(lotId, newStatus);
@@ -368,6 +374,18 @@ export default function LotManagement() {
     setEditingLot(lot);
     setIsCreating(true);
     setSelectedLotId(lot.id);
+  };
+
+  const handleStatusChangeInForm = (newStatus: LotStatus) => {
+    if (!editingLot) return;
+
+    // Validar se está tentando marcar como vendido sem estar reservado
+    if (newStatus === LotStatus.SOLD && editingLot.status !== LotStatus.RESERVED) {
+      alert(`❌ Não é possível marcar o lote como "Vendido".\n\nO lote precisa estar com status "Reservado" antes de ser marcado como "Vendido".`);
+      return;
+    }
+
+    setEditingLot({ ...editingLot, status: newStatus });
   };
 
   const handleNewLot = () => {
@@ -489,9 +507,7 @@ export default function LotManagement() {
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
                   <select
                     value={editingLot.status}
-                    onChange={(e) =>
-                      setEditingLot({ ...editingLot, status: e.target.value as LotStatus })
-                    }
+                    onChange={(e) => handleStatusChangeInForm(e.target.value as LotStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
@@ -533,12 +549,7 @@ export default function LotManagement() {
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
                   <select
                     value={editingLot.status}
-                    onChange={(e) =>
-                      setEditingLot({
-                        ...editingLot,
-                        status: e.target.value as LotStatus,
-                      })
-                    }
+                    onChange={(e) => handleStatusChangeInForm(e.target.value as LotStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
