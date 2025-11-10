@@ -2,9 +2,22 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Se estiver na página de gerenciar mapas, marcar como visitado
+    if (pathname === '/admin/map-management') {
+      localStorage.setItem('hasVisitedMapManagement', 'true');
+    }
+  }, [pathname]);
+
+  // Verificar se já visitou (apenas no cliente)
+  const hasVisitedMapManagement = typeof window !== 'undefined' 
+    ? localStorage.getItem('hasVisitedMapManagement') === 'true' || pathname === '/admin/map-management'
+    : false;
 
   const menuItems = [
     {
@@ -48,28 +61,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-lg)] sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-[var(--card-bg)] min-h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)]">
+          <div className="p-6 border-b border-[var(--border)]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold">Painel Administrativo</h1>
-                <p className="text-xs text-white/80">Vale dos Carajás</p>
+                <h1 className="text-lg font-bold text-white">Admin</h1>
+                <p className="text-xs text-white/70">Vale dos Carajás</p>
               </div>
             </div>
           </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-[var(--card-bg)] min-h-[calc(100vh-73px)] border-r border-[var(--border)] shadow-[var(--shadow-md)]">
+          
           <nav className="p-4 space-y-2">
             {menuItems.map((item) => (
               <Link
@@ -109,19 +117,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </svg>
                 <span>Gerenciar Mapas</span>
               </Link>
-              <Link
-                href="/admin/lot-management"
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                  pathname?.startsWith('/admin/lot-management')
-                    ? 'bg-[var(--surface)] text-[var(--primary)]'
-                    : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <span>Editar Lotes</span>
-              </Link>
+              {hasVisitedMapManagement && (
+                <Link
+                  href="/admin/lot-management"
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    pathname?.startsWith('/admin/lot-management')
+                      ? 'bg-[var(--surface)] text-[var(--primary)]'
+                      : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Editar Lotes</span>
+                </Link>
+              )}
               <Link
                 href="/admin/data"
                 className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
