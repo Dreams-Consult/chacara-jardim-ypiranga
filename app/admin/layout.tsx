@@ -10,31 +10,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout, canAccessUsers } = useAuth();
-  const [hasVisitedMapManagement, setHasVisitedMapManagement] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  
+  // Inicializar showLotManagement lendo localStorage (só roda uma vez)
+  const [showLotManagement, setShowLotManagement] = useState(() => {
+    // Durante SSR, retornar false
+    // Durante CSR, ler do localStorage
+    return false; // Sempre false no SSR e primeira renderização no client
+  });
 
-  // Apenas rodar no cliente após montar
+  // Após montar, verificar localStorage
   useEffect(() => {
-    setMounted(true);
     const visited = localStorage.getItem('hasVisitedMapManagement') === 'true';
-    setHasVisitedMapManagement(visited);
+    if (visited) {
+      // Agendar atualização para próximo tick para evitar setState síncrono
+      Promise.resolve().then(() => setShowLotManagement(true));
+    }
   }, []);
 
+  // Validar sessão e redirecionar
   useEffect(() => {
-    if (!mounted) return;
-
-    // Redirecionar para login se não autenticado
     if (!isAuthenticated && pathname !== '/login') {
+      console.log('[AdminLayout] ⚠️ Usuário não autenticado - redirecionando para login');
       router.push('/login');
-      return;
     }
+  }, [isAuthenticated, pathname, router]);
 
-    // Se estiver na página de gerenciar mapas, marcar como visitado
-    if (pathname === '/admin/map-management') {
+  // Marcar como visitado quando entrar em map-management
+  useEffect(() => {
+    if (pathname === '/admin/map-management' && !showLotManagement) {
       localStorage.setItem('hasVisitedMapManagement', 'true');
-      setHasVisitedMapManagement(true);
+      // Agendar atualização para próximo tick
+      Promise.resolve().then(() => setShowLotManagement(true));
     }
-  }, [pathname, isAuthenticated, router, mounted]);
+  }, [pathname, showLotManagement]);
 
   const handleLogout = () => {
     logout();
@@ -107,15 +115,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname?.startsWith(path);
   };
 
-  // Renderizar conteúdo vazio até o componente ser montado
-  if (!mounted) {
-    return (
-      <div suppressHydrationWarning className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <div suppressHydrationWarning className="animate-pulse">Carregando...</div>
-      </div>
-    );
-  }
-
   return (
     <div suppressHydrationWarning className="min-h-screen bg-[var(--background)]">
       <div className="flex">
@@ -174,7 +173,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </svg>
                 <span>Gerenciar Mapas</span>
               </Link>
-              {hasVisitedMapManagement && (
+              {showLotManagement && (
                 <Link
                   href="/admin/lot-management"
                   className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, UserRole, UserStatus } from '@/types';
 import axios from 'axios';
 
@@ -33,6 +33,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return null;
   });
+
+  // Validar sessão ao montar o componente e em intervalos
+  useEffect(() => {
+    // Verificar se há dados de sessão no localStorage
+    const validateSession = () => {
+      if (typeof window === 'undefined') return;
+      
+      const storedUser = localStorage.getItem('currentUser');
+      const userData = localStorage.getItem('userData');
+      
+      // Se há um usuário no estado mas não no localStorage, fazer logout
+      if (user && !storedUser && !userData) {
+        console.log('[AuthContext] ⚠️ Sessão perdida - fazendo logout automático');
+        setUser(null);
+      }
+      
+      // Se há dados no localStorage mas não no estado, restaurar
+      if (!user && (storedUser || userData)) {
+        try {
+          const parsedUser = JSON.parse(storedUser || userData || '');
+          console.log('[AuthContext] 🔄 Restaurando sessão do localStorage');
+          setUser(parsedUser);
+        } catch (e) {
+          console.error('[AuthContext] Erro ao restaurar sessão:', e);
+          localStorage.removeItem('currentUser');
+          localStorage.removeItem('userData');
+        }
+      }
+    };
+
+    // Validar imediatamente
+    validateSession();
+
+    // Validar a cada 30 segundos (opcional - para detectar se outro tab limpou a sessão)
+    const intervalId = setInterval(validateSession, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [user]);
 
   const login = async (cpf: string, password: string): Promise<boolean> => {
     try {

@@ -36,7 +36,7 @@ export default function UsersPage() {
       console.log('[UsersPage] Carregando usuários...');
       setIsLoading(true);
 
-      const response = await axios.get(`${API_URL}/usuarios/listar`, {
+      const response = await axios.get(`${API_URL}/usuarios/`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -44,7 +44,9 @@ export default function UsersPage() {
       });
 
       console.log('[UsersPage] ✅ Usuários carregados:', response.data);
-      setUsers(response.data.users || []);
+      // A API pode retornar os usuários diretamente ou em response.data.users
+      const usersList = Array.isArray(response.data) ? response.data : (response.data.users || []);
+      setUsers(usersList);
     } catch (error) {
       console.error('[UsersPage] ❌ Erro ao carregar usuários:', error);
       alert('Erro ao carregar usuários');
@@ -61,15 +63,15 @@ export default function UsersPage() {
         // Editar usuário existente
         console.log('[UsersPage] Atualizando usuário:', editingUser.id);
 
-        const updateData = {
+        const params = new URLSearchParams({
           name: formData.name,
           email: formData.email,
           cpf: formData.cpf.replace(/\D/g, ''),
           role: formData.role,
           ...(formData.password && { password: formData.password }),
-        };
+        });
 
-        await axios.put(`${API_URL}/usuarios/atualizar/${editingUser.id}`, updateData, {
+        await axios.put(`${API_URL}/usuarios/atualizar/${editingUser.id}?${params.toString()}`, null, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -116,35 +118,12 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-
-    try {
-      console.log('[UsersPage] Excluindo usuário:', userId);
-
-      await axios.delete(`${API_URL}/usuarios/deletar/${userId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 10000,
-      });
-
-      console.log('[UsersPage] ✅ Usuário excluído');
-      alert('Usuário excluído com sucesso!');
-
-      // Recarregar lista de usuários
-      await loadUsers();
-    } catch (error) {
-      console.error('[UsersPage] ❌ Erro ao excluir usuário:', error);
-      alert('Erro ao excluir usuário');
-    }
-  };
-
   const handleApprove = async (userId: string) => {
     try {
       console.log('[UsersPage] Aprovando usuário:', userId);
 
-      await axios.put(`${API_URL}/usuarios/aprovar/${userId}`, {
+      await axios.put(`${API_URL}/usuarios/aprovar`, {
+        idUser: userId,
         status: UserStatus.APPROVED,
       }, {
         headers: {
@@ -170,7 +149,8 @@ export default function UsersPage() {
     try {
       console.log('[UsersPage] Rejeitando usuário:', userId);
 
-      await axios.put(`${API_URL}/usuarios/rejeitar/${userId}`, {
+      await axios.put(`${API_URL}/usuarios/rejeitar`, {
+        idUser: userId,
         status: UserStatus.REJECTED,
       }, {
         headers: {
@@ -188,18 +168,6 @@ export default function UsersPage() {
       console.error('[UsersPage] ❌ Erro ao rejeitar usuário:', error);
       alert('Erro ao rejeitar usuário');
     }
-  };
-
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      cpf: user.cpf,
-      role: user.role,
-      password: '',
-    });
-    setIsCreating(true);
   };
 
   const resetForm = () => {
@@ -230,26 +198,6 @@ export default function UsersPage() {
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles[role]}`}>
         {labels[role]}
-      </span>
-    );
-  };
-
-  const getStatusBadge = (status: UserStatus) => {
-    const styles = {
-      [UserStatus.PENDING]: 'bg-amber-100 text-amber-800 border-amber-200',
-      [UserStatus.APPROVED]: 'bg-green-100 text-green-800 border-green-200',
-      [UserStatus.REJECTED]: 'bg-red-100 text-red-800 border-red-200',
-    };
-
-    const labels = {
-      [UserStatus.PENDING]: 'Pendente',
-      [UserStatus.APPROVED]: 'Aprovado',
-      [UserStatus.REJECTED]: 'Rejeitado',
-    };
-
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles[status]}`}>
-        {labels[status]}
       </span>
     );
   };
@@ -293,6 +241,103 @@ export default function UsersPage() {
           </button>
         )}
       </div>
+
+      {/* Seção de Usuários Pendentes */}
+      {users.filter(u => u.status === UserStatus.PENDING).length > 0 && (
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
+          <div className="bg-amber-50 border-b-2 border-amber-200 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-500 text-white p-2 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-amber-900">
+                  Cadastros Pendentes de Aprovação
+                </h2>
+                <p className="text-amber-700 text-sm">
+                  {users.filter(u => u.status === UserStatus.PENDING).length} vendedor(es) aguardando confirmação
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nome
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    CPF
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    CRECI
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Perfil
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {users.filter(u => u.status === UserStatus.PENDING).map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">{user.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600 font-mono">
+                        {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">{user.creci || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getRoleBadge(user.role)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium border bg-amber-100 text-amber-800 border-amber-200">
+                        Pendente
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(user.id)}
+                          className="text-green-600 hover:text-green-800 font-medium"
+                        >
+                          Aprovar
+                        </button>
+                        <button
+                          onClick={() => handleReject(user.id)}
+                          className="text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Rejeitar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Formulário de Criação/Edição */}
       {isCreating && (
@@ -396,103 +441,6 @@ export default function UsersPage() {
           </form>
         </div>
       )}
-
-      {/* Lista de Usuários */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nome
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  CPF
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  CRECI
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Perfil
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    Nenhum usuário cadastrado
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.cpf}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.creci || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getRoleBadge(user.role)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(user.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex gap-2 flex-wrap">
-                        {user.status === UserStatus.PENDING && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(user.id)}
-                              className="text-green-600 hover:text-green-800 font-medium"
-                            >
-                              Aprovar
-                            </button>
-                            <button
-                              onClick={() => handleReject(user.id)}
-                              className="text-red-600 hover:text-red-800 font-medium"
-                            >
-                              Rejeitar
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-800 font-medium"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }
