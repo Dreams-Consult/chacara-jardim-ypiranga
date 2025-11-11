@@ -20,10 +20,10 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
   // Carregar dados do vendedor logado do localStorage
   const getSellerData = () => {
     if (typeof window === 'undefined') return null;
-    
+
     const currentUser = localStorage.getItem('currentUser');
     const userData = localStorage.getItem('userData');
-    
+
     if (currentUser) {
       try {
         return JSON.parse(currentUser);
@@ -31,7 +31,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
         console.error('[usePurchaseForm] Erro ao parsear currentUser:', error);
       }
     }
-    
+
     if (userData) {
       try {
         return JSON.parse(userData);
@@ -39,7 +39,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
         console.error('[usePurchaseForm] Erro ao parsear userData:', error);
       }
     }
-    
+
     return null;
   };
 
@@ -66,7 +66,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
         email: seller.email,
         cpf: seller.cpf,
       });
-      
+
       // React 19: usar Promise.resolve().then() para setState assíncrono
       Promise.resolve().then(() => {
         setFormData(prev => ({

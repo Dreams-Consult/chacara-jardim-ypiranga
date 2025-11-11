@@ -39,16 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Verificar se há dados de sessão no localStorage
     const validateSession = () => {
       if (typeof window === 'undefined') return;
-      
+
       const storedUser = localStorage.getItem('currentUser');
       const userData = localStorage.getItem('userData');
-      
+
       // Se há um usuário no estado mas não no localStorage, fazer logout
       if (user && !storedUser && !userData) {
         console.log('[AuthContext] ⚠️ Sessão perdida - fazendo logout automático');
         setUser(null);
       }
-      
+
       // Se há dados no localStorage mas não no estado, restaurar
       if (!user && (storedUser || userData)) {
         try {

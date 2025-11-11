@@ -52,7 +52,6 @@ const validateCPF = (cpf: string): boolean => {
 export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModalProps) {
   const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lot, onSuccess);
   const [cpfError, setCpfError] = React.useState<string>('');
-  const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCPF(e.target.value);
@@ -67,21 +66,6 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
       }
     } else {
       setCpfError('');
-    }
-  };
-
-  const handleSellerCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData({ ...formData, sellerCPF: formatted });
-
-    if (formatted.length === 14) {
-      if (!validateCPF(formatted)) {
-        setSellerCpfError('CPF inválido');
-      } else {
-        setSellerCpfError('');
-      }
-    } else {
-      setSellerCpfError('');
     }
   };
 
@@ -100,23 +84,6 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
     }
 
     setFormData({ ...formData, customerPhone: formatted });
-  };
-
-  const handleSellerPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const numbers = e.target.value.replace(/\D/g, '');
-    let formatted = numbers;
-
-    if (numbers.length <= 2) {
-      formatted = numbers;
-    } else if (numbers.length <= 6) {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    } else if (numbers.length <= 10) {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
-    } else {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-    }
-
-    setFormData({ ...formData, sellerPhone: formatted });
   };
 
   return (
@@ -257,8 +224,8 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                 )}
               </div>
               <p className="text-sm text-[var(--foreground)]/70 mb-4">
-                {(formData.sellerName || formData.sellerEmail || formData.sellerCPF) 
-                  ? 'Seus dados foram carregados automaticamente. Você pode editá-los se necessário.'
+                {(formData.sellerName || formData.sellerEmail || formData.sellerCPF)
+                  ? 'Seus dados foram carregados automaticamente e não podem ser alterados.'
                   : 'Preencha as informações do vendedor/corretor responsável pela venda'
                 }
               </p>
@@ -270,8 +237,9 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                     type="text"
                     required
                     value={formData.sellerName || ''}
-                    onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-gray-100 cursor-not-allowed"
                     placeholder="Nome completo do vendedor"
                   />
                 </div>
@@ -282,8 +250,9 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                     type="email"
                     required
                     value={formData.sellerEmail || ''}
-                    onChange={(e) => setFormData({ ...formData, sellerEmail: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-gray-100 cursor-not-allowed"
                     placeholder="email@vendedor.com"
                   />
                 </div>
@@ -294,8 +263,9 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                     type="tel"
                     required
                     value={formData.sellerPhone || ''}
-                    onChange={handleSellerPhoneChange}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-gray-100 cursor-not-allowed"
                     placeholder="(00) 00000-0000"
                     maxLength={15}
                   />
@@ -307,16 +277,12 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                     type="text"
                     required
                     value={formData.sellerCPF || ''}
-                    onChange={handleSellerCPFChange}
-                    className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
-                      sellerCpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
-                    }`}
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-gray-100 cursor-not-allowed"
                     placeholder="000.000.000-00"
                     maxLength={14}
                   />
-                  {sellerCpfError && (
-                    <p className="text-red-600 text-sm mt-1">❌ {sellerCpfError}</p>
-                  )}
                 </div>
               </div>
             </div>
@@ -335,7 +301,7 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                disabled={isSubmitting || cpfError !== '' || sellerCpfError !== ''}
+                disabled={isSubmitting || cpfError !== ''}
                 className="flex-1 px-5 py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] cursor-pointer"
               >
                 {isSubmitting ? (

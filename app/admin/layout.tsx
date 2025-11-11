@@ -10,7 +10,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout, canAccessUsers } = useAuth();
-  
+
   // Inicializar showLotManagement lendo localStorage (só roda uma vez)
   const [showLotManagement, setShowLotManagement] = useState(() => {
     // Durante SSR, retornar false
@@ -160,33 +160,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="px-4 pb-4">
             <p className="text-xs font-bold text-[var(--foreground)]/60 mb-2 px-4">FERRAMENTAS</p>
             <div className="space-y-1">
-              <Link
-                href="/admin/map-management"
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                  pathname === '/admin/map-management'
-                    ? 'bg-[var(--surface)] text-[var(--primary)]'
-                    : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
-                <span>Gerenciar Mapas</span>
-              </Link>
-              {showLotManagement && (
-                <Link
-                  href="/admin/lot-management"
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                    pathname?.startsWith('/admin/lot-management')
-                      ? 'bg-[var(--surface)] text-[var(--primary)]'
-                      : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>Editar Lotes</span>
-                </Link>
+              {/* Gerenciamento de Mapas - apenas DEV e ADMIN */}
+              {user?.role !== UserRole.VENDEDOR && (
+                <>
+                  <Link
+                    href="/admin/map-management"
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                      pathname === '/admin/map-management'
+                        ? 'bg-[var(--surface)] text-[var(--primary)]'
+                        : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    <span>Gerenciar Mapas</span>
+                  </Link>
+                  {showLotManagement && (
+                    <Link
+                      href="/admin/lot-management"
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                        pathname?.startsWith('/admin/lot-management')
+                          ? 'bg-[var(--surface)] text-[var(--primary)]'
+                          : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span>Editar Lotes</span>
+                    </Link>
+                  )}
+                </>
               )}
               <Link
                 href="/admin/data"

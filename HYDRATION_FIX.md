@@ -86,7 +86,7 @@ const [user, setUser] = useState<User | null>(() => {
    ```tsx
    // ✅ CORRETO - Sempre retorna false (SSR e CSR)
    const [value, setValue] = useState(() => false);
-   
+
    // Depois leia localStorage em useEffect
    useEffect(() => {
      const stored = localStorage.getItem('key');
@@ -138,7 +138,7 @@ const [user, setUser] = useState<User | null>(() => {
    ```tsx
    // ❌ ERRADO - React 19 BLOQUEIA isso
    if (myRef.current) { ... } // Durante render
-   
+
    // ✅ CORRETO - Use em useEffect
    useEffect(() => {
      if (myRef.current) { ... }
@@ -154,7 +154,7 @@ const [user, setUser] = useState<User | null>(() => {
      }
      return null;
    });
-   
+
    // ✅ CORRETO - Sempre retorna o mesmo valor
    const [value, setValue] = useState(() => false); // ✅ SSR=false, CSR=false
    useEffect(() => {
@@ -173,7 +173,7 @@ const [user, setUser] = useState<User | null>(() => {
      }
      return defaultValue;
    });
-   
+
    // OU use requestAnimationFrame para setState assíncrono
    useEffect(() => {
      const rafId = requestAnimationFrame(() => {
