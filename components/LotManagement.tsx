@@ -390,7 +390,7 @@ export default function LotManagement() {
 
   const handleNewLot = () => {
     setEditingLot({
-      id: Date.now().toString(),
+      id: '', // ID será gerado pelo backend (autoincrement)
       mapId,
       lotNumber: '',
       area: { points: [] },

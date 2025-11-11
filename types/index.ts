@@ -51,3 +51,28 @@ export interface PurchaseRequest {
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
   createdAt: Date;
 }
+
+export enum UserRole {
+  DEV = 'dev',
+  ADMIN = 'admin',
+  VENDEDOR = 'vendedor',
+}
+
+export enum UserStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  cpf: string;
+  creci?: string;
+  role: UserRole;
+  status: UserStatus;
+  password?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

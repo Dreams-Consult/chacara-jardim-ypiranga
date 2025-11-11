@@ -1,23 +1,71 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, logout, canAccessUsers } = useAuth();
+  const [hasVisitedMapManagement, setHasVisitedMapManagement] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Apenas rodar no cliente após montar
+  useEffect(() => {
+    setMounted(true);
+    const visited = localStorage.getItem('hasVisitedMapManagement') === 'true';
+    setHasVisitedMapManagement(visited);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
+    // Redirecionar para login se não autenticado
+    if (!isAuthenticated && pathname !== '/login') {
+      router.push('/login');
+      return;
+    }
+
     // Se estiver na página de gerenciar mapas, marcar como visitado
     if (pathname === '/admin/map-management') {
       localStorage.setItem('hasVisitedMapManagement', 'true');
+      setHasVisitedMapManagement(true);
     }
-  }, [pathname]);
+  }, [pathname, isAuthenticated, router, mounted]);
 
-  // Verificar se já visitou (apenas no cliente)
-  const hasVisitedMapManagement = typeof window !== 'undefined'
-    ? localStorage.getItem('hasVisitedMapManagement') === 'true' || pathname === '/admin/map-management'
-    : false;
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
+  const getRoleBadge = () => {
+    if (!user) return null;
+
+    const styles = {
+      [UserRole.DEV]: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+      [UserRole.ADMIN]: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      [UserRole.VENDEDOR]: 'bg-green-500/20 text-green-300 border-green-500/30',
+    };
+
+    const labels = {
+      [UserRole.DEV]: 'DEV',
+      [UserRole.ADMIN]: 'Admin',
+      [UserRole.VENDEDOR]: 'Vendedor',
+    };
+
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${styles[user.role]}`}>
+        {labels[user.role]}
+      </span>
+    );
+  };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const menuItems = [
     {
@@ -59,11 +107,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname?.startsWith(path);
   };
 
+  // Renderizar conteúdo vazio até o componente ser montado
+  if (!mounted) {
+    return (
+      <div suppressHydrationWarning className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div suppressHydrationWarning className="animate-pulse">Carregando...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div suppressHydrationWarning className="min-h-screen bg-[var(--background)]">
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-[var(--card-bg)] min-h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)]">
+        <aside className="w-64 bg-[var(--card-bg)] min-h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col">
           <div className="p-6 border-b border-[var(--border)]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-xl flex items-center justify-center">
@@ -145,6 +202,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </svg>
                 <span>Dados</span>
               </Link>
+              {canAccessUsers && (
+                <Link
+                  href="/admin/users"
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    pathname === '/admin/users'
+                      ? 'bg-[var(--surface)] text-[var(--primary)]'
+                      : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  <span>Usuários</span>
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {/* User Info & Logout */}
+          <div className="mt-auto border-t border-[var(--border)] p-4">
+            <div className="bg-[var(--surface)]/50 rounded-lg p-3">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {user?.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {getRoleBadge()}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sair
+              </button>
             </div>
           </div>
         </aside>

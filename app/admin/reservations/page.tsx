@@ -4,10 +4,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Lot, LotStatus, Map } from '@/types';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function ReservationsPage() {
+  const { user } = useAuth();
   const [reservedLots, setReservedLots] = useState<Lot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -99,14 +102,20 @@ export default function ReservationsPage() {
 
       const lotsArrays = await Promise.all(lotsPromises);
       const flatLots = lotsArrays.flat();
-      setReservedLots(flatLots);
-      console.log('[Reservations] ✅ Dados carregados:', flatLots.length, 'reservas');
+
+      // Filtrar por CPF do vendedor se o usuário for VENDEDOR
+      const filteredLots = user?.role === UserRole.VENDEDOR
+        ? flatLots.filter((lot) => lot.reservedBy === user.cpf)
+        : flatLots;
+
+      setReservedLots(filteredLots);
+      console.log('[Reservations] ✅ Dados carregados:', filteredLots.length, 'reservas');
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao carregar dados:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.role, user?.cpf]);
 
   useEffect(() => {
     loadData();
@@ -186,6 +195,14 @@ export default function ReservationsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Minhas Reservas</h1>
         <p className="text-white/70">Gerencie as reservas de lotes - finalize compras ou reverta reservas</p>
+        {user?.role === UserRole.VENDEDOR && (
+          <div className="mt-3 inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-lg text-sm border border-blue-500/30">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Exibindo apenas suas vendas (CPF: {user.cpf})
+          </div>
+        )}
       </div>
 
       {/* Estatísticas */}

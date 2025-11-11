@@ -123,7 +123,6 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           cpf: formData.sellerCPF,
         },
         purchaseRequest: {
-          id: Date.now().toString(),
           lotId: lot.id,
           status: 'pending',
           createdAt: new Date().toISOString(),

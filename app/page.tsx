@@ -2,13 +2,19 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomePage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    router.replace('/admin/dashboard');
-  }, [router]);
+    if (isAuthenticated) {
+      router.replace('/admin/dashboard');
+    } else {
+      router.replace('/login');
+    }
+  }, [router, isAuthenticated]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
