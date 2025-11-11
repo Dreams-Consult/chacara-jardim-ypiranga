@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Lot } from '@/types';
 
@@ -17,17 +17,68 @@ interface FormData {
 }
 
 export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
+  // Carregar dados do vendedor logado do localStorage
+  const getSellerData = () => {
+    if (typeof window === 'undefined') return null;
+    
+    const currentUser = localStorage.getItem('currentUser');
+    const userData = localStorage.getItem('userData');
+    
+    if (currentUser) {
+      try {
+        return JSON.parse(currentUser);
+      } catch (error) {
+        console.error('[usePurchaseForm] Erro ao parsear currentUser:', error);
+      }
+    }
+    
+    if (userData) {
+      try {
+        return JSON.parse(userData);
+      } catch (error) {
+        console.error('[usePurchaseForm] Erro ao parsear userData:', error);
+      }
+    }
+    
+    return null;
+  };
+
+  const sellerData = getSellerData();
+
   const [formData, setFormData] = useState<FormData>({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
     customerCPF: '',
     message: '',
-    sellerName: '',
-    sellerEmail: '',
-    sellerPhone: '',
-    sellerCPF: '',
+    sellerName: sellerData?.name || '',
+    sellerEmail: sellerData?.email || '',
+    sellerPhone: sellerData?.phone || '',
+    sellerCPF: sellerData?.cpf || '',
   });
+
+  // Atualizar dados do vendedor quando o componente montar
+  useEffect(() => {
+    const seller = getSellerData();
+    if (seller) {
+      console.log('[usePurchaseForm] ✅ Dados do vendedor carregados automaticamente:', {
+        name: seller.name,
+        email: seller.email,
+        cpf: seller.cpf,
+      });
+      
+      // React 19: usar Promise.resolve().then() para setState assíncrono
+      Promise.resolve().then(() => {
+        setFormData(prev => ({
+          ...prev,
+          sellerName: seller.name || prev.sellerName,
+          sellerEmail: seller.email || prev.sellerEmail,
+          sellerPhone: seller.phone || prev.sellerPhone,
+          sellerCPF: seller.cpf || prev.sellerCPF,
+        }));
+      });
+    }
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

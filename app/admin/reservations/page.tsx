@@ -23,7 +23,7 @@ export default function ReservationsPage() {
       const mapsData = Array.isArray(mapsResponse.data) ? mapsResponse.data : [];
 
       interface MapData {
-        id: string;
+        mapId: string;
         name: string;
         description?: string;
         imageUrl?: string;
@@ -34,7 +34,7 @@ export default function ReservationsPage() {
       }
 
       const loadedMaps: Map[] = mapsData.map((data: MapData) => ({
-        id: data.id,
+        id: data.mapId,
         name: data.name,
         description: data.description || '',
         imageUrl: data.imageUrl || '',
@@ -47,6 +47,7 @@ export default function ReservationsPage() {
 
       // Carregar lotes reservados
       const lotsPromises = loadedMaps.map(async (map) => {
+        console.log(map.id)
         try {
           const response = await axios.get(`${API_URL}/mapas/lotes`, {
             params: { mapId: map.id },

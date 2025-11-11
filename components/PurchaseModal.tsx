@@ -248,9 +248,19 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
             </div>
 
             <div className="border-t border-[var(--border)] pt-4 mt-4">
-              <h3 className="text-lg font-bold text-[var(--foreground)] mb-3">📋 Informações do Vendedor</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-[var(--foreground)]">📋 Informações do Vendedor</h3>
+                {(formData.sellerName || formData.sellerEmail || formData.sellerCPF) && (
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                    ✓ Preenchido automaticamente
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-[var(--foreground)]/70 mb-4">
-                Preencha as informações do vendedor/corretor responsável pela venda
+                {(formData.sellerName || formData.sellerEmail || formData.sellerCPF) 
+                  ? 'Seus dados foram carregados automaticamente. Você pode editá-los se necessário.'
+                  : 'Preencha as informações do vendedor/corretor responsável pela venda'
+                }
               </p>
 
               <div className="space-y-4">
