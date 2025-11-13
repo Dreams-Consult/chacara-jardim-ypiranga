@@ -122,8 +122,8 @@ export default function UsersPage() {
     try {
       console.log('[UsersPage] Aprovando usuário:', userId);
 
-      await axios.put(`${API_URL}/usuarios/aprovar`, {
-        idUser: userId,
+      await axios.put(`${API_URL}/usuarios/aprovar`,{
+        idUsuario: userId,
         status: UserStatus.APPROVED,
       }, {
         headers: {
