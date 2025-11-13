@@ -193,19 +193,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   )}
                 </>
               )}
-              <Link
-                href="/admin/data"
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                  pathname === '/admin/data'
-                    ? 'bg-[var(--surface)] text-[var(--primary)]'
-                    : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                </svg>
-                <span>Dados</span>
-              </Link>
               {canAccessUsers && (
                 <Link
                   href="/admin/users"
