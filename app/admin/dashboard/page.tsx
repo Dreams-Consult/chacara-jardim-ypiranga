@@ -15,24 +15,6 @@ export default function DashboardPage() {
   const [allLots, setAllLots] = useState<Lot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirecionar vendedores para a página de mapas
-  useEffect(() => {
-    if (user?.role === UserRole.VENDEDOR) {
-      console.log('⚠️ Vendedor não tem acesso ao dashboard - redirecionando');
-      router.push('/admin/maps');
-      return;
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  // Não renderizar para vendedores
-  if (user?.role === UserRole.VENDEDOR) {
-    return null;
-  }
-
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
@@ -127,6 +109,27 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+
+  // Redirecionar vendedores para a página de mapas
+  useEffect(() => {
+    if (user?.role === UserRole.VENDEDOR) {
+      console.log('⚠️ Vendedor não tem acesso ao dashboard - redirecionando');
+      router.push('/admin/maps');
+      return;
+    }
+  }, [user, router]);
+
+  // Carregar dados do dashboard
+  useEffect(() => {
+    if (user?.role !== UserRole.VENDEDOR) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  // Não renderizar para vendedores
+  if (user?.role === UserRole.VENDEDOR) {
+    return null;
+  }
 
   const totalLots = allLots.length;
   const availableLots = allLots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
