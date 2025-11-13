@@ -30,6 +30,7 @@ export default function ReservationsPage() {
   const { user } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -78,6 +79,40 @@ export default function ReservationsPage() {
     console.log('🔄 Auto-refresh de reservas');
     loadData();
   }, 3000);
+
+  const handleApprove = async (reservationId: number) => {
+    if (!confirm('Tem certeza que deseja aprovar esta reserva?')) {
+      return;
+    }
+
+    try {
+      await axios.put(`${API_URL}/reservas/${reservationId}`, {
+        status: 'completed'
+      });
+      console.log('[Reservations] ✅ Reserva aprovada com sucesso');
+      loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('[Reservations] ❌ Erro ao aprovar reserva:', error);
+      alert('Erro ao aprovar reserva. Tente novamente.');
+    }
+  };
+
+  const handleReject = async (reservationId: number) => {
+    if (!confirm('Tem certeza que deseja rejeitar esta reserva?')) {
+      return;
+    }
+
+    try {
+      await axios.put(`${API_URL}/reservas/${reservationId}`, {
+        status: 'cancelled'
+      });
+      console.log('[Reservations] ✅ Reserva rejeitada com sucesso');
+      loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('[Reservations] ❌ Erro ao rejeitar reserva:', error);
+      alert('Erro ao rejeitar reserva. Tente novamente.');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -183,71 +218,114 @@ export default function ReservationsPage() {
             <p className="text-white/50 text-sm mt-2">As reservas aparecerão aqui quando forem criadas</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[var(--border)]">
-                  <th className="text-left py-3 px-4 text-white font-semibold">ID</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Cliente</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">CPF Cliente</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Telefone</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Status</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reservations.map((reservation) => (
-                  <tr
-                    key={reservation.id}
-                    className="border-b border-[var(--border)] hover:bg-[var(--surface)] transition-colors"
-                  >
-                    <td className="py-4 px-4">
-                      <span className="text-white/70 font-mono text-sm">#{reservation.id}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div>
-                        <div className="text-white font-semibold">{reservation.customer_name}</div>
-                        <div className="text-white/50 text-sm">{reservation.customer_email}</div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-white/70 font-mono text-sm">{reservation.customer_cpf}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-white/70 text-sm">{reservation.customer_phone}</span>
-                    </td>
-                    <td className="py-4 px-4">
+          <div className="space-y-4">
+            {reservations.map((reservation) => (
+              <div
+                key={reservation.id}
+                className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] overflow-hidden hover:border-[var(--primary)]/30 transition-colors"
+              >
+                {/* Header do Card */}
+                <div className="p-4 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-white/50 font-mono text-xs">#{reservation.id}</span>
                       {reservation.status === 'pending' && (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
                           Pendente
                         </span>
                       )}
                       {reservation.status === 'completed' && (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
                           Concluída
                         </span>
                       )}
                       {reservation.status === 'cancelled' && (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
                           Cancelada
                         </span>
                       )}
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-white/70 text-sm">
-                        {new Date(reservation.created_at).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    <h3 className="text-white font-bold text-lg truncate">{reservation.customer_name}</h3>
+                    <p className="text-white/60 text-sm truncate">{reservation.customer_email}</p>
+                  </div>
+
+                  {/* Botão de expandir/recolher */}
+                  <button
+                    onClick={() => setExpandedReservation(
+                      expandedReservation === reservation.id ? null : reservation.id
+                    )}
+                    className="flex-shrink-0 p-2 rounded-lg bg-[var(--card-bg)] hover:bg-[var(--background)] transition-colors"
+                  >
+                    <svg
+                      className={`w-5 h-5 text-white transition-transform ${
+                        expandedReservation === reservation.id ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Detalhes expandidos */}
+                {expandedReservation === reservation.id && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-[var(--border)] pt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-white/50 text-xs font-medium mb-1">CPF do Cliente</p>
+                        <p className="text-white font-mono text-sm">{reservation.customer_cpf}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
+                        <p className="text-white text-sm">{reservation.customer_phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/50 text-xs font-medium mb-1">Vendedor</p>
+                        <p className="text-white text-sm">{reservation.seller_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/50 text-xs font-medium mb-1">Data da Reserva</p>
+                        <p className="text-white text-sm">
+                          {new Date(reservation.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Botões de ação */}
+                    {reservation.status === 'pending' && (
+                      <div className="flex flex-col sm:flex-row gap-2 pt-3">
+                        <button
+                          onClick={() => handleApprove(reservation.id)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Aprovar Reserva
+                        </button>
+                        <button
+                          onClick={() => handleReject(reservation.id)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Rejeitar Reserva
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
