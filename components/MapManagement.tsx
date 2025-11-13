@@ -44,20 +44,12 @@ export default function MapManagement() {
     <div className="min-h-screen bg-[var(--background)] p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Gerenciamento de Mapas</h1>
-        <div className="flex gap-2">
-          <a
-            href="/admin/data"
-            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
-          >
-            📦 Exportar/Importar
-          </a>
-          <button
-            onClick={() => setIsCreating(true)}
-            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
-          >
-            Novo Mapa
-          </button>
-        </div>
+        <button
+          onClick={() => setIsCreating(true)}
+          className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+        >
+          Novo Mapa
+        </button>
       </div>
 
       {isLoading ? (
