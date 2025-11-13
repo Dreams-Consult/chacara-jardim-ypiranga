@@ -1,19 +1,37 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Map, Lot, LotStatus } from '@/types';
+import { Map, Lot, LotStatus, UserRole } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [maps, setMaps] = useState<Map[]>([]);
   const [allLots, setAllLots] = useState<Lot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Redirecionar vendedores para a página de mapas
+  useEffect(() => {
+    if (user?.role === UserRole.VENDEDOR) {
+      console.log('⚠️ Vendedor não tem acesso ao dashboard - redirecionando');
+      router.push('/admin/maps');
+      return;
+    }
+  }, [user, router]);
+
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Não renderizar para vendedores
+  if (user?.role === UserRole.VENDEDOR) {
+    return null;
+  }
 
   const loadDashboardData = async () => {
     try {

@@ -243,7 +243,7 @@ export default function UsersPage() {
       </div>
 
       {/* Seção de Usuários Pendentes */}
-      {users.filter(u => u.status === UserStatus.PENDING).length > 0 && (
+      {users.filter(u => u.status === UserStatus.PENDING).length > 0 ? (
         <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
           <div className="bg-amber-50 border-b-2 border-amber-200 px-6 py-4">
             <div className="flex items-center gap-3">
@@ -335,6 +335,24 @@ export default function UsersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 p-8 mb-6">
+          <div className="flex items-center justify-center gap-4">
+            <div className="bg-green-500 text-white p-3 rounded-full">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-green-900 mb-1">
+                Nenhum usuário pendente
+              </h3>
+              <p className="text-green-700">
+                Não há cadastros aguardando aprovação no momento
+              </p>
+            </div>
           </div>
         </div>
       )}
