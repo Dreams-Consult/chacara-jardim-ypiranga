@@ -337,6 +337,24 @@ export default function ReservationsPage() {
                         </button>
                       </div>
                     )}
+
+                    {/* Botão de cancelamento para reservas concluídas (apenas ADMIN e DEV) */}
+                    {reservation.status === 'completed' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
+                      <div className="flex flex-col gap-2 pt-3">
+                        <button
+                          onClick={() => handleReject(reservation.id)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Cancelar Venda
+                        </button>
+                        <p className="text-xs text-white/40 text-center">
+                          ⚠️ Isso marcará o lote como disponível novamente
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
