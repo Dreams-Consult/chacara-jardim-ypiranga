@@ -15,6 +15,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'rejected'>('all');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -519,14 +520,14 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Lista de Todos os Usuários (Aprovados/Rejeitados) */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
+      {/* Lista Geral de Usuários */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-emerald-500 text-white p-2 rounded-lg">
+              <div className="bg-blue-500 text-white p-2 rounded-lg">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div>
@@ -534,14 +535,53 @@ export default function UsersPage() {
                   Todos os Usuários
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  {users.filter(u => u.status !== UserStatus.PENDING).length} usuário(s) cadastrado(s)
+                  {users.filter(u => u.status !== UserStatus.PENDING).length} usuário(s) no total
                 </p>
               </div>
+            </div>
+
+            {/* Filtro de Status */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  statusFilter === 'all'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                onClick={() => setStatusFilter('approved')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  statusFilter === 'approved'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                Aprovados
+              </button>
+              <button
+                onClick={() => setStatusFilter('rejected')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  statusFilter === 'rejected'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                Rejeitados
+              </button>
             </div>
           </div>
         </div>
 
-        {users.filter(u => u.status !== UserStatus.PENDING).length > 0 ? (
+        {users.filter(u => {
+          if (u.status === UserStatus.PENDING) return false;
+          if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
+          if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
+          return true;
+        }).length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -570,7 +610,12 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.filter(u => u.status !== UserStatus.PENDING).map((user) => (
+                {users.filter(u => {
+                  if (u.status === UserStatus.PENDING) return false;
+                  if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
+                  if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
+                  return true;
+                }).map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{user.name}</div>
@@ -596,11 +641,17 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {user.status === UserStatus.APPROVED ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-green-100 text-green-800 border-green-200">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
                           Aprovado
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-red-100 text-red-800 border-red-200">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
                           Rejeitado
                         </span>
                       )}
@@ -614,11 +665,19 @@ export default function UsersPage() {
           <div className="p-8 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <p className="text-gray-600 text-lg">Nenhum usuário cadastrado ainda</p>
-            <p className="text-gray-500 text-sm mt-2">Clique em &quot;Novo Usuário&quot; para adicionar o primeiro usuário</p>
+            <p className="text-gray-600 text-lg">
+              {statusFilter === 'approved' && 'Nenhum usuário aprovado'}
+              {statusFilter === 'rejected' && 'Nenhum usuário rejeitado'}
+              {statusFilter === 'all' && 'Nenhum usuário cadastrado'}
+            </p>
+            <p className="text-gray-500 text-sm mt-2">
+              {statusFilter === 'approved' && 'Aprove usuários pendentes para vê-los aqui'}
+              {statusFilter === 'rejected' && 'Usuários rejeitados aparecerão aqui'}
+              {statusFilter === 'all' && 'Aguarde solicitações de cadastro'}
+            </p>
           </div>
         )}
       </div>
