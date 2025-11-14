@@ -97,7 +97,7 @@ POST /criarMapa
 Content-Type: application/json
 
 {
-  "name": "Mapa Chácara Jardim Ypiranga",
+  "name": "Mapa Chácara Jardim Ipiranga",
   "description": "Loteamento principal",
   "imageUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
 }

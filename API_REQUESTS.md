@@ -28,7 +28,7 @@ const response = await axios.get(`${API_URL}/mapas`);
 [
   {
     "mapId": "1762192028364",
-    "name": "Mapa Chácara Jardim Ypiranga",
+    "name": "Mapa Chácara Jardim Ipiranga",
     "description": "Loteamento residencial",
     "imageUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
     "width": 1920,
@@ -197,7 +197,7 @@ const response = await axios.get(`${API_URL}/mapas/lotes`, {
 ```json
 {
   "mapId": "1762192028364",
-  "name": "Chácara Jardim Ypiranga",
+  "name": "Chácara Jardim Ipiranga",
   "description": "Loteamento residencial",
   "imageUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
   "width": 1920,
@@ -339,7 +339,7 @@ if (data.lots && Array.isArray(data.lots)) {
 **Request Example:**
 ```typescript
 const requestData = {
-  name: "Mapa Chácara Jardim Ypiranga",
+  name: "Mapa Chácara Jardim Ipiranga",
   description: "Loteamento principal",
   imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
 };

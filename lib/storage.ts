@@ -17,7 +17,7 @@ const initializeSampleData = (): void => {
   // Criar mapa de exemplo
   const sampleMap: Map = {
     id: '1762192028364',
-    name: 'Mapa de Exemplo - Chácara Jardim Ypiranga',
+    name: 'Mapa de Exemplo - Chácara Jardim Ipiranga',
     description: 'Mapa de exemplo para testes. Substitua pela imagem real.',
     imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjQwMCIgeT0iMzAwIiBmb250LXNpemU9IjI0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5Ij5NYXBhIGRlIEV4ZW1wbG88L3RleHQ+PC9zdmc+',
     imageType: 'image',

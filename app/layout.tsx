@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vale dos Carajás - Chácara Jardim Ypiranga",
+  title: "Vale dos Carajás - Chácara Jardim Ipiranga",
   description: "Loteamento de chácaras em ambiente natural preservado",
 };
 

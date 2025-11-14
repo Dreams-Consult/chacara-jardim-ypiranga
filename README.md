@@ -1,4 +1,4 @@
-# 🏡 Plataforma de Gerenciamento de Lotes - Chácara Jardim Ypiranga
+# 🏡 Plataforma de Gerenciamento de Lotes - Chácara Jardim Ipiranga
 
 ## ✅ Sistema Implementado com Sucesso!
 

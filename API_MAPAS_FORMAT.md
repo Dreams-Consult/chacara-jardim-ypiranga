@@ -12,7 +12,7 @@ Este endpoint deve retornar todos os mapas cadastrados **junto com seus lotes**.
 [
   {
     "mapId": "1762455471299",
-    "name": "Loteamento Chácara Jardim Ypiranga - Fase 1",
+    "name": "Loteamento Chácara Jardim Ipiranga - Fase 1",
     "description": "Primeira fase do loteamento",
     "imageUrl": "data:image/png;base64,...",
     "imageType": "image/png",
@@ -63,7 +63,7 @@ Este endpoint deve retornar todos os mapas cadastrados **junto com seus lotes**.
   },
   {
     "mapId": "1762455680661",
-    "name": "Loteamento Chácara Jardim Ypiranga - Fase 2",
+    "name": "Loteamento Chácara Jardim Ipiranga - Fase 2",
     "description": "Segunda fase do loteamento",
     "imageUrl": "data:image/png;base64,...",
     "imageType": "image/png",
