@@ -16,6 +16,9 @@ export default function UsersPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'rejected'>('all');
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,6 +36,21 @@ export default function UsersPage() {
       loadUsers();
     }
   }, [canAccessUsers, router]);
+
+  // Fechar menu de ações ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionsMenuOpen !== null) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.actions-menu-container')) {
+          setActionsMenuOpen(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [actionsMenuOpen]);
 
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -200,6 +218,43 @@ export default function UsersPage() {
     }
   };
 
+  const handleChangeRole = async (userId: string, newRole: UserRole) => {
+    try {
+      console.log('[UsersPage] Alterando cargo do usuário:', userId, 'para:', newRole);
+
+      await axios.put(`${API_URL}/usuarios/role`, {
+        idUsuario: userId,
+        role: newRole,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      });
+
+      console.log('[UsersPage] ✅ Cargo alterado com sucesso');
+      alert('Cargo do usuário alterado com sucesso!');
+
+      // Fechar modal e recarregar lista
+      setIsRoleModalOpen(false);
+      setSelectedUserForRole(null);
+      await loadUsers();
+    } catch (error) {
+      console.error('[UsersPage] ❌ Erro ao alterar cargo:', error);
+      alert('Erro ao alterar cargo do usuário');
+    }
+  };
+
+  const openRoleModal = (user: User) => {
+    setSelectedUserForRole(user);
+    setIsRoleModalOpen(true);
+  };
+
+  const closeRoleModal = () => {
+    setIsRoleModalOpen(false);
+    setSelectedUserForRole(null);
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -295,29 +350,30 @@ export default function UsersPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Tabela para Desktop - apenas telas muito grandes */}
+          <div className="hidden xl:block">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nome
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     CPF
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     CRECI
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Perfil
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -325,39 +381,39 @@ export default function UsersPage() {
               <tbody className="divide-y divide-gray-200">
                 {users.filter(u => u.status === UserStatus.PENDING).map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{user.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-600">{user.email}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-600 font-mono">
                         {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-600">{user.creci || '-'}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {getRoleBadge(user.role)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className="px-3 py-1 rounded-full text-xs font-medium border bg-amber-100 text-amber-800 border-amber-200">
                         Pendente
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApprove(user.id)}
-                          className="text-green-600 hover:text-green-800 font-medium"
+                          className="px-3 py-1 text-green-600 hover:text-white hover:bg-green-600 border border-green-600 rounded-lg font-medium transition-colors"
                         >
                           Aprovar
                         </button>
                         <button
                           onClick={() => handleReject(user.id)}
-                          className="text-red-600 hover:text-red-800 font-medium"
+                          className="px-3 py-1 text-red-600 hover:text-white hover:bg-red-600 border border-red-600 rounded-lg font-medium transition-colors"
                         >
                           Rejeitar
                         </button>
@@ -367,6 +423,55 @@ export default function UsersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Cards para Tablet e Mobile */}
+          <div className="xl:hidden divide-y divide-gray-200">
+            {users.filter(u => u.status === UserStatus.PENDING).map((user) => (
+              <div key={user.id} className="p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{user.email}</p>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium border bg-amber-100 text-amber-800 border-amber-200">
+                    Pendente
+                  </span>
+                </div>
+
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center text-sm">
+                    <span className="font-medium text-gray-500 w-20">CPF:</span>
+                    <span className="text-gray-900 font-mono">
+                      {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <span className="font-medium text-gray-500 w-20">CRECI:</span>
+                    <span className="text-gray-900">{user.creci || '-'}</span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <span className="font-medium text-gray-500 w-20">Perfil:</span>
+                    {getRoleBadge(user.role)}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleApprove(user.id)}
+                    className="flex-1 px-4 py-2 text-green-600 bg-green-50 hover:bg-green-600 hover:text-white border border-green-600 rounded-lg font-medium transition-colors"
+                  >
+                    ✓ Aprovar
+                  </button>
+                  <button
+                    onClick={() => handleReject(user.id)}
+                    className="flex-1 px-4 py-2 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white border border-red-600 rounded-lg font-medium transition-colors"
+                  >
+                    ✗ Rejeitar
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ) : (
@@ -541,10 +646,10 @@ export default function UsersPage() {
             </div>
 
             {/* Filtro de Status */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'all'
                     ? 'bg-blue-500 text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
@@ -554,7 +659,7 @@ export default function UsersPage() {
               </button>
               <button
                 onClick={() => setStatusFilter('approved')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'approved'
                     ? 'bg-green-500 text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
@@ -564,7 +669,7 @@ export default function UsersPage() {
               </button>
               <button
                 onClick={() => setStatusFilter('rejected')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'rejected'
                     ? 'bg-red-500 text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
@@ -582,85 +687,208 @@ export default function UsersPage() {
           if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
           return true;
         }).length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CPF
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Telefone
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CRECI
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Perfil
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {users.filter(u => {
-                  if (u.status === UserStatus.PENDING) return false;
-                  if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
-                  if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
-                  return true;
-                }).map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600 font-mono">
-                        {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">
-                        {user.phone ? user.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.creci || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getRoleBadge(user.role)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {user.status === UserStatus.APPROVED ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          Aprovado
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                          Rejeitado
-                        </span>
-                      )}
-                    </td>
+          <>
+            {/* Tabela para Desktop - apenas telas muito grandes */}
+            <div className="hidden xl:block">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nome
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      CPF
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Telefone
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      CRECI
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Perfil
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {users.filter(u => {
+                    if (u.status === UserStatus.PENDING) return false;
+                    if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
+                    if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
+                    return true;
+                  }).map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{user.email}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-600 font-mono">
+                          {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">
+                          {user.phone ? user.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '-'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{user.creci || '-'}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {getRoleBadge(user.role)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {user.status === UserStatus.APPROVED ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Aprovado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                            Rejeitado
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap relative">
+                        <div className="actions-menu-container">
+                          <button
+                            onClick={() => setActionsMenuOpen(actionsMenuOpen === user.id ? null : user.id)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            title="Ações"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                            Ações
+                          </button>
+
+                          {actionsMenuOpen === user.id && (
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                              <button
+                                onClick={() => {
+                                  openRoleModal(user);
+                                  setActionsMenuOpen(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                              >
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                Alterar Cargo
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards para Tablet e Mobile */}
+            <div className="xl:hidden divide-y divide-gray-200">
+              {users.filter(u => {
+                if (u.status === UserStatus.PENDING) return false;
+                if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
+                if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
+                return true;
+              }).map((user) => (
+                <div key={user.id} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{user.email}</p>
+                    </div>
+                    {user.status === UserStatus.APPROVED ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Aprovado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        Rejeitado
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium text-gray-500 w-20">CPF:</span>
+                      <span className="text-gray-900 font-mono">
+                        {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium text-gray-500 w-20">Telefone:</span>
+                      <span className="text-gray-900">
+                        {user.phone ? user.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '-'}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium text-gray-500 w-20">CRECI:</span>
+                      <span className="text-gray-900">{user.creci || '-'}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium text-gray-500 w-20">Perfil:</span>
+                      {getRoleBadge(user.role)}
+                    </div>
+                  </div>
+
+                  <div className="relative actions-menu-container">
+                    <button
+                      onClick={() => setActionsMenuOpen(actionsMenuOpen === user.id ? null : user.id)}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                      </svg>
+                      Ações
+                    </button>
+
+                    {actionsMenuOpen === user.id && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                        <button
+                          onClick={() => {
+                            openRoleModal(user);
+                            setActionsMenuOpen(null);
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                          </svg>
+                          Alterar Cargo
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="p-8 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
@@ -681,6 +909,110 @@ export default function UsersPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Alteração de Cargo */}
+      {isRoleModalOpen && selectedUserForRole && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Header do Modal */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white">Alterar Cargo</h3>
+                <button
+                  onClick={closeRoleModal}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-1 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Corpo do Modal */}
+            <div className="p-6">
+              {/* Informações do Usuário */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 rounded-full p-2">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 text-lg">{selectedUserForRole.name}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{selectedUserForRole.email}</p>
+                    <div className="mt-2">
+                      <span className="text-xs text-gray-500">Cargo atual: </span>
+                      {getRoleBadge(selectedUserForRole.role)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seleção de Cargo */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Selecione o novo cargo:
+                </label>
+
+                {Object.values(UserRole).map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => handleChangeRole(selectedUserForRole.id, role)}
+                    disabled={selectedUserForRole.role === role}
+                    className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
+                      selectedUserForRole.role === role
+                        ? 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-60'
+                        : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">
+                          {role === UserRole.DEV && '🔧'}
+                          {role === UserRole.ADMIN && '👑'}
+                          {role === UserRole.VENDEDOR && '💼'}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {role === UserRole.DEV && 'Desenvolvedor'}
+                            {role === UserRole.ADMIN && 'Administrador'}
+                            {role === UserRole.VENDEDOR && 'Vendedor'}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {role === UserRole.DEV && 'Acesso total ao sistema'}
+                            {role === UserRole.ADMIN && 'Gerenciamento de usuários e mapas'}
+                            {role === UserRole.VENDEDOR && 'Vendas e reservas de lotes'}
+                          </p>
+                        </div>
+                      </div>
+                      {selectedUserForRole.role === role && (
+                        <div className="flex items-center gap-2">
+                          <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-sm font-medium text-green-600">Atual</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer do Modal */}
+            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end">
+              <button
+                onClick={closeRoleModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
