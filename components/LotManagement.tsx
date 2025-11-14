@@ -24,6 +24,14 @@ export default function LotManagement() {
   const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle'>('rectangle');
   const [previewArea, setPreviewArea] = useState<LotArea | null>(null);
 
+  // Limpa a pré-visualização quando começamos a editar um lote diferente
+  useEffect(() => {
+    if (isCreating) {
+      // Quando mudamos de lote ou começamos uma nova edição, limpa a pré-visualização
+      setPreviewArea(null);
+    }
+  }, [isCreating, selectedLotId]);
+
   const loadData = useCallback(async () => {
     if (!mapId) return;
 
@@ -183,6 +191,21 @@ export default function LotManagement() {
     }
   };
 
+  const updateLotToAPI = async (lot: Lot) => {
+    try {
+      console.log('[LotManagement] 📝 Atualizando lote:', lot);
+      await axios.patch(`${API_URL}/mapas/lotes`, lot, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      });
+      console.log('[LotManagement] ✅ Lote atualizado com sucesso');
+      await reloadLots();
+    } catch (error) {
+      console.error('[LotManagement] ❌ Erro ao atualizar lote:', error);
+      throw error;
+    }
+  };
+
   const deleteLotFromAPI = async (lotId: string) => {
     try {
       console.log(`[LotManagement] 🗑️ Deletando lote ${lotId}...`);
@@ -207,6 +230,7 @@ export default function LotManagement() {
         firstPoint: area.points[0],
         lastPoint: area.points[area.points.length - 1]
       });
+      // Substitui completamente a área anterior pela nova área desenhada
       setEditingLot({ ...editingLot, area });
       setPreviewArea(area); // Salva a área para pré-visualização
     }
@@ -271,8 +295,13 @@ export default function LotManagement() {
       }
     }
 
-    if (editingLot.area.points.length < 3) {
-      alert('❌ Desenhe a área do lote no mapa (mínimo 3 pontos)');
+    // Validação crítica: verificar se a área foi desenhada no mapa
+    if (!editingLot.area || !editingLot.area.points || editingLot.area.points.length < 3) {
+      alert(
+        '❌ Área do lote não foi desenhada!\n\n' +
+        'Você precisa desenhar a área do lote no mapa antes de salvar.\n\n' +
+        'Clique no mapa para definir pelo menos 3 pontos da área do lote.'
+      );
       return;
     }
 
@@ -307,7 +336,12 @@ export default function LotManagement() {
     });
 
     try {
-      await saveLotToAPI(lot);
+      // Se o lote tem ID, é uma atualização, senão é criação
+      if (lot.id && lot.id !== '') {
+        await updateLotToAPI(lot);
+      } else {
+        await saveLotToAPI(lot);
+      }
       setIsCreating(false);
       setEditingLot(null);
       setSelectedLotId(undefined);
@@ -319,6 +353,20 @@ export default function LotManagement() {
   };
 
   const handleDelete = async (id: string) => {
+    // Encontra o lote que está sendo excluído
+    const lotToDelete = lots.find(lot => lot.id === id);
+
+    // Verifica se o lote está reservado ou vendido
+    if (lotToDelete && (lotToDelete.status === LotStatus.RESERVED || lotToDelete.status === LotStatus.SOLD)) {
+      const statusText = lotToDelete.status === LotStatus.RESERVED ? 'reservado' : 'vendido';
+      alert(
+        `❌ Não é possível excluir este lote!\n\n` +
+        `O Lote ${lotToDelete.lotNumber} está ${statusText}.\n\n` +
+        `Para excluir este lote, você precisa primeiro cancelar a ${lotToDelete.status === LotStatus.RESERVED ? 'reserva' : 'venda'} na página de Reservas.`
+      );
+      return;
+    }
+
     if (confirm('Tem certeza que deseja excluir este lote?')) {
       try {
         await deleteLotFromAPI(id);
@@ -340,6 +388,7 @@ export default function LotManagement() {
     setEditingLot(lot);
     setIsCreating(true);
     setSelectedLotId(lot.id);
+    setPreviewArea(null); // Limpa qualquer pré-visualização anterior
   };
 
   const handleNewLot = () => {
@@ -411,12 +460,14 @@ export default function LotManagement() {
                 </button>
               </div>
             )}
-            <button
-              onClick={handleNewLot}
-              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
-            >
-              Novo Lote
-            </button>
+            {!isCreating && (
+              <button
+                onClick={handleNewLot}
+                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
+              >
+                Novo Lote
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -569,25 +620,45 @@ export default function LotManagement() {
                       : `✓ ${editingLot.area.points.length} pontos desenhados`}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveLot}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-sm transition-all hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
-                    disabled={editingLot.area.points.length < 3}
-                  >
-                    Salvar
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsCreating(false);
-                      setEditingLot(null);
-                      setSelectedLotId(undefined);
-                      setPreviewArea(null); // Limpa a pré-visualização ao cancelar
-                    }}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 shadow-sm transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveLot}
+                      className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 shadow-sm transition-all hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+                      disabled={editingLot.area.points.length < 3}
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsCreating(false);
+                        setEditingLot(null);
+                        setSelectedLotId(undefined);
+                        setPreviewArea(null); // Limpa a pré-visualização ao cancelar
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 shadow-sm transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                  {editingLot.id && (
+                    <button
+                      onClick={async () => {
+                        await handleDelete(editingLot.id);
+                        // Fecha o menu de edição após excluir
+                        setIsCreating(false);
+                        setEditingLot(null);
+                        setSelectedLotId(undefined);
+                        setPreviewArea(null);
+                      }}
+                      className="w-full px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Excluir Lote
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
