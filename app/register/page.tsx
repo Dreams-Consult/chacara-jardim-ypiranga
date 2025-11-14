@@ -13,6 +13,7 @@ export default function RegisterPage() {
     name: '',
     email: '',
     cpf: '',
+    phone: '',
     creci: '',
     password: '',
     confirmPassword: '',
@@ -32,9 +33,32 @@ export default function RegisterPage() {
     return value;
   };
 
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      if (numbers.length <= 10) {
+        // Formato: (00) 0000-0000
+        return numbers
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{4})(\d)/, '$1-$2');
+      } else {
+        // Formato: (00) 00000-0000
+        return numbers
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{5})(\d)/, '$1-$2');
+      }
+    }
+    return value;
+  };
+
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCPF(e.target.value);
     setFormData({ ...formData, cpf: formatted });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setFormData({ ...formData, phone: formatted });
   };
 
   // Validar CPF
@@ -84,6 +108,13 @@ export default function RegisterPage() {
       return false;
     }
 
+    // Validar telefone
+    const phoneNumbers = formData.phone.replace(/\D/g, '');
+    if (!phoneNumbers || phoneNumbers.length < 10 || phoneNumbers.length > 11) {
+      setError('Telefone inválido. Digite um número completo com DDD.');
+      return false;
+    }
+
     if (formData.password.length < 6) {
       setError('Senha deve ter no mínimo 6 caracteres');
       return false;
@@ -113,6 +144,7 @@ export default function RegisterPage() {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação do CPF
+        phone: formData.phone.replace(/\D/g, ''), // Remove formatação do telefone
         creci: formData.creci.trim() || null,
         role: UserRole.VENDEDOR,
         status: UserStatus.PENDING,
@@ -217,6 +249,22 @@ export default function RegisterPage() {
                 maxLength={14}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 placeholder="000.000.000-00"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Telefone
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                required
+                maxLength={15}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                placeholder="(00) 00000-0000"
               />
             </div>
 

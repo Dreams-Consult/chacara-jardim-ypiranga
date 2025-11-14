@@ -19,6 +19,7 @@ export default function UsersPage() {
     name: '',
     email: '',
     cpf: '',
+    creci: '',
     role: UserRole.VENDEDOR,
     password: '',
   });
@@ -68,6 +69,7 @@ export default function UsersPage() {
           email: formData.email,
           cpf: formData.cpf.replace(/\D/g, ''),
           role: formData.role,
+          ...(formData.creci && { creci: formData.creci }),
           ...(formData.password && { password: formData.password }),
         });
 
@@ -88,6 +90,7 @@ export default function UsersPage() {
           name: formData.name,
           email: formData.email,
           cpf: formData.cpf.replace(/\D/g, ''),
+          creci: formData.creci || null,
           role: formData.role,
           status: UserStatus.APPROVED, // Usuários criados por admin são aprovados automaticamente
           password: formData.password,
@@ -175,6 +178,7 @@ export default function UsersPage() {
       name: '',
       email: '',
       cpf: '',
+      creci: '',
       role: UserRole.VENDEDOR,
       password: '',
     });
@@ -405,6 +409,19 @@ export default function UsersPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   placeholder="000.000.000-00"
                   maxLength={14}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  CRECI <span className="text-gray-500 text-xs">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.creci}
+                  onChange={(e) => setFormData({ ...formData, creci: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="CRECI 12345-F"
                 />
               </div>
 

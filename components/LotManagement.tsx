@@ -197,27 +197,6 @@ export default function LotManagement() {
     }
   };
 
-  const updateLotStatus = async (lotId: string, status: LotStatus) => {
-    try {
-      console.log(`[LotManagement] 🔄 Atualizando status do lote ${lotId} para ${status}...`);
-      await axios.put(`${API_URL}/mapas/lotes/comprar`,
-        {
-          lotId,
-          status
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 10000,
-        }
-      );
-      console.log('[LotManagement] ✅ Status atualizado com sucesso');
-      await reloadLots();
-    } catch (error) {
-      console.error('[LotManagement] ❌ Erro ao atualizar status:', error);
-      throw error;
-    }
-  };
-
   const handleAreaDrawn = (area: LotArea) => {
     if (editingLot) {
       console.log(`📐 Área desenhada recebida (modo: ${drawingMode}):`, {
@@ -344,48 +323,16 @@ export default function LotManagement() {
     }
   };
 
-  const handleChangeStatus = async (lotId: string, newStatus: LotStatus) => {
-    const lot = lots.find(l => l.id === lotId);
-    if (!lot) return;
-
-    const statusLabels = {
-      [LotStatus.AVAILABLE]: 'Disponível',
-      [LotStatus.RESERVED]: 'Reservado',
-      [LotStatus.SOLD]: 'Vendido',
-    };
-
-    // Validar se está tentando marcar como vendido sem estar reservado
-    if (newStatus === LotStatus.SOLD && lot.status !== LotStatus.RESERVED) {
-      alert(`❌ Não é possível finalizar a compra do lote ${lot.lotNumber}.\n\nO lote precisa estar com status "Reservado" antes de ser marcado como "Vendido".`);
+  const handleEditLot = (lot: Lot) => {
+    // Bloquear edição de lotes que não estão disponíveis
+    if (lot.status !== LotStatus.AVAILABLE) {
+      alert(`❌ Não é possível editar este lote.\n\nApenas lotes com status "Disponível" podem ser editados.\n\nStatus atual: ${lot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}`);
       return;
     }
 
-    if (confirm(`Alterar status do lote ${lot.lotNumber} para "${statusLabels[newStatus]}"?`)) {
-      try {
-        await updateLotStatus(lotId, newStatus);
-      } catch (err) {
-        console.error('Erro ao atualizar status:', err);
-        alert('Erro ao atualizar status. Tente novamente.');
-      }
-    }
-  };
-
-  const handleEditLot = (lot: Lot) => {
     setEditingLot(lot);
     setIsCreating(true);
     setSelectedLotId(lot.id);
-  };
-
-  const handleStatusChangeInForm = (newStatus: LotStatus) => {
-    if (!editingLot) return;
-
-    // Validar se está tentando marcar como vendido sem estar reservado
-    if (newStatus === LotStatus.SOLD && editingLot.status !== LotStatus.RESERVED) {
-      alert(`❌ Não é possível marcar o lote como "Vendido".\n\nO lote precisa estar com status "Reservado" antes de ser marcado como "Vendido".`);
-      return;
-    }
-
-    setEditingLot({ ...editingLot, status: newStatus });
   };
 
   const handleNewLot = () => {
@@ -507,13 +454,14 @@ export default function LotManagement() {
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
                   <select
                     value={editingLot.status}
-                    onChange={(e) => handleStatusChangeInForm(e.target.value as LotStatus)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-gray-100 cursor-not-allowed"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
-                    <option value={LotStatus.RESERVED}>Reservado</option>
-                    <option value={LotStatus.SOLD}>Vendido</option>
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Status é controlado automaticamente pelas reservas
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Área (m²)</label>
@@ -549,13 +497,14 @@ export default function LotManagement() {
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
                   <select
                     value={editingLot.status}
-                    onChange={(e) => handleStatusChangeInForm(e.target.value as LotStatus)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-gray-100 cursor-not-allowed"
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
-                    <option value={LotStatus.RESERVED}>Reservado</option>
-                    <option value={LotStatus.SOLD}>Vendido</option>
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Status é controlado automaticamente pelas reservas
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Descrição</label>
@@ -667,42 +616,6 @@ export default function LotManagement() {
                           Excluir
                         </button>
                       </div>
-                      {lot.status !== LotStatus.SOLD && (
-                        <div className="flex gap-2">
-                          {lot.status !== LotStatus.AVAILABLE && (
-                            <button
-                              onClick={() => handleChangeStatus(lot.id, LotStatus.AVAILABLE)}
-                              className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors cursor-pointer"
-                            >
-                              ✓ Marcar Disponível
-                            </button>
-                          )}
-                          {lot.status !== LotStatus.RESERVED && (
-                            <button
-                              onClick={() => handleChangeStatus(lot.id, LotStatus.RESERVED)}
-                              className="flex-1 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded hover:bg-amber-200 transition-colors cursor-pointer"
-                            >
-                              ⏸ Marcar Reservado
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleChangeStatus(lot.id, LotStatus.SOLD)}
-                            className="flex-1 px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded hover:bg-red-200 transition-colors cursor-pointer"
-                          >
-                            ✕ Marcar Vendido
-                          </button>
-                        </div>
-                      )}
-                      {lot.status === LotStatus.SOLD && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleChangeStatus(lot.id, LotStatus.AVAILABLE)}
-                            className="flex-1 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200 transition-colors cursor-pointer"
-                          >
-                            ↻ Reverter para Disponível
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
