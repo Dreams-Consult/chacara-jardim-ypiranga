@@ -19,6 +19,7 @@ export default function UsersPage() {
     name: '',
     email: '',
     cpf: '',
+    phone: '',
     creci: '',
     role: UserRole.VENDEDOR,
     password: '',
@@ -31,6 +32,29 @@ export default function UsersPage() {
       loadUsers();
     }
   }, [canAccessUsers, router]);
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      if (numbers.length <= 10) {
+        // Formato: (00) 0000-0000
+        return numbers
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{4})(\d)/, '$1-$2');
+      } else {
+        // Formato: (00) 00000-0000
+        return numbers
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{5})(\d)/, '$1-$2');
+      }
+    }
+    return value;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setFormData({ ...formData, phone: formatted });
+  };
 
   const loadUsers = async () => {
     try {
@@ -68,6 +92,7 @@ export default function UsersPage() {
           name: formData.name,
           email: formData.email,
           cpf: formData.cpf.replace(/\D/g, ''),
+          phone: formData.phone.replace(/\D/g, ''),
           role: formData.role,
           ...(formData.creci && { creci: formData.creci }),
           ...(formData.password && { password: formData.password }),
@@ -90,6 +115,7 @@ export default function UsersPage() {
           name: formData.name,
           email: formData.email,
           cpf: formData.cpf.replace(/\D/g, ''),
+          phone: formData.phone.replace(/\D/g, ''),
           creci: formData.creci || null,
           role: formData.role,
           status: UserStatus.APPROVED, // Usuários criados por admin são aprovados automaticamente
@@ -178,6 +204,7 @@ export default function UsersPage() {
       name: '',
       email: '',
       cpf: '',
+      phone: '',
       creci: '',
       role: UserRole.VENDEDOR,
       password: '',
@@ -409,6 +436,21 @@ export default function UsersPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   placeholder="000.000.000-00"
                   maxLength={14}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefone
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
                 />
               </div>
 
