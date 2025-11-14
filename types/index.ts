@@ -69,6 +69,7 @@ export interface User {
   name: string;
   email: string;
   cpf: string;
+  phone?: string;
   creci?: string;
   role: UserRole;
   status: UserStatus;
