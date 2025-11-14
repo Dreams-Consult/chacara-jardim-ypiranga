@@ -81,15 +81,21 @@ export default function ReservationsPage() {
   }, 3000);
 
   const handleApprove = async (reservationId: number) => {
-    if (!confirm('Tem certeza que deseja aprovar esta reserva?')) {
+    if (!confirm('Tem certeza que deseja aprovar esta reserva?\n\nIsso marcará o lote como VENDIDO.')) {
       return;
     }
 
     try {
-      await axios.put(`${API_URL}/reservas/${reservationId}`, {
-        status: 'completed'
+      await axios.put(`${API_URL}/reserva/confirmacao`, {
+        reservationId: reservationId.toString(),
+        status: 'completed',
+        lotStatus: 'sold'
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
       });
-      console.log('[Reservations] ✅ Reserva aprovada com sucesso');
+
+      console.log('[Reservations] ✅ Reserva aprovada e lote marcado como vendido');
       loadData(); // Recarregar dados
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao aprovar reserva:', error);
@@ -103,8 +109,10 @@ export default function ReservationsPage() {
     }
 
     try {
-      await axios.put(`${API_URL}/reservas/${reservationId}`, {
-        status: 'cancelled'
+      await axios.put(`${API_URL}/reserva/confirmacao`, {
+        reservationId: reservationId.toString(),
+        status: 'cancelled',
+        lotStatus: 'available'
       });
       console.log('[Reservations] ✅ Reserva rejeitada com sucesso');
       loadData(); // Recarregar dados
