@@ -19,6 +19,8 @@ export default function UsersPage() {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -295,7 +297,7 @@ export default function UsersPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
@@ -307,51 +309,52 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6 overflow-x-hidden">
       {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Crie e gerencie usuários do sistema
           </p>
         </div>
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Novo Usuário
+            <span className="hidden sm:inline">Novo Usuário</span>
+            <span className="sm:hidden">Novo</span>
           </button>
         )}
       </div>
 
       {/* Seção de Usuários Pendentes */}
       {users.filter(u => u.status === UserStatus.PENDING).length > 0 ? (
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
-          <div className="bg-amber-50 border-b-2 border-amber-200 px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-500 text-white p-2 rounded-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-visible">
+          <div className="bg-amber-50 border-b-2 border-amber-200 px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-amber-500 text-white p-2 rounded-lg flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-amber-900">
-                  Cadastros Pendentes de Aprovação
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-xl font-bold text-amber-900 truncate">
+                  Cadastros Pendentes
                 </h2>
-                <p className="text-amber-700 text-sm">
-                  {users.filter(u => u.status === UserStatus.PENDING).length} vendedor(es) aguardando confirmação
+                <p className="text-amber-700 text-xs sm:text-sm">
+                  {users.filter(u => u.status === UserStatus.PENDING).length} vendedor(es) aguardando
                 </p>
               </div>
             </div>
           </div>
 
           {/* Tabela para Desktop - apenas telas muito grandes */}
-          <div className="hidden xl:block">
+          <div className="hidden xl:block overflow-visible">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -359,13 +362,7 @@ export default function UsersPage() {
                     Nome
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     CPF
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CRECI
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Perfil
@@ -385,15 +382,9 @@ export default function UsersPage() {
                       <div className="text-sm font-medium text-gray-900">{user.name}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.email}</div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-600 font-mono">
                         {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.creci || '-'}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {getRoleBadge(user.role)}
@@ -475,19 +466,19 @@ export default function UsersPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 p-8 mb-6">
-          <div className="flex items-center justify-center gap-4">
-            <div className="bg-green-500 text-white p-3 rounded-full">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <div className="bg-green-500 text-white p-2 sm:p-3 rounded-full flex-shrink-0">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-green-900 mb-1">
+            <div className="text-center sm:text-left">
+              <h3 className="text-lg sm:text-xl font-bold text-green-900 mb-1">
                 Nenhum usuário pendente
               </h3>
-              <p className="text-green-700">
-                Não há cadastros aguardando aprovação no momento
+              <p className="text-sm sm:text-base text-green-700">
+                Não há cadastros aguardando aprovação
               </p>
             </div>
           </div>
@@ -496,12 +487,12 @@ export default function UsersPage() {
 
       {/* Formulário de Criação/Edição */}
       {isCreating && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">
+        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">
             {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Nome Completo
@@ -626,7 +617,7 @@ export default function UsersPage() {
       )}
 
       {/* Lista Geral de Usuários */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-visible mb-6">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -689,7 +680,7 @@ export default function UsersPage() {
         }).length > 0 ? (
           <>
             {/* Tabela para Desktop - apenas telas muito grandes */}
-            <div className="hidden xl:block">
+            <div className="hidden xl:block overflow-visible">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
@@ -697,16 +688,10 @@ export default function UsersPage() {
                       Nome
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       CPF
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Telefone
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      CRECI
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Perfil
@@ -731,9 +716,6 @@ export default function UsersPage() {
                         <div className="text-sm font-medium text-gray-900">{user.name}</div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">{user.email}</div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm text-gray-600 font-mono">
                           {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                         </div>
@@ -742,9 +724,6 @@ export default function UsersPage() {
                         <div className="text-sm text-gray-600">
                           {user.phone ? user.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '-'}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">{user.creci || '-'}</div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {getRoleBadge(user.role)}
@@ -780,7 +759,21 @@ export default function UsersPage() {
                           </button>
 
                           {actionsMenuOpen === user.id && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                            <div className="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                              <button
+                                onClick={() => {
+                                  setSelectedUserForDetails(user);
+                                  setIsDetailsModalOpen(true);
+                                  setActionsMenuOpen(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                              >
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Ver Detalhes
+                              </button>
                               <button
                                 onClick={() => {
                                   openRoleModal(user);
@@ -869,7 +862,21 @@ export default function UsersPage() {
                     </button>
 
                     {actionsMenuOpen === user.id && (
-                      <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                      <div className="absolute left-0 right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                        <button
+                          onClick={() => {
+                            setSelectedUserForDetails(user);
+                            setIsDetailsModalOpen(true);
+                            setActionsMenuOpen(null);
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Ver Detalhes
+                        </button>
                         <button
                           onClick={() => {
                             openRoleModal(user);
@@ -1008,6 +1015,155 @@ export default function UsersPage() {
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalhes do Usuário */}
+      {isDetailsModalOpen && selectedUserForDetails && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setIsDetailsModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header do Modal */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white">Detalhes do Usuário</h3>
+                <button
+                  onClick={() => setIsDetailsModalOpen(false)}
+                  className="text-white hover:bg-white/20 rounded-lg p-1 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo do Modal */}
+            <div className="p-6">
+              <div className="space-y-4">
+                {/* Nome */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Nome Completo</label>
+                  <p className="text-lg font-semibold text-gray-900">{selectedUserForDetails.name}</p>
+                </div>
+
+                {/* Email */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                  <p className="text-lg text-gray-900">{selectedUserForDetails.email}</p>
+                </div>
+
+                {/* CPF */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">CPF</label>
+                  <p className="text-lg font-mono text-gray-900">
+                    {selectedUserForDetails.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                  </p>
+                </div>
+
+                {/* Telefone e CRECI - em grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Telefone</label>
+                    <p className="text-lg text-gray-900">
+                      {selectedUserForDetails.phone
+                        ? selectedUserForDetails.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3')
+                        : 'Não informado'
+                      }
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">CRECI</label>
+                    <p className="text-lg text-gray-900">
+                      {selectedUserForDetails.creci || 'Não informado'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Perfil e Status - em grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-2">Perfil</label>
+                    <div className="flex items-center">
+                      {getRoleBadge(selectedUserForDetails.role)}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
+                    <div className="flex items-center">
+                      {selectedUserForDetails.status === UserStatus.APPROVED ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Aprovado
+                        </span>
+                      ) : selectedUserForDetails.status === UserStatus.REJECTED ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          Rejeitado
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                          </svg>
+                          Pendente
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data de Cadastro */}
+                {selectedUserForDetails.createdAt && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Cadastrado em</label>
+                    <p className="text-lg text-gray-900">
+                      {new Date(selectedUserForDetails.createdAt).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer do Modal */}
+            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  openRoleModal(selectedUserForDetails);
+                }}
+                className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Alterar Cargo
+              </button>
+              <button
+                onClick={() => setIsDetailsModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>
