@@ -62,6 +62,13 @@ export default function ReservationsPage() {
         filteredReservations = allReservations;
       }
 
+      // Ordenar reservas da mais recente para a mais antiga
+      filteredReservations.sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA; // Ordem decrescente (mais recente primeiro)
+      });
+
       setReservations(filteredReservations);
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao carregar reservas:', error);
