@@ -4,6 +4,7 @@ import React from 'react';
 import InteractiveMap from '@/components/InteractiveMap';
 import PurchaseModal from '@/components/PurchaseModal';
 import { useMapSelection } from '@/hooks/useMapSelection';
+import { LotStatus } from '@/types';
 
 export default function AdminMapsLotsPage() {
   const {
@@ -11,6 +12,7 @@ export default function AdminMapsLotsPage() {
     lots,
     selectedMap,
     selectedLot,
+    viewingLot,
     showPurchaseModal,
     isLoading,
     availableLotsCount,
@@ -19,6 +21,7 @@ export default function AdminMapsLotsPage() {
     handleLotClick,
     handlePurchaseSuccess,
     handlePurchaseClose,
+    handleViewClose,
     selectMap,
   } = useMapSelection();
 
@@ -151,6 +154,142 @@ export default function AdminMapsLotsPage() {
           onClose={handlePurchaseClose}
           onSuccess={handlePurchaseSuccess}
         />
+      )}
+
+      {/* Modal de Visualização de Lote (Reservado/Vendido) */}
+      {viewingLot && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={handleViewClose}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`px-6 py-4 rounded-t-2xl ${
+              viewingLot.status === LotStatus.RESERVED
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600'
+                : 'bg-gradient-to-r from-red-500 to-red-600'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Lote {viewingLot.lotNumber}</h2>
+                  <p className="text-white/90 text-sm mt-1">
+                    {viewingLot.status === LotStatus.RESERVED ? '🔒 Reservado' : '✓ Vendido'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleViewClose}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="p-6 space-y-6">
+              {/* Informação de status */}
+              <div className={`rounded-xl p-4 border-2 ${
+                viewingLot.status === LotStatus.RESERVED
+                  ? 'bg-amber-50 border-amber-300'
+                  : 'bg-red-50 border-red-300'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  viewingLot.status === LotStatus.RESERVED ? 'text-amber-800' : 'text-red-800'
+                }`}>
+                  {viewingLot.status === LotStatus.RESERVED
+                    ? '⚠️ Este lote está reservado.'
+                    : '✓ Este lote foi vendido.'}
+                </p>
+              </div>
+
+              {/* Informações principais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Número do Lote</label>
+                  <p className="text-xl font-bold text-gray-900">{viewingLot.lotNumber}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    viewingLot.status === LotStatus.RESERVED
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {viewingLot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Área</label>
+                  <p className="text-xl font-bold text-gray-900">{viewingLot.size} m²</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Preço Total</label>
+                  <p className="text-xl font-bold text-gray-900">
+                    R$ {viewingLot.price.toLocaleString('pt-BR')}
+                  </p>
+                  {viewingLot.pricePerM2 && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      R$ {viewingLot.pricePerM2.toLocaleString('pt-BR')}/m²
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Descrição */}
+              {viewingLot.description && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Descrição</label>
+                  <p className="text-gray-900 leading-relaxed">{viewingLot.description}</p>
+                </div>
+              )}
+
+              {/* Características */}
+              {viewingLot.features && viewingLot.features.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-3">Características</label>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingLot.features.map((feature, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Informações da área desenhada */}
+              {viewingLot.area.points.length > 0 && (
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Área Desenhada</label>
+                  <p className="text-sm text-blue-700">
+                    ✓ {viewingLot.area.points.length} pontos definidos no mapa
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end">
+              <button
+                onClick={handleViewClose}
+                className="px-6 py-2.5 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

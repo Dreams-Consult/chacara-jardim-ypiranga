@@ -11,6 +11,7 @@ export const useMapSelection = () => {
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
   const selectedMapIdRef = useRef<string | null>(null);
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
+  const [viewingLot, setViewingLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingLots, setIsLoadingLots] = useState(false);
@@ -144,6 +145,9 @@ export const useMapSelection = () => {
     if (lot.status === LotStatus.AVAILABLE) {
       setSelectedLot(lot);
       setShowPurchaseModal(true);
+    } else {
+      // Lotes reservados ou vendidos abrem modal de visualização
+      setViewingLot(lot);
     }
   }, []);
 
@@ -157,6 +161,10 @@ export const useMapSelection = () => {
   const handlePurchaseClose = useCallback(() => {
     setShowPurchaseModal(false);
     setSelectedLot(null);
+  }, []);
+
+  const handleViewClose = useCallback(() => {
+    setViewingLot(null);
   }, []);
 
   const availableLotsCount = lots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
@@ -184,6 +192,7 @@ export const useMapSelection = () => {
     lots,
     selectedMap,
     selectedLot,
+    viewingLot,
     showPurchaseModal,
     isLoading,
     isLoadingLots,
@@ -193,6 +202,7 @@ export const useMapSelection = () => {
     handleLotClick,
     handlePurchaseSuccess,
     handlePurchaseClose,
+    handleViewClose,
     selectMap,
   };
 };

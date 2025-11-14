@@ -18,6 +18,7 @@ export default function LotManagement() {
   const [lots, setLots] = useState<Lot[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingLot, setEditingLot] = useState<Lot | null>(null);
+  const [viewingLot, setViewingLot] = useState<Lot | null>(null);
   const [selectedLotId, setSelectedLotId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle'>('rectangle');
@@ -329,12 +330,13 @@ export default function LotManagement() {
   };
 
   const handleEditLot = (lot: Lot) => {
-    // Bloquear edição de lotes que não estão disponíveis
+    // Se o lote não está disponível, abrir modal de visualização
     if (lot.status !== LotStatus.AVAILABLE) {
-      alert(`❌ Não é possível editar este lote.\n\nApenas lotes com status "Disponível" podem ser editados.\n\nStatus atual: ${lot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}`);
+      setViewingLot(lot);
       return;
     }
 
+    // Lotes disponíveis podem ser editados normalmente
     setEditingLot(lot);
     setIsCreating(true);
     setSelectedLotId(lot.id);
@@ -630,9 +632,13 @@ export default function LotManagement() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditLot(lot)}
-                          className="flex-1 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
+                          className={`flex-1 px-3 py-1 text-white text-sm font-medium rounded transition-colors shadow-sm hover:shadow-md cursor-pointer ${
+                            lot.status === LotStatus.AVAILABLE
+                              ? 'bg-blue-600 hover:bg-blue-700'
+                              : 'bg-gray-600 hover:bg-gray-700'
+                          }`}
                         >
-                          Editar
+                          {lot.status === LotStatus.AVAILABLE ? 'Editar' : 'Ver Detalhes'}
                         </button>
                         <button
                           onClick={() => handleDelete(lot.id)}
@@ -654,6 +660,171 @@ export default function LotManagement() {
           )}
         </div>
       </div>
+
+      {/* Modal de Visualização de Lote (Reservado/Vendido) */}
+      {viewingLot && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setViewingLot(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`px-6 py-4 rounded-t-2xl ${
+              viewingLot.status === LotStatus.RESERVED
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600'
+                : 'bg-gradient-to-r from-red-500 to-red-600'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Lote {viewingLot.lotNumber}</h2>
+                  <p className="text-white/90 text-sm mt-1">
+                    {viewingLot.status === LotStatus.RESERVED ? '🔒 Reservado' : '✓ Vendido'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setViewingLot(null)}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="p-6 space-y-6">
+              {/* Informação de status */}
+              <div className={`rounded-xl p-4 border-2 ${
+                viewingLot.status === LotStatus.RESERVED
+                  ? 'bg-amber-50 border-amber-300'
+                  : 'bg-red-50 border-red-300'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  viewingLot.status === LotStatus.RESERVED ? 'text-amber-800' : 'text-red-800'
+                }`}>
+                  {viewingLot.status === LotStatus.RESERVED
+                    ? '⚠️ Este lote está reservado e não pode ser editado.'
+                    : '✓ Este lote foi vendido e não pode ser editado.'}
+                </p>
+              </div>
+
+              {/* Informações principais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Número do Lote</label>
+                  <p className="text-xl font-bold text-gray-900">{viewingLot.lotNumber}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    viewingLot.status === LotStatus.RESERVED
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {viewingLot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Área</label>
+                  <p className="text-xl font-bold text-gray-900">{viewingLot.size} m²</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Preço Total</label>
+                  <p className="text-xl font-bold text-gray-900">
+                    R$ {viewingLot.price.toLocaleString('pt-BR')}
+                  </p>
+                  {viewingLot.pricePerM2 && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      R$ {viewingLot.pricePerM2.toLocaleString('pt-BR')}/m²
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Descrição */}
+              {viewingLot.description && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Descrição</label>
+                  <p className="text-gray-900 leading-relaxed">{viewingLot.description}</p>
+                </div>
+              )}
+
+              {/* Características */}
+              {viewingLot.features && viewingLot.features.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-3">Características</label>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingLot.features.map((feature, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Informações da área desenhada */}
+              {viewingLot.area.points.length > 0 && (
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Área Desenhada</label>
+                  <p className="text-sm text-blue-700">
+                    ✓ {viewingLot.area.points.length} pontos definidos no mapa
+                  </p>
+                </div>
+              )}
+
+              {/* Datas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Criado em</label>
+                  <p className="text-sm text-gray-900">
+                    {new Date(viewingLot.createdAt).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Atualizado em</label>
+                  <p className="text-sm text-gray-900">
+                    {new Date(viewingLot.updatedAt).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end">
+              <button
+                onClick={() => setViewingLot(null)}
+                className="px-6 py-2.5 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
