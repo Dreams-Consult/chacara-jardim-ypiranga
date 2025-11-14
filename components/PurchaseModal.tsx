@@ -122,8 +122,11 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
                 <p className="text-lg font-bold text-[var(--surface)]">{lot.size}m²</p>
               </div>
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço</p>
+                <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço Total</p>
                 <p className="text-lg font-bold text-[var(--surface)]">R$ {lot.price.toLocaleString('pt-BR')}</p>
+                {lot.pricePerM2 && (
+                  <p className="text-xs text-[var(--surface)]/70 mt-1">R$ {lot.pricePerM2.toLocaleString('pt-BR')}/m²</p>
+                )}
               </div>
             </div>
             {lot.description && (

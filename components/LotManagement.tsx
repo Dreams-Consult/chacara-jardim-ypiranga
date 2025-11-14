@@ -275,13 +275,18 @@ export default function LotManagement() {
       return;
     }
 
-    if (!editingLot.price || editingLot.price <= 0) {
-      alert('❌ Informe o preço do lote');
+    if (!editingLot.size || editingLot.size <= 0) {
+      alert('❌ Informe o tamanho do lote (m²)');
       return;
     }
 
-    if (!editingLot.size || editingLot.size <= 0) {
-      alert('❌ Informe o tamanho do lote (m²)');
+    if (!editingLot.pricePerM2 || editingLot.pricePerM2 <= 0) {
+      alert('❌ Informe o preço por m² do lote');
+      return;
+    }
+
+    if (!editingLot.price || editingLot.price <= 0) {
+      alert('❌ O preço total do lote deve ser maior que zero');
       return;
     }
 
@@ -344,6 +349,7 @@ export default function LotManagement() {
       status: LotStatus.AVAILABLE,
       price: 0,
       size: 0,
+      pricePerM2: 0,
       description: '',
       features: [],
       createdAt: new Date(),
@@ -468,30 +474,49 @@ export default function LotManagement() {
                   <input
                     type="number"
                     value={editingLot.size || ''}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const newSize = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                      const pricePerM2 = editingLot.pricePerM2 || 0;
                       setEditingLot({
                         ...editingLot,
-                        size: e.target.value === '' ? 0 : parseFloat(e.target.value)
-                      })
-                    }
+                        size: newSize,
+                        price: newSize * pricePerM2
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="300"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">Preço (R$)</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Preço por m² (R$)</label>
+                  <input
+                    type="number"
+                    value={editingLot.pricePerM2 || ''}
+                    onChange={(e) => {
+                      const newPricePerM2 = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                      const size = editingLot.size || 0;
+                      setEditingLot({
+                        ...editingLot,
+                        pricePerM2: newPricePerM2,
+                        price: size * newPricePerM2
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="150"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Preço Total (R$)</label>
                   <input
                     type="number"
                     value={editingLot.price || ''}
-                    onChange={(e) =>
-                      setEditingLot({
-                        ...editingLot,
-                        price: e.target.value === '' ? 0 : parseFloat(e.target.value)
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="50000"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-gray-100 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Calculado automaticamente: {editingLot.size || 0} m² × R$ {editingLot.pricePerM2 || 0}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>

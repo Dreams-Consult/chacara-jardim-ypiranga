@@ -164,6 +164,11 @@ export default function InteractiveMap({
           <p className="text-base font-bold text-gray-900 mt-2">
             R$ {hoveredLot.price.toLocaleString('pt-BR')}
           </p>
+          {hoveredLot.pricePerM2 && (
+            <p className="text-xs text-gray-600 mt-1">
+              R$ {hoveredLot.pricePerM2.toLocaleString('pt-BR')}/m²
+            </p>
+          )}
         </div>
       )}
     </div>

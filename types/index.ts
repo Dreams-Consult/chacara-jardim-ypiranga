@@ -21,6 +21,7 @@ export interface Lot {
   area: LotArea;
   status: LotStatus;
   price: number;
+  pricePerM2?: number; // Preço por metro quadrado
   size: number; // Área em m²
   description?: string;
   features?: string[];
