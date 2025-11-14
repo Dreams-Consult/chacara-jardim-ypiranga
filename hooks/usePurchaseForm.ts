@@ -146,6 +146,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
       console.log(`[usePurchaseForm] ✅ Lote ${lot.id} está disponível, prosseguindo com a reserva...`);
 
       // Prosseguir com a reserva
+      const sellerInfo = getSellerData();
       const requestData = {
         lot: {
           id: lot.id,
@@ -168,6 +169,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           message: formData.message || null,
         },
         seller: {
+          id: sellerInfo.id, // ID do vendedor do localStorage
           name: formData.sellerName,
           email: formData.sellerEmail,
           phone: formData.sellerPhone,
@@ -179,6 +181,8 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           createdAt: new Date().toISOString(),
         }
       };
+
+      console.log('[usePurchaseForm] 📤 Enviando reserva com ID do vendedor:', sellerInfo?.id);
 
       const response = await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
