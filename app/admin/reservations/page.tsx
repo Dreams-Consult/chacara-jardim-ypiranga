@@ -171,7 +171,7 @@ export default function ReservationsPage() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -209,6 +209,20 @@ export default function ReservationsPage() {
           <p className="text-white/90 text-sm font-medium mb-1">Concluídas</p>
           <p className="text-white text-4xl font-bold">
             {reservations.filter(r => r.status === 'completed').length}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-white/90 text-sm font-medium mb-1">Canceladas</p>
+          <p className="text-white text-4xl font-bold">
+            {reservations.filter(r => r.status === 'cancelled').length}
           </p>
         </div>
       </div>
