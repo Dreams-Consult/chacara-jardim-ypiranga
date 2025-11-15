@@ -10,7 +10,7 @@ export const useMapSelection = () => {
   const [lots, setLots] = useState<Lot[]>([]);
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
   const selectedMapIdRef = useRef<string | null>(null);
-  const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
+  const [selectedLots, setSelectedLots] = useState<Lot[]>([]); // Mudado para array
   const [viewingLot, setViewingLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -142,25 +142,45 @@ export const useMapSelection = () => {
   };
 
   const handleLotClick = useCallback((lot: Lot) => {
-    if (lot.status === LotStatus.AVAILABLE) {
-      setSelectedLot(lot);
+    // Sempre abre o modal de visualização ao clicar
+    setViewingLot(lot);
+  }, []);
+
+  const handleToggleLotSelection = useCallback((lot: Lot) => {
+    // Toggle seleção: adiciona ou remove o lote da lista
+    if (lot.status !== LotStatus.AVAILABLE) return;
+
+    setSelectedLots(prev => {
+      const isAlreadySelected = prev.some(l => l.id === lot.id);
+      if (isAlreadySelected) {
+        return prev.filter(l => l.id !== lot.id);
+      } else {
+        return [...prev, lot];
+      }
+    });
+  }, []);
+
+  const handleOpenPurchaseModal = useCallback(() => {
+    if (selectedLots.length > 0) {
       setShowPurchaseModal(true);
     } else {
-      // Lotes reservados ou vendidos abrem modal de visualização
-      setViewingLot(lot);
+      alert('Selecione pelo menos um lote disponível antes de enviar a reserva.');
     }
-  }, []);
+  }, [selectedLots]);
 
   const handlePurchaseSuccess = useCallback(() => {
     setShowPurchaseModal(false);
     setRefreshKey((prev) => prev + 1);
-    alert('Seu interesse foi registrado com sucesso! O lote foi reservado. Entraremos em contato em breve.');
-    setSelectedLot(null);
-  }, []);
+    alert(`${selectedLots.length === 1 ? 'Seu interesse foi registrado' : 'Seus interesses foram registrados'} com sucesso! ${selectedLots.length === 1 ? 'O lote foi reservado' : 'Os lotes foram reservados'}. Entraremos em contato em breve.`);
+    setSelectedLots([]);
+  }, [selectedLots.length]);
 
   const handlePurchaseClose = useCallback(() => {
     setShowPurchaseModal(false);
-    setSelectedLot(null);
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedLots([]);
   }, []);
 
   const handleViewClose = useCallback(() => {
@@ -191,7 +211,7 @@ export const useMapSelection = () => {
     maps,
     lots,
     selectedMap,
-    selectedLot,
+    selectedLots, // Mudado de selectedLot para selectedLots
     viewingLot,
     showPurchaseModal,
     isLoading,
@@ -200,9 +220,13 @@ export const useMapSelection = () => {
     reservedLotsCount,
     soldLotsCount,
     handleLotClick,
+    handleToggleLotSelection, // Nova função para adicionar/remover lote da seleção
+    handleOpenPurchaseModal, // Nova função para abrir modal
+    handleClearSelection, // Nova função para limpar seleção
     handlePurchaseSuccess,
     handlePurchaseClose,
     handleViewClose,
     selectMap,
+    isLotSelected: (lotId: string) => selectedLots.some(l => l.id === lotId), // Helper para verificar se lote está selecionado
   };
 };

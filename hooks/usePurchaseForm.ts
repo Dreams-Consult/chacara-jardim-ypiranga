@@ -16,7 +16,7 @@ interface FormData {
   sellerCPF: string;
 }
 
-export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
+export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
   // Carregar dados do vendedor logado do localStorage
   const getSellerData = () => {
     if (typeof window === 'undefined') return null;
@@ -131,24 +131,31 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
     }
 
     try {
-      // 🔍 VERIFICAR SE O LOTE ESTÁ DISPONÍVEL ANTES DE RESERVAR
-      console.log(`[usePurchaseForm] 🔍 Verificando disponibilidade do lote ${lot.id}...`);
+      // 🔍 VERIFICAR SE TODOS OS LOTES ESTÃO DISPONÍVEIS ANTES DE RESERVAR
+      console.log(`[usePurchaseForm] 🔍 Verificando disponibilidade de ${lots.length} lote(s)...`);
 
-      const checkResponse = await axios.get(`${API_URL}/mapas/lotes/valido?idLote=${lot.id}`);
+      const unavailableLots: string[] = [];
+      for (const lot of lots) {
+        const checkResponse = await axios.get(`${API_URL}/mapas/lotes/valido?idLote=${lot.id}`);
+        if (checkResponse.data.isAvailable === 0) {
+          unavailableLots.push(lot.lotNumber);
+        }
+      }
 
-      if (checkResponse.data.isAvailable === 0) {
-        setError('Este lote não está mais disponível. Por favor, escolha outro lote.');
+      if (unavailableLots.length > 0) {
+        setError(`Os seguintes lotes não estão mais disponíveis: ${unavailableLots.join(', ')}. Por favor, remova-os da seleção.`);
         setIsSubmitting(false);
-        console.log(`[usePurchaseForm] ❌ Lote ${lot.id} não está disponível`);
+        console.log(`[usePurchaseForm] ❌ Lotes indisponíveis:`, unavailableLots);
         return;
       }
 
-      console.log(`[usePurchaseForm] ✅ Lote ${lot.id} está disponível, prosseguindo com a reserva...`);
+      console.log(`[usePurchaseForm] ✅ Todos os ${lots.length} lote(s) estão disponíveis, prosseguindo com a reserva...`);
 
-      // Prosseguir com a reserva
+      // Criar UMA ÚNICA reserva com MÚLTIPLOS lotes
       const sellerInfo = getSellerData();
+
       const requestData = {
-        lot: {
+        lots: lots.map(lot => ({
           id: lot.id,
           mapId: lot.mapId,
           lotNumber: lot.lotNumber,
@@ -160,7 +167,7 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           features: lot.features,
           createdAt: lot.createdAt,
           updatedAt: lot.updatedAt,
-        },
+        })),
         customer: {
           name: formData.customerName,
           email: formData.customerEmail,
@@ -176,22 +183,22 @@ export function usePurchaseForm(lot: Lot, onSuccess: () => void) {
           cpf: formData.sellerCPF,
         },
         purchaseRequest: {
-          lotId: lot.id,
+          lotIds: lots.map(lot => lot.id), // Array de IDs dos lotes
           status: 'pending',
           createdAt: new Date().toISOString(),
         }
       };
 
-      console.log('[usePurchaseForm] 📤 Enviando reserva com ID do vendedor:', sellerInfo?.id);
+      console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s) e ID do vendedor:`, sellerInfo?.id);
 
-      const response = await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
+      await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
           'Content-Type': 'application/json',
         },
         timeout: 10000,
       });
 
-      console.log('[usePurchaseForm] ✅ Reserva enviada com sucesso:', response.data);
+      console.log(`[usePurchaseForm] ✅ Reserva enviada com sucesso para ${lots.length} lote(s)`);
 
       onSuccess();
     } catch (err) {

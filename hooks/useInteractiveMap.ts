@@ -8,6 +8,7 @@ interface UseInteractiveMapProps {
   isEditMode?: boolean;
   onAreaDrawn?: (area: LotArea) => void;
   selectedLotId?: string;
+  selectedLotIds?: string[]; // Novo: suporte para múltiplos lotes selecionados
   drawingMode?: 'polygon' | 'rectangle';
   previewArea?: LotArea | null;
 }
@@ -19,6 +20,7 @@ export function useInteractiveMap({
   isEditMode = false,
   onAreaDrawn,
   selectedLotId,
+  selectedLotIds = [], // Novo: suporte para múltiplos lotes selecionados
   drawingMode = 'polygon',
   previewArea = null,
 }: UseInteractiveMapProps) {
@@ -106,7 +108,8 @@ export function useInteractiveMap({
     ctx.drawImage(img, 0, 0);
 
     lots.forEach((lot) => {
-      drawLot(ctx, lot, lot.id === hoveredLot?.id, lot.id === selectedLotId);
+      const isSelected = lot.id === selectedLotId || selectedLotIds.includes(lot.id);
+      drawLot(ctx, lot, lot.id === hoveredLot?.id, isSelected);
     });
 
     // Desenho de polígono (modo antigo)
@@ -168,7 +171,7 @@ export function useInteractiveMap({
     }
 
     ctx.restore();
-  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, isEditMode, scale, offset, drawingMode, isDrawingRect, rectStart, rectEnd, previewArea]);
+  }, [imageLoaded, lots, drawingPoints, hoveredLot, selectedLotId, selectedLotIds, isEditMode, scale, offset, drawingMode, isDrawingRect, rectStart, rectEnd, previewArea]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

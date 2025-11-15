@@ -5,7 +5,7 @@ import { Lot } from '@/types';
 import { usePurchaseForm } from '@/hooks/usePurchaseForm';
 
 interface PurchaseModalProps {
-  lot: Lot;
+  lots: Lot[]; // Mudado de lot: Lot para lots: Lot[]
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -49,9 +49,13 @@ const validateCPF = (cpf: string): boolean => {
   return true;
 };
 
-export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModalProps) {
-  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lot, onSuccess);
+export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
+  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess);
   const [cpfError, setCpfError] = React.useState<string>('');
+
+  // Calcular preço total de todos os lotes
+  const totalPrice = lots.reduce((sum, lot) => sum + lot.price, 0);
+  const totalArea = lots.reduce((sum, lot) => sum + lot.size, 0);
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCPF(e.target.value);
@@ -99,7 +103,9 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Manifestar Interesse</h2>
-                <p className="text-white/90 text-sm">Lote {lot.lotNumber}</p>
+                <p className="text-white/90 text-sm">
+                  {lots.length === 1 ? `Lote ${lots[0].lotNumber}` : `${lots.length} Lotes Selecionados`}
+                </p>
               </div>
             </div>
             <button
@@ -115,41 +121,29 @@ export default function PurchaseModal({ lot, onClose, onSuccess }: PurchaseModal
         </div>
 
         <div className="p-6">
+          {/* Informações dos lotes selecionados */}
           <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-2xl p-5 mb-6">
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">
+              {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
+            </h3>
+            <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+              {lots.map((lot) => (
+                <div key={lot.id} className="bg-white/80 rounded-lg p-2 border border-[var(--border)] flex justify-between items-center">
+                  <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
+                  <span className="text-sm text-[var(--surface)]">{lot.size}m² - R$ {lot.price.toLocaleString('pt-BR')}</span>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--surface)] mb-1">Área</p>
-                <p className="text-lg font-bold text-[var(--surface)]">{lot.size}m²</p>
+                <p className="text-xs font-medium text-[var(--surface)] mb-1">Área Total</p>
+                <p className="text-lg font-bold text-[var(--surface)]">{totalArea}m²</p>
               </div>
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
                 <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">R$ {lot.price.toLocaleString('pt-BR')}</p>
-                {lot.pricePerM2 && (
-                  <p className="text-xs text-[var(--surface)]/70 mt-1">R$ {lot.pricePerM2.toLocaleString('pt-BR')}/m²</p>
-                )}
+                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR')}</p>
               </div>
             </div>
-            {lot.description && (
-              <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)] mb-4">
-                <p className="text-xs font-medium text-[var(--surface)] mb-2">Descrição</p>
-                <p className="text-sm text-[var(--surface)] leading-relaxed">{lot.description}</p>
-              </div>
-            )}
-            {lot.features && lot.features.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-[var(--foreground)] mb-2">Características</p>
-                <div className="flex flex-wrap gap-2">
-                  {lot.features.map((feature, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1.5 bg-white/80 border border-[var(--primary)]/20 text-[var(--primary)] text-xs font-medium rounded-lg"
-                    >
-                      {feature}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {error && (

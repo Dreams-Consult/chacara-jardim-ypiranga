@@ -11,7 +11,7 @@ export default function AdminMapsLotsPage() {
     maps,
     lots,
     selectedMap,
-    selectedLot,
+    selectedLots, // Mudado de selectedLot para selectedLots
     viewingLot,
     showPurchaseModal,
     isLoading,
@@ -19,10 +19,14 @@ export default function AdminMapsLotsPage() {
     reservedLotsCount,
     soldLotsCount,
     handleLotClick,
+    handleToggleLotSelection, // Nova função para adicionar/remover da lista
+    handleOpenPurchaseModal, // Nova função
+    handleClearSelection, // Nova função
     handlePurchaseSuccess,
     handlePurchaseClose,
     handleViewClose,
     selectMap,
+    isLotSelected, // Helper para verificar se está selecionado
   } = useMapSelection();
 
   if (isLoading) {
@@ -67,13 +71,14 @@ export default function AdminMapsLotsPage() {
       )}
 
       {selectedMap && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 relative">
           <div className="lg:col-span-3">
             <div className="bg-white rounded-2xl shadow-[var(--shadow-lg)] p-4 sm:p-6">
               <InteractiveMap
                 imageUrl={selectedMap.imageUrl}
                 lots={lots}
                 onLotClick={handleLotClick}
+                selectedLotIds={selectedLots.map(lot => lot.id)} // Passa IDs dos lotes selecionados
               />
             </div>
           </div>
@@ -148,15 +153,62 @@ export default function AdminMapsLotsPage() {
         </div>
       )}
 
-      {showPurchaseModal && selectedLot && (
+      {/* Barra de Ação Flutuante para Seleção Múltipla */}
+      {selectedLots.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 min-w-[300px] sm:min-w-[400px] border-2 border-blue-400/30">
+            {/* Contador de Lotes */}
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">{selectedLots.length}</span>
+              </div>
+              <div className="text-white">
+                <p className="font-bold text-lg leading-tight">
+                  {selectedLots.length === 1 ? '1 Lote' : `${selectedLots.length} Lotes`}
+                </p>
+                <p className="text-white/80 text-sm">Selecionado{selectedLots.length > 1 ? 's' : ''}</p>
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="hidden sm:block w-px h-12 bg-white/20"></div>
+
+            {/* Botões de Ação */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleClearSelection}
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 backdrop-blur-sm border border-white/20"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Limpar
+              </button>
+
+              <button
+                onClick={handleOpenPurchaseModal}
+                className="px-6 py-2.5 bg-white text-blue-600 rounded-xl font-bold transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Enviar Reserva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {showPurchaseModal && selectedLots.length > 0 && (
         <PurchaseModal
-          lot={selectedLot}
+          lots={selectedLots} // Mudado de lot para lots
           onClose={handlePurchaseClose}
           onSuccess={handlePurchaseSuccess}
         />
       )}
 
-      {/* Modal de Visualização de Lote (Reservado/Vendido) */}
+      {/* Modal de Visualização de Lote */}
       {viewingLot && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -168,7 +220,9 @@ export default function AdminMapsLotsPage() {
           >
             {/* Header */}
             <div className={`px-6 py-4 rounded-t-2xl ${
-              viewingLot.status === LotStatus.RESERVED
+              viewingLot.status === LotStatus.AVAILABLE
+                ? 'bg-gradient-to-r from-green-500 to-green-600'
+                : viewingLot.status === LotStatus.RESERVED
                 ? 'bg-gradient-to-r from-amber-500 to-amber-600'
                 : 'bg-gradient-to-r from-red-500 to-red-600'
             }`}>
@@ -176,7 +230,9 @@ export default function AdminMapsLotsPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white">Lote {viewingLot.lotNumber}</h2>
                   <p className="text-white/90 text-sm mt-1">
-                    {viewingLot.status === LotStatus.RESERVED ? '🔒 Reservado' : '✓ Vendido'}
+                    {viewingLot.status === LotStatus.AVAILABLE && '✓ Disponível'}
+                    {viewingLot.status === LotStatus.RESERVED && '🔒 Reservado'}
+                    {viewingLot.status === LotStatus.SOLD && '✓ Vendido'}
                   </p>
                 </div>
                 <button
@@ -193,19 +249,21 @@ export default function AdminMapsLotsPage() {
             {/* Conteúdo */}
             <div className="p-6 space-y-6">
               {/* Informação de status */}
-              <div className={`rounded-xl p-4 border-2 ${
-                viewingLot.status === LotStatus.RESERVED
-                  ? 'bg-amber-50 border-amber-300'
-                  : 'bg-red-50 border-red-300'
-              }`}>
-                <p className={`text-sm font-medium ${
-                  viewingLot.status === LotStatus.RESERVED ? 'text-amber-800' : 'text-red-800'
+              {viewingLot.status !== LotStatus.AVAILABLE && (
+                <div className={`rounded-xl p-4 border-2 ${
+                  viewingLot.status === LotStatus.RESERVED
+                    ? 'bg-amber-50 border-amber-300'
+                    : 'bg-red-50 border-red-300'
                 }`}>
-                  {viewingLot.status === LotStatus.RESERVED
-                    ? '⚠️ Este lote está reservado.'
-                    : '✓ Este lote foi vendido.'}
-                </p>
-              </div>
+                  <p className={`text-sm font-medium ${
+                    viewingLot.status === LotStatus.RESERVED ? 'text-amber-800' : 'text-red-800'
+                  }`}>
+                    {viewingLot.status === LotStatus.RESERVED
+                      ? '⚠️ Este lote está reservado.'
+                      : '✓ Este lote foi vendido.'}
+                  </p>
+                </div>
+              )}
 
               {/* Informações principais */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -217,11 +275,15 @@ export default function AdminMapsLotsPage() {
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                    viewingLot.status === LotStatus.RESERVED
+                    viewingLot.status === LotStatus.AVAILABLE
+                      ? 'bg-green-100 text-green-800'
+                      : viewingLot.status === LotStatus.RESERVED
                       ? 'bg-amber-100 text-amber-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {viewingLot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
+                    {viewingLot.status === LotStatus.AVAILABLE && 'Disponível'}
+                    {viewingLot.status === LotStatus.RESERVED && 'Reservado'}
+                    {viewingLot.status === LotStatus.SOLD && 'Vendido'}
                   </span>
                 </div>
 
@@ -280,13 +342,43 @@ export default function AdminMapsLotsPage() {
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end">
+            <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-between items-center gap-3">
               <button
                 onClick={handleViewClose}
-                className="px-6 py-2.5 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Fechar
               </button>
+
+              {viewingLot.status === LotStatus.AVAILABLE && (
+                <button
+                  onClick={() => {
+                    handleToggleLotSelection(viewingLot);
+                    handleViewClose();
+                  }}
+                  className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                    isLotSelected(viewingLot.id)
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  {isLotSelected(viewingLot.id) ? (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Remover da Lista
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Adicionar à Lista
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ interface InteractiveMapProps {
   isEditMode?: boolean;
   onAreaDrawn?: (area: LotArea) => void;
   selectedLotId?: string;
+  selectedLotIds?: string[]; // Novo: suporte para múltiplos lotes selecionados
   drawingMode?: 'polygon' | 'rectangle';
   previewArea?: LotArea | null;
 }
@@ -22,6 +23,7 @@ export default function InteractiveMap({
   isEditMode = false,
   onAreaDrawn,
   selectedLotId,
+  selectedLotIds = [], // Novo: suporte para múltiplos lotes selecionados
   drawingMode = 'polygon',
   previewArea = null,
 }: InteractiveMapProps) {
@@ -52,6 +54,7 @@ export default function InteractiveMap({
     isEditMode,
     onAreaDrawn,
     selectedLotId,
+    selectedLotIds, // Novo: passa múltiplos lotes selecionados
     drawingMode,
     previewArea,
   });
