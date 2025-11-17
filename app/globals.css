@@ -1,26 +1,141 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Paleta Natural Escura - Inspirada em Vale dos Carajás */
+  --background: #1a4a42;
+  --foreground: #ffffff;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Cores principais - tons naturais escuros */
+  --primary: #1e5a37;        /* Verde floresta profundo */
+  --primary-light: #2d7a4f;
+  --primary-dark: #0f3d24;
+
+  --secondary: #7d5a3f;      /* Terra/Madeira escura */
+  --secondary-light: #9d7456;
+  --secondary-dark: #5e4330;
+
+  --accent: #d4a574;         /* Dourado/Ouro */
+  --accent-light: #e6b885;
+
+  /* Cores de status com tons profundos */
+  --success: #1e7e34;
+  --success-dark: #155d27;
+  --warning: #d66a1f;
+  --warning-dark: #b35419;
+  --danger: #b02836;
+  --danger-dark: #8c1f2a;
+
+  /* Backgrounds com contraste suave */
+  --card-bg: #234f47;
+  --surface: #2a5850;
+  --surface-hover: #316159;
+  --border: rgba(212, 165, 116, 0.3);
+  --border-strong: rgba(212, 165, 116, 0.5);
+
+  /* Sombras naturais profundas */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a1f1e;
+    --foreground: #f5f5f0;
+    --card-bg: #2a2f2e;
+    --surface: #232827;
+    --surface-hover: #2d3332;
+    --border: rgba(45, 122, 79, 0.35);
+    --border-strong: rgba(45, 122, 79, 0.6);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  touch-action: pan-x pan-y pinch-zoom;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+html {
+  touch-action: pan-x pan-y pinch-zoom;
+  scroll-behavior: smooth;
+}
+
+canvas {
+  touch-action: none;
+}
+
+/* Transições suaves */
+* {
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+/* Botões com estilo vibrante */
+button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Inputs com melhor visibilidade */
+input, textarea, select {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1c1c1c;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(28, 28, 28, 0.5);
+  font-weight: 500;
+}
+
+/* Scrollbar customizada vibrante */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 6px;
+  border: 2px solid var(--surface);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-dark);
+}
+
+/* Animação para barra de seleção múltipla */
+@keyframes slide-up {
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+

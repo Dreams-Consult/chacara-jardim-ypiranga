@@ -41,7 +41,7 @@ export function useLotOperations(mapId: string) {
    * Cria um novo lote com valores padrão
    */
   const createNewLot = (): Lot => ({
-    id: Date.now().toString(),
+    id: '', // ID será gerado pelo backend (autoincrement)
     mapId,
     lotNumber: '',
     area: { points: [] },

@@ -1,4 +1,4 @@
-# Chácara Jardim Ypiranga - Plataforma de Gerenciamento de Lotes
+# Chácara Jardim Ipiranga - Plataforma de Gerenciamento de Lotes
 
 Plataforma completa para gerenciamento e venda de lotes com mapas interativos e áreas clicáveis.
 

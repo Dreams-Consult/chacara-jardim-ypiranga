@@ -7,8 +7,6 @@ export default function NotFound() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redireciona para a página inicial em caso de 404
-    // Isso permite que rotas dinâmicas funcionem no GitHub Pages
     const path = window.location.pathname.replace('/chacara-jardim-ypiranga', '');
     if (path && path !== '/') {
       router.replace(path);

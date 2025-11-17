@@ -16,10 +16,12 @@ export enum LotStatus {
 export interface Lot {
   id: string;
   mapId: string;
+  mapName?: string; // Nome do mapa associado (opcional)
   lotNumber: string;
   area: LotArea;
   status: LotStatus;
   price: number;
+  pricePerM2?: number; // Preço por metro quadrado
   size: number; // Área em m²
   description?: string;
   features?: string[];
@@ -49,4 +51,30 @@ export interface PurchaseRequest {
   message?: string;
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
   createdAt: Date;
+}
+
+export enum UserRole {
+  DEV = 'dev',
+  ADMIN = 'admin',
+  VENDEDOR = 'vendedor',
+}
+
+export enum UserStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  cpf: string;
+  phone?: string;
+  creci?: string;
+  role: UserRole;
+  status: UserStatus;
+  password?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

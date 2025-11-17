@@ -21,7 +21,7 @@ http://localhost:3000/admin/maps
 ### 2. Fazer Upload do Mapa
 1. Clique em **"Novo Mapa"**
 2. Preencha:
-   - **Nome**: "Chácara Jardim Ypiranga - Projeto 02"
+   - **Nome**: "Chácara Jardim Ipiranga - Projeto 02"
    - **Descrição**: "Loteamento com XX lotes disponíveis"
 3. Clique em **"Upload de Imagem ou PDF"**
 4. Selecione o arquivo: `/home/maiasb/codes/dreams/teste-chacara-copilot/lot-mapping-platform/NOVO PROJETO REVISADO 02 IMAGEM -Model.pdf`
