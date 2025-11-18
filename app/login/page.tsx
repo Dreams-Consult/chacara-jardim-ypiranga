@@ -204,14 +204,6 @@ function LoginForm() {
               </Link>
             </p>
           </div>
-
-          {/* Informação de Desenvolvimento */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-800 font-medium mb-2">🔧 Modo Desenvolvimento</p>
-            <p className="text-xs text-blue-600">
-              Para criar o primeiro usuário admin, use o localStorage do navegador ou crie via console.
-            </p>
-          </div>
         </div>
       </div>
     </div>
