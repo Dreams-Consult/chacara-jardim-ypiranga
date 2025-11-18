@@ -84,8 +84,15 @@ function LoginForm() {
       const success = await login(cpf, password);
 
       if (success) {
-        console.log('[Login] ✅ Login bem-sucedido, redirecionando...');
-        router.push('/admin/dashboard');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || "{}");
+
+        if (!currentUser.first_login) {
+          console.log('[Login] ✅ Login bem-sucedido, redirecionando...');
+          router.push('/admin/dashboard');
+        }else {
+          console.log('[Login] Primeiro login detectado, redirecionando para atualização de senha...');
+          router.push(`/password?userId=${currentUser.id}`);
+        }
       } else {
         setError('CPF ou senha inválidos');
         setLoading(false);
