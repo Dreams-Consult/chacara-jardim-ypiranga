@@ -141,6 +141,7 @@ export default function UsersPage() {
           role: formData.role,
           status: UserStatus.APPROVED, // Usuários criados por admin são aprovados automaticamente
           password: formData.password,
+          first_login: true,
         };
 
         await axios.post(`${API_URL}/usuarios/criar`, newUserData, {

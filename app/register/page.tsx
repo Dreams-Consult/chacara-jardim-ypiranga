@@ -149,6 +149,7 @@ export default function RegisterPage() {
         role: UserRole.VENDEDOR,
         status: UserStatus.PENDING,
         password: formData.password,
+        first_login: false
       };
 
       console.log('[Register] Enviando dados do usuário:', userData);
