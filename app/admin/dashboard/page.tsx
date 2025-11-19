@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { Map, Lot, LotStatus, UserRole } from '@/types';
@@ -171,7 +171,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Estatísticas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -194,6 +194,20 @@ export default function DashboardPage() {
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Total de Lotes</p>
           <p className="text-white text-4xl font-bold">{totalLots}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl p-6 shadow-[var(--shadow-lg)] border-2 border-yellow-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-yellow-300/30 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-yellow-900/90 text-sm font-medium mb-1">Lotes Reservados</p>
+          <p className="text-yellow-900 text-4xl font-bold">{reservedLots}</p>
         </div>
 
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
