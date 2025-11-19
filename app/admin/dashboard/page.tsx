@@ -305,6 +305,24 @@ export default function DashboardPage() {
                 ></div>
               </div>
             </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                  <span className="text-white font-medium">Bloqueado</span>
+                </div>
+                <span className="text-white font-bold">
+                  {blockedSlots} ({totalLots > 0 ? ((blockedSlots / totalLots) * 100).toFixed(1) : 0}%)
+                </span>
+              </div>
+              <div className="w-full bg-[var(--surface)] rounded-full h-3">
+                <div
+                  className="bg-gray-500 h-3 rounded-full transition-all"
+                  style={{ width: `${totalLots > 0 ? (blockedSlots / totalLots) * 100 : 0}%` }}
+                ></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -359,6 +377,7 @@ export default function DashboardPage() {
               const mapAvailable = mapLots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
               const mapReserved = mapLots.filter((lot) => lot.status === LotStatus.RESERVED).length;
               const mapSold = mapLots.filter((lot) => lot.status === LotStatus.SOLD).length;
+              const mapBlocked = mapLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
 
               return (
                 <div key={map.id} className="bg-[var(--surface)] rounded-xl p-5 border border-[var(--border)] hover:shadow-[var(--shadow-md)] transition-all">
@@ -382,6 +401,10 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-red-400">Vendidos:</span>
                       <span className="text-red-400 font-bold">{mapSold}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">Bloqueados:</span>
+                      <span className="text-gray-500 font-bold">{mapBlocked}</span>
                     </div>
                   </div>
                 </div>
