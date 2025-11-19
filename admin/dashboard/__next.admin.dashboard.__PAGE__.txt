@@ -1,9 +1,9 @@
 1:"$Sreact.fragment"
 2:I[47257,["/chacara-jardim-ypiranga/_next/static/chunks/ff1a16fafef87110.js","/chacara-jardim-ypiranga/_next/static/chunks/247eb132b7f7b574.js"],"ClientPageRoot"]
-3:I[20383,["/chacara-jardim-ypiranga/_next/static/chunks/5cd3c46ec84b29cd.js","/chacara-jardim-ypiranga/_next/static/chunks/8a4dd8649c6938e3.js","/chacara-jardim-ypiranga/_next/static/chunks/9b666d5d49172ae4.js","/chacara-jardim-ypiranga/_next/static/chunks/b1e673a8e6334808.js"],"default"]
+3:I[20383,["/chacara-jardim-ypiranga/_next/static/chunks/5b9fe5727a5b119a.js","/chacara-jardim-ypiranga/_next/static/chunks/8a4dd8649c6938e3.js","/chacara-jardim-ypiranga/_next/static/chunks/9b666d5d49172ae4.js","/chacara-jardim-ypiranga/_next/static/chunks/028198032249b3bf.js"],"default"]
 6:I[97367,["/chacara-jardim-ypiranga/_next/static/chunks/ff1a16fafef87110.js","/chacara-jardim-ypiranga/_next/static/chunks/247eb132b7f7b574.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"buildId":"yVITJTsH3StVLRwfw-vur","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/chacara-jardim-ypiranga/_next/static/chunks/b1e673a8e6334808.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"vHKUEwbQbI86uigR_eSzk","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/chacara-jardim-ypiranga/_next/static/chunks/028198032249b3bf.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
 4:{}
 5:{}
 8:null
