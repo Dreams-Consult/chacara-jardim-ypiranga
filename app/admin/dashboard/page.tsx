@@ -135,6 +135,7 @@ export default function DashboardPage() {
   const availableLots = allLots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
   const reservedLots = allLots.filter((lot) => lot.status === LotStatus.RESERVED).length;
   const soldLots = allLots.filter((lot) => lot.status === LotStatus.SOLD).length;
+  const blockedSlots = allLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
 
   const totalValue = allLots.reduce((sum, lot) => sum + lot.price, 0);
   const availableValue = allLots
@@ -197,7 +198,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl p-6 shadow-[var(--shadow-lg)] border-2 border-yellow-300">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-yellow-300/30 rounded-xl flex items-center justify-center">
@@ -232,6 +233,18 @@ export default function DashboardPage() {
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Lotes Vendidos</p>
           <p className="text-white text-4xl font-bold">{soldLots}</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 11-12.728 0M12 9v2m0 4h.01" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-white/90 text-sm font-medium mb-1">Lotes Bloqueados</p>
+          <p className="text-white text-4xl font-bold">{blockedSlots}</p>
         </div>
       </div>
 
