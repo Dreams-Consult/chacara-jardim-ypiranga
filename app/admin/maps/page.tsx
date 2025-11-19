@@ -221,10 +221,12 @@ export default function AdminMapsLotsPage() {
             {/* Header */}
             <div className={`px-6 py-4 rounded-t-2xl ${
               viewingLot.status === LotStatus.AVAILABLE
-                ? 'bg-gradient-to-r from-green-500 to-green-600'
-                : viewingLot.status === LotStatus.RESERVED
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600'
-                : 'bg-gradient-to-r from-red-500 to-red-600'
+              ? 'bg-gradient-to-r from-green-500 to-green-600'
+              : viewingLot.status === LotStatus.RESERVED
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600'
+              : viewingLot.status === LotStatus.BLOCKED
+              ? 'bg-gradient-to-r from-gray-500 to-gray-700'
+              : 'bg-gradient-to-r from-red-500 to-red-600'
             }`}>
               <div className="flex items-center justify-between">
                 <div>
@@ -233,6 +235,7 @@ export default function AdminMapsLotsPage() {
                     {viewingLot.status === LotStatus.AVAILABLE && '✓ Disponível'}
                     {viewingLot.status === LotStatus.RESERVED && '🔒 Reservado'}
                     {viewingLot.status === LotStatus.SOLD && '✓ Vendido'}
+                    {viewingLot.status === LotStatus.BLOCKED && '🔒 Bloqueado'}
                   </p>
                 </div>
                 <button
@@ -251,93 +254,107 @@ export default function AdminMapsLotsPage() {
               {/* Informação de status */}
               {viewingLot.status !== LotStatus.AVAILABLE && (
                 <div className={`rounded-xl p-4 border-2 ${
-                  viewingLot.status === LotStatus.RESERVED
-                    ? 'bg-amber-50 border-amber-300'
-                    : 'bg-red-50 border-red-300'
+                viewingLot.status === LotStatus.RESERVED
+                  ? 'bg-amber-50 border-amber-300'
+                  : viewingLot.status === LotStatus.SOLD
+                  ? 'bg-red-50 border-red-300'
+                  : viewingLot.status === LotStatus.BLOCKED
+                  ? 'bg-gray-200 border-gray-400'
+                  : 'bg-gray-100 border-gray-300'
                 }`}>
-                  <p className={`text-sm font-medium ${
-                    viewingLot.status === LotStatus.RESERVED ? 'text-amber-800' : 'text-red-800'
-                  }`}>
-                    {viewingLot.status === LotStatus.RESERVED
-                      ? '⚠️ Este lote está reservado.'
-                      : '✓ Este lote foi vendido.'}
-                  </p>
-                </div>
+                <p className={`text-sm font-medium ${
+                viewingLot.status === LotStatus.RESERVED
+                  ? 'text-amber-800'
+                  : viewingLot.status === LotStatus.SOLD
+                  ? 'text-red-800'
+                  : 'text-gray-700'
+                }`}>
+                {viewingLot.status === LotStatus.RESERVED &&
+                  '⚠️ Este lote está reservado.'}
+                {viewingLot.status === LotStatus.SOLD &&
+                  '✓ Este lote foi vendido.'}
+                {viewingLot.status === LotStatus.BLOCKED &&
+                  '⛔ Este lote está bloqueado e não pode ser reservado.'}
+                </p>
+              </div>
               )}
 
               {/* Informações principais */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Número do Lote</label>
-                  <p className="text-xl font-bold text-gray-900">{viewingLot.lotNumber}</p>
-                </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-500 mb-1">Número do Lote</label>
+                <p className="text-xl font-bold text-gray-900">{viewingLot.lotNumber}</p>
+              </div>
 
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                    viewingLot.status === LotStatus.AVAILABLE
-                      ? 'bg-green-100 text-green-800'
-                      : viewingLot.status === LotStatus.RESERVED
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {viewingLot.status === LotStatus.AVAILABLE && 'Disponível'}
-                    {viewingLot.status === LotStatus.RESERVED && 'Reservado'}
-                    {viewingLot.status === LotStatus.SOLD && 'Vendido'}
-                  </span>
-                </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                viewingLot.status === LotStatus.AVAILABLE
+                  ? 'bg-green-100 text-green-800'
+                  : viewingLot.status === LotStatus.RESERVED
+                  ? 'bg-amber-100 text-amber-800'
+                  : viewingLot.status === LotStatus.SOLD
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-gray-200 text-gray-700'
+                }`}>
+                {viewingLot.status === LotStatus.AVAILABLE && 'Disponível'}
+                {viewingLot.status === LotStatus.RESERVED && 'Reservado'}
+                {viewingLot.status === LotStatus.SOLD && 'Vendido'}
+                {viewingLot.status === LotStatus.BLOCKED && 'Bloqueado'}
+                </span>
+              </div>
 
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Área</label>
-                  <p className="text-xl font-bold text-gray-900">{viewingLot.size} m²</p>
-                </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-500 mb-1">Área</label>
+                <p className="text-xl font-bold text-gray-900">{viewingLot.size} m²</p>
+              </div>
 
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Preço Total</label>
-                  <p className="text-xl font-bold text-gray-900">
-                    R$ {viewingLot.price.toLocaleString('pt-BR')}
-                  </p>
-                  {viewingLot.pricePerM2 && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      R$ {viewingLot.pricePerM2.toLocaleString('pt-BR')}/m²
-                    </p>
-                  )}
-                </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-500 mb-1">Preço Total</label>
+                <p className="text-xl font-bold text-gray-900">
+                R$ {viewingLot.price.toLocaleString('pt-BR')}
+                </p>
+                {viewingLot.pricePerM2 && (
+                <p className="text-xs text-gray-600 mt-1">
+                  R$ {viewingLot.pricePerM2.toLocaleString('pt-BR')}/m²
+                </p>
+                )}
+              </div>
               </div>
 
               {/* Descrição */}
               {viewingLot.description && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-2">Descrição</label>
-                  <p className="text-gray-900 leading-relaxed">{viewingLot.description}</p>
-                </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-500 mb-2">Descrição</label>
+                <p className="text-gray-900 leading-relaxed">{viewingLot.description}</p>
+              </div>
               )}
 
               {/* Características */}
               {viewingLot.features && viewingLot.features.length > 0 && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-3">Características</label>
-                  <div className="flex flex-wrap gap-2">
-                    {viewingLot.features.map((feature, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-500 mb-3">Características</label>
+                <div className="flex flex-wrap gap-2">
+                {viewingLot.features.map((feature, index) => (
+                  <span
+                  key={index}
+                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg"
+                  >
+                  {feature}
+                  </span>
+                ))}
                 </div>
+              </div>
               )}
 
               {/* Informações da área desenhada */}
               {viewingLot.area.points.length > 0 && (
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <label className="block text-sm font-medium text-blue-800 mb-2">Área Desenhada</label>
-                  <p className="text-sm text-blue-700">
-                    ✓ {viewingLot.area.points.length} pontos definidos no mapa
-                  </p>
-                </div>
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <label className="block text-sm font-medium text-blue-800 mb-2">Área Desenhada</label>
+                <p className="text-sm text-blue-700">
+                ✓ {viewingLot.area.points.length} pontos definidos no mapa
+                </p>
+              </div>
               )}
             </div>
 

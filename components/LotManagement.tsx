@@ -379,7 +379,7 @@ export default function LotManagement() {
 
   const handleEditLot = (lot: Lot) => {
     // Se o lote não está disponível, abrir modal de visualização
-    if (lot.status !== LotStatus.AVAILABLE) {
+    if (lot.status !== LotStatus.AVAILABLE && lot.status !== LotStatus.BLOCKED) {
       setViewingLot(lot);
       return;
     }
@@ -513,10 +513,15 @@ export default function LotManagement() {
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
                   <select
                     value={editingLot.status}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-gray-100 cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 cursor-pointer"
+                    onChange={(e) =>
+                      setEditingLot({ ...editingLot, status: e.target.value as LotStatus })
+                    }
                   >
                     <option value={LotStatus.AVAILABLE}>Disponível</option>
+                    <option value={LotStatus.RESERVED}>Reservado</option>
+                    <option value={LotStatus.SOLD}>Vendido</option>
+                    <option value={LotStatus.BLOCKED}>Bloqueado</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
                     Status é controlado automaticamente pelas reservas
@@ -571,19 +576,7 @@ export default function LotManagement() {
                     Calculado automaticamente: {editingLot.size || 0} m² × R$ {editingLot.pricePerM2 || 0}
                   </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">Status</label>
-                  <select
-                    value={editingLot.status}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-gray-100 cursor-not-allowed"
-                  >
-                    <option value={LotStatus.AVAILABLE}>Disponível</option>
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Status é controlado automaticamente pelas reservas
-                  </p>
-                </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">Descrição</label>
                   <textarea
@@ -678,17 +671,21 @@ export default function LotManagement() {
                         <h3 className="font-bold text-gray-900">Lote {lot.lotNumber}</h3>
                         <p className="text-sm font-medium">
                           <span className={
-                            lot.status === LotStatus.AVAILABLE
-                              ? 'text-green-700'
-                              : lot.status === LotStatus.RESERVED
-                              ? 'text-amber-700'
-                              : 'text-red-700'
+                          lot.status === LotStatus.AVAILABLE
+                            ? 'text-green-700'
+                            : lot.status === LotStatus.RESERVED
+                            ? 'text-amber-700'
+                            : lot.status === LotStatus.BLOCKED
+                            ? 'text-gray-700'
+                            : 'text-red-700'
                           }>
-                            {lot.status === LotStatus.AVAILABLE
-                              ? 'Disponível'
-                              : lot.status === LotStatus.RESERVED
-                              ? 'Reservado'
-                              : 'Vendido'}
+                          {lot.status === LotStatus.AVAILABLE
+                            ? 'Disponível'
+                            : lot.status === LotStatus.RESERVED
+                            ? 'Reservado'
+                            : lot.status === LotStatus.BLOCKED
+                            ? 'Bloqueado'
+                            : 'Vendido'}
                           </span>
                         </p>
                       </div>
@@ -701,22 +698,22 @@ export default function LotManagement() {
                     </p>
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditLot(lot)}
-                          className={`flex-1 px-3 py-1 text-white text-sm font-medium rounded transition-colors shadow-sm hover:shadow-md cursor-pointer ${
-                            lot.status === LotStatus.AVAILABLE
-                              ? 'bg-blue-600 hover:bg-blue-700'
-                              : 'bg-gray-600 hover:bg-gray-700'
-                          }`}
-                        >
-                          {lot.status === LotStatus.AVAILABLE ? 'Editar' : 'Ver Detalhes'}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(lot.id)}
-                          className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
-                        >
-                          Excluir
-                        </button>
+                      <button
+                        onClick={() => handleEditLot(lot)}
+                        className={`flex-1 px-3 py-1 text-white text-sm font-medium rounded transition-colors shadow-sm hover:shadow-md cursor-pointer ${
+                        lot.status === LotStatus.AVAILABLE || lot.status === LotStatus.BLOCKED
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-gray-600 hover:bg-gray-700'
+                        }`}
+                      >
+                        {(lot.status === LotStatus.AVAILABLE || lot.status === LotStatus.BLOCKED) ? 'Editar' : 'Ver Detalhes'}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(lot.id)}
+                        className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
+                      >
+                        Excluir
+                      </button>
                       </div>
                     </div>
                   </div>

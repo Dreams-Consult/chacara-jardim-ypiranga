@@ -60,15 +60,19 @@ export function useInteractiveMap({
     });
     ctx.closePath();
 
-    let fillColor = 'rgba(34, 197, 94, 0.3)';
+
+    let fillColor = 'rgba(34, 197, 94, 0.3)'; // Disponível (verde)
     let strokeColor = '#22c55e';
 
     if (lot.status === LotStatus.RESERVED) {
-      fillColor = 'rgba(251, 191, 36, 0.3)';
+      fillColor = 'rgba(251, 191, 36, 0.3)'; // Amarelo
       strokeColor = '#fbbf24';
     } else if (lot.status === LotStatus.SOLD) {
-      fillColor = 'rgba(239, 68, 68, 0.3)';
+      fillColor = 'rgba(239, 68, 68, 0.3)'; // Vermelho
       strokeColor = '#ef4444';
+    } else if (lot.status === LotStatus.BLOCKED) {
+      fillColor = 'rgba(107, 114, 128, 0.3)'; // Cinza
+      strokeColor = '#6b7280';
     }
 
     if (isHovered) {

@@ -151,14 +151,24 @@ export default function InteractiveMap({
           <h3 className="font-bold text-lg text-gray-900 mb-2">Lote {hoveredLot.lotNumber}</h3>
           <p className="text-sm text-gray-700 mb-1">
             <span className="font-medium">Status:</span>{' '}
-            <span className={
+            <span
+              className={
               hoveredLot.status === LotStatus.AVAILABLE
                 ? 'font-semibold text-green-700'
                 : hoveredLot.status === LotStatus.RESERVED
-                  ? 'font-semibold text-amber-700'
-                  : 'font-semibold text-red-700'
-            }>
-              {hoveredLot.status === LotStatus.AVAILABLE ? 'Disponível' : hoveredLot.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
+                ? 'font-semibold text-amber-700'
+                : hoveredLot.status === LotStatus.BLOCKED
+                ? 'font-semibold text-gray-500'
+                : 'font-semibold text-red-700'
+              }
+            >
+              {hoveredLot.status === LotStatus.AVAILABLE
+              ? 'Disponível'
+              : hoveredLot.status === LotStatus.RESERVED
+              ? 'Reservado'
+              : hoveredLot.status === LotStatus.BLOCKED
+              ? 'Bloqueado'
+              : 'Vendido'}
             </span>
           </p>
           <p className="text-sm text-gray-700 mb-1">
