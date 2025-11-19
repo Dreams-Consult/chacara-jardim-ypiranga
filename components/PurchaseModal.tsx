@@ -117,6 +117,15 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
     setFormData({ ...formData, customerPhone: formatted });
   };
 
+  // Função auxiliar para atualizar paymentMethod e limpar otherPayment se necessário
+  const handlePaymentMethodChange = (value: string) => {
+  if (value !== 'outro') {
+    setFormData({ ...formData, paymentMethod: value, otherPayment: '' });
+  } else {
+    setFormData({ ...formData, paymentMethod: value });
+  }
+}
+
   return (
     <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
@@ -261,16 +270,34 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                         ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                         : 'bg-white text-[var(--surface)] border-[var(--border)] hover:text-white hover:bg-[var(--primary)]/10'}
                     `}
-                    onClick={() => setFormData({ ...formData, paymentMethod: option.value })}
+                    onClick={() => handlePaymentMethodChange(option.value)}
                   >
                     {option.icon}
                     {option.label}
                   </button>
                 ))}
               </div>
+
               <input type="hidden" name="paymentMethod" value={formData.paymentMethod || ''} required />
               {!formData.paymentMethod && (
                 <p className="text-red-600 text-sm mt-1">❌ Selecione uma forma de pagamento</p>
+              )}
+
+              {formData.paymentMethod === 'outro' && (
+                <div className="mt-3">
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                    Especifique a forma de pagamento *
+                  </label>
+                  <input
+                    maxLength={30}
+                    type="text"
+                    required
+                    value={formData.otherPayment || ''}
+                    onChange={e => setFormData({ ...formData, otherPayment: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="Descreva a forma de pagamento"
+                  />
+                </div>
               )}
             </div>
 
