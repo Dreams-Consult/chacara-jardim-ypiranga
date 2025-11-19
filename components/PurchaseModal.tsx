@@ -49,6 +49,33 @@ const validateCPF = (cpf: string): boolean => {
   return true;
 };
 
+const paymentOptions = [
+  { label: 'Pix', value: 'pix', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="4" y="4" width="16" height="16" rx="5" stroke="currentColor" strokeWidth={2} />
+      <path d="M8 12h8" stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
+    </svg>
+  ) },
+  { label: 'Cartão', value: 'cartao', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="2" y="6" width="20" height="12" rx="3" stroke="currentColor" strokeWidth={2} />
+      <path d="M2 10h20" stroke="currentColor" strokeWidth={2} />
+    </svg>
+  ) },
+  { label: 'Dinheiro', value: 'dinheiro', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor" strokeWidth={2} />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={2} />
+    </svg>
+  ) },
+  { label: 'Outro', value: 'outro', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={2} />
+      <path d="M8 12h8" stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
+    </svg>
+  ) },
+];
+
 export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
   const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess);
   const [cpfError, setCpfError] = React.useState<string>('');
@@ -220,6 +247,31 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 rows={4}
                 placeholder="Deixe uma mensagem ou dúvida"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Forma de Pagamento *</label>
+              <div className="flex gap-3">
+                {paymentOptions.map(option => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors font-medium
+                      ${formData.paymentMethod === option.value
+                        ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                        : 'bg-white text-[var(--surface)] border-[var(--border)] hover:text-white hover:bg-[var(--primary)]/10'}
+                    `}
+                    onClick={() => setFormData({ ...formData, paymentMethod: option.value })}
+                  >
+                    {option.icon}
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <input type="hidden" name="paymentMethod" value={formData.paymentMethod || ''} required />
+              {!formData.paymentMethod && (
+                <p className="text-red-600 text-sm mt-1">❌ Selecione uma forma de pagamento</p>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">

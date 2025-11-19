@@ -14,6 +14,7 @@ interface FormData {
   sellerEmail: string;
   sellerPhone: string;
   sellerCPF: string;
+  paymentMethod: string;
 }
 
 export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
@@ -55,6 +56,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
     sellerEmail: sellerData?.email || '',
     sellerPhone: sellerData?.phone || '',
     sellerCPF: sellerData?.cpf || '',
+    paymentMethod: '',
   });
 
   // Atualizar dados do vendedor quando o componente montar
@@ -183,6 +185,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
           cpf: formData.sellerCPF,
         },
         purchaseRequest: {
+          paymentMethod: formData.paymentMethod,
           lotIds: lots.map(lot => lot.id), // Array de IDs dos lotes
           status: 'pending',
           createdAt: new Date().toISOString(),
