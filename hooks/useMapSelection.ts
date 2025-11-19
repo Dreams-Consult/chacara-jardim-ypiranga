@@ -21,7 +21,7 @@ export const useMapSelection = () => {
   useRealtimeUpdates(() => {
     console.log('🔄 Auto-refresh da página pública: recarregando mapas e lotes...');
     setRefreshKey(prev => prev + 1);
-  }, 3000);
+  }, 10000);
 
   // Buscar apenas informações dos mapas (sem lotes)
   useEffect(() => {
