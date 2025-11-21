@@ -19,7 +19,7 @@ export interface Lot {
   mapId: string;
   mapName?: string; // Nome do mapa associado (opcional)
   lotNumber: string;
-  area: LotArea;
+  area?: LotArea; // Opcional - usado apenas para compatibilidade com visualização antiga
   status: LotStatus;
   price: number;
   pricePerM2?: number; // Preço por metro quadrado

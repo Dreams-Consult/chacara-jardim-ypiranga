@@ -255,12 +255,9 @@ export function useInteractiveMap({
 
     if (isEditMode && drawingMode === 'polygon') {
       setDrawingPoints([...drawingPoints, { x, y }]);
-    } else if (!isEditMode) {
-      const clickedLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
-      if (clickedLot && onLotClick) {
-        onLotClick(clickedLot);
-      }
     }
+    // Removido: cliques em áreas do mapa quando não está em modo de edição
+    // As seleções devem ser feitas pelo componente CinemaStyleLotSelector
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -288,13 +285,9 @@ export function useInteractiveMap({
 
     if (isEditMode) return;
 
-    const { x, y } = getCanvasCoordinates(e);
-    const hoveredLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
-    setHoveredLot(hoveredLot || null);
-
-    if (hoveredLot) {
-      canvas.style.cursor = 'pointer';
-    } else {
+    // Removido: hover nas áreas do mapa quando não está em modo de edição
+    // O hover agora é feito pelo componente CinemaStyleLotSelector
+    if (canvas) {
       canvas.style.cursor = 'default';
     }
   };
