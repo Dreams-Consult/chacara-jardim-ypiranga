@@ -7,8 +7,6 @@ import { Map, Lot, LotStatus, LotArea } from '@/types';
 import InteractiveMap from '@/components/InteractiveMap';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function LotManagement() {
   const searchParams = useSearchParams();
   const router = useRouter();

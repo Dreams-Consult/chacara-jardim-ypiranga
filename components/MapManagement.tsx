@@ -115,6 +115,7 @@ export default function MapManagement() {
   const { maps, isLoading, deleteMapById, processFileUpload, loadMaps } = useMapOperations();
   const [isCreating, setIsCreating] = useState(false);
   const [editingMap, setEditingMap] = useState<Map | null>(null);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -219,6 +220,53 @@ export default function MapManagement() {
           alert('❌ Erro ao deletar mapa. Verifique sua conexão e tente novamente.');
         }
       }
+    }
+  };
+
+  const handleEditDetails = (map: Map) => {
+    setEditingMap(map);
+    setIsEditingDetails(true);
+  };
+
+  const handleUpdateDetails = async () => {
+    if (!editingMap?.name?.trim()) {
+      alert('Por favor, preencha o nome do mapa');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const url = '/api/mapas/atualizar';
+      const payload = {
+        id: editingMap.id,
+        name: editingMap.name,
+        description: editingMap.description || ''
+      };
+
+      console.log('[MapManagement] Atualizando mapa:', { url, payload });
+
+      const response = await axios.patch(url, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      });
+
+      console.log('[MapManagement] Resposta da API:', response.data);
+
+      await loadMaps();
+      setIsEditingDetails(false);
+      setEditingMap(null);
+      alert('✅ Mapa atualizado com sucesso!');
+    } catch (error: any) {
+      console.error('[MapManagement] Erro ao atualizar mapa:', error);
+      console.error('[MapManagement] Detalhes do erro:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      const errorMessage = error.response?.data?.error || error.message || 'Erro ao atualizar mapa. Tente novamente.';
+      alert(`❌ ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -442,6 +490,15 @@ export default function MapManagement() {
                 >
                   Gerenciar
                 </button>
+                <button
+                  onClick={() => handleEditDetails(map)}
+                  className="px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+                  title="Editar nome e descrição"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
                 {!mapsWithReservedLots[map.id]?.hasReserved ? (
                   <button
                     onClick={() => handleDelete(map.id)}
@@ -470,6 +527,81 @@ export default function MapManagement() {
       {maps.length === 0 && !isCreating && (
         <div className="text-center py-12">
           <p className="text-[var(--foreground)] text-lg font-semibold">Nenhum mapa cadastrado. Clique em &ldquo;Novo Mapa&rdquo; para começar.</p>
+        </div>
+      )}
+
+      {/* Modal de Edição de Detalhes */}
+      {isEditingDetails && editingMap && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-blue-500/30">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Editar Mapa
+            </h2>
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Nome *</label>
+                <input
+                  type="text"
+                  value={editingMap.name || ''}
+                  onChange={(e) =>
+                    setEditingMap({ ...editingMap, name: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-[var(--shadow-sm)]"
+                  placeholder="Nome do mapa"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Descrição</label>
+                <textarea
+                  value={editingMap.description || ''}
+                  onChange={(e) =>
+                    setEditingMap({ ...editingMap, description: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-[var(--shadow-sm)]"
+                  placeholder="Descrição do mapa"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setIsEditingDetails(false);
+                  setEditingMap(null);
+                }}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateDetails}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
