@@ -11,6 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isAuthenticated, logout, canAccessUsers } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Estado para controlar visibilidade do sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,6 +22,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Garantir que o componente está montado antes de renderizar
   useEffect(() => {
     setMounted(true);
+    // Dar tempo para o AuthContext restaurar a sessão do localStorage
+    const timer = setTimeout(() => {
+      setIsCheckingAuth(false);
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Após montar, verificar localStorage (apenas no cliente)
@@ -40,11 +46,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Validar sessão e redirecionar
   useEffect(() => {
+    // Não verificar até que a checagem de autenticação termine
+    if (isCheckingAuth) return;
+    
     if (!isAuthenticated && pathname !== '/login') {
       console.log('[AdminLayout] ⚠️ Usuário não autenticado - redirecionando para login');
       router.push('/login');
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [isAuthenticated, pathname, router, isCheckingAuth]);
 
   // Marcar como visitado quando entrar em map-management
   useEffect(() => {
@@ -82,8 +91,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   // Não renderizar até montar no cliente (evita hydration mismatch)
-  if (!mounted) {
-    return null;
+  if (!mounted || isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+          <p className="text-white/70">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated || !user) {
