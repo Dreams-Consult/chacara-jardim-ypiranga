@@ -5,10 +5,12 @@ import crypto from 'crypto';
 const dbConfig = {
   host: 'localhost',
   port: 3306,
-  user: 'root',
+  user: 'maia',
   password: 'ForTheHorde!',
   database: 'vale_dos_carajas',
 };
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   let connection;
@@ -53,12 +55,13 @@ export async function POST(request: NextRequest) {
 
     if (Array.isArray(existing) && existing[0] && (existing[0] as any).count > 0) {
       return NextResponse.json(
-        { error: 'CPF ou email já cadastrado' },
+        { error: 'CPF ou email já cadastrado', message: 'Este CPF ou email já está cadastrado no sistema' },
         { status: 409 }
       );
     }
 
-    await connection.execute(
+    // Inserir novo usuário
+    const [result] = await connection.execute(
       `INSERT INTO users (
         name, email, cpf, phone, creci, role, status,
         password, first_login, created_at, updated_at
@@ -76,7 +79,10 @@ export async function POST(request: NextRequest) {
       ]
     );
 
+    const userId = (result as any).insertId;
+
     const newUser = {
+      id: userId,
       name,
       email,
       cpf: cleanCpf,
@@ -89,12 +95,27 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('[API /usuarios/criar] Usuário criado:', email);
-    return NextResponse.json(newUser, { status: 201 });
-  } catch (error) {
-    console.error('[API /usuarios/criar] Erro:', error);
+    console.log('[API /usuarios/criar] ✅ Usuário criado:', email, '- ID:', userId);
     return NextResponse.json(
-      { error: 'Erro ao criar usuário' },
+      { 
+        message: 'Usuário criado com sucesso. Aguarde aprovação do administrador.',
+        user: newUser 
+      }, 
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('[API /usuarios/criar] ❌ Erro:', error);
+    
+    // Verificar se é erro de duplicação do MySQL
+    if ((error as any).code === 'ER_DUP_ENTRY') {
+      return NextResponse.json(
+        { error: 'CPF ou email já cadastrado', message: 'Este CPF ou email já está cadastrado no sistema' },
+        { status: 409 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: 'Erro ao criar usuário', message: 'Ocorreu um erro ao processar seu cadastro. Tente novamente.' },
       { status: 500 }
     );
   } finally {

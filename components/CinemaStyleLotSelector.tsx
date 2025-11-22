@@ -63,7 +63,7 @@ export default function CinemaStyleLotSelector({
       onMultipleSelect([selectedLotForModal]);
     } else if (onLotSelect) {
       onLotSelect(selectedLotForModal);
-    }
+    } 
 
     setSelectedLotForModal(null);
   };

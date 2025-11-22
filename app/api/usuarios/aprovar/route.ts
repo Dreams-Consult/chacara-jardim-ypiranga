@@ -4,10 +4,12 @@ import mysql from 'mysql2/promise';
 const dbConfig = {
   host: 'localhost',
   port: 3306,
-  user: 'root',
+  user: 'maia',
   password: 'ForTheHorde!',
   database: 'vale_dos_carajas',
 };
+
+export const dynamic = 'force-dynamic';
 
 export async function PUT(request: NextRequest) {
   let connection;
@@ -32,24 +34,56 @@ export async function PUT(request: NextRequest) {
 
     connection = await mysql.createConnection(dbConfig);
 
-    await connection.execute(
+    // Verificar se o usuário existe
+    const [users] = await connection.execute(
+      'SELECT id, name, email FROM users WHERE id = ?',
+      [idUsuario]
+    );
+
+    if (!Array.isArray(users) || users.length === 0) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado', message: 'O usuário especificado não existe' },
+        { status: 404 }
+      );
+    }
+
+    const user = users[0] as any;
+
+    // Atualizar status do usuário
+    const [result] = await connection.execute(
       'UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?',
       [status, idUsuario]
     );
 
-    console.log('[API /usuarios/aprovar] Status atualizado:', idUsuario, status);
+    const affectedRows = (result as any).affectedRows;
+
+    if (affectedRows === 0) {
+      return NextResponse.json(
+        { error: 'Nenhum usuário foi atualizado', message: 'Não foi possível atualizar o status do usuário' },
+        { status: 400 }
+      );
+    }
+
+    const statusMessage = status === 'approved' ? 'aprovado' : 'rejeitado';
+    console.log(`[API /usuarios/aprovar] ✅ Usuário ${statusMessage}:`, user.email, '- ID:', idUsuario);
+    
     return NextResponse.json(
       {
-        message: 'Status do usuário atualizado com sucesso',
+        message: `Usuário ${statusMessage} com sucesso`,
         userId: idUsuario,
+        userName: user.name,
+        userEmail: user.email,
         status,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('[API /usuarios/aprovar] Erro:', error);
+    console.error('[API /usuarios/aprovar] ❌ Erro:', error);
     return NextResponse.json(
-      { error: 'Erro ao atualizar status do usuário' },
+      { 
+        error: 'Erro ao atualizar status do usuário', 
+        message: 'Ocorreu um erro ao processar a solicitação. Tente novamente.' 
+      },
       { status: 500 }
     );
   } finally {

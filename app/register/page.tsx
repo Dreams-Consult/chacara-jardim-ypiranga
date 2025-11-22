@@ -171,15 +171,17 @@ export default function RegisterPage() {
 
       // Verificar se é erro de duplicação (email ou CPF já existe)
       if (axios.isAxiosError(err) && err.response) {
-        if (err.response.status === 409 || err.response.data?.message?.includes('já existe')) {
-          setError(err.response.data?.message || 'Este email ou CPF já está cadastrado');
-        } else if (err.response.data?.message) {
-          setError(err.response.data.message);
+        const errorMessage = err.response.data?.message || err.response.data?.error;
+        
+        if (err.response.status === 409) {
+          setError(errorMessage || 'Este email ou CPF já está cadastrado');
+        } else if (errorMessage) {
+          setError(errorMessage);
         } else {
           setError('Erro ao criar conta. Tente novamente.');
         }
       } else {
-        setError('Erro ao criar conta. Tente novamente.');
+        setError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
       }
 
       setLoading(false);

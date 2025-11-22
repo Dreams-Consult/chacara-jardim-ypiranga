@@ -4,10 +4,12 @@ import mysql from 'mysql2/promise';
 const dbConfig = {
   host: 'localhost',
   port: 3306,
-  user: 'root',
+  user: 'maia',
   password: 'ForTheHorde!',
   database: 'vale_dos_carajas',
 };
+
+export const dynamic = 'force-dynamic';
 
 export async function PUT(request: NextRequest) {
   let connection;
@@ -32,24 +34,57 @@ export async function PUT(request: NextRequest) {
 
     connection = await mysql.createConnection(dbConfig);
 
-    await connection.execute(
+    // Verificar se o usuário existe
+    const [users] = await connection.execute(
+      'SELECT id, name, email, role FROM users WHERE id = ?',
+      [idUsuario]
+    );
+
+    if (!Array.isArray(users) || users.length === 0) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado', message: 'O usuário especificado não existe' },
+        { status: 404 }
+      );
+    }
+
+    const user = users[0] as any;
+    const oldRole = user.role;
+
+    // Atualizar cargo do usuário
+    const [result] = await connection.execute(
       'UPDATE users SET role = ?, updated_at = NOW() WHERE id = ?',
       [role, idUsuario]
     );
 
-    console.log('[API /usuarios/role] Cargo atualizado:', idUsuario, role);
+    const affectedRows = (result as any).affectedRows;
+
+    if (affectedRows === 0) {
+      return NextResponse.json(
+        { error: 'Nenhum usuário foi atualizado', message: 'Não foi possível atualizar o cargo do usuário' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[API /usuarios/role] ✅ Cargo atualizado:`, user.email, `- ${oldRole} → ${role}`);
+    
     return NextResponse.json(
       {
         message: 'Cargo do usuário atualizado com sucesso',
         userId: idUsuario,
-        role,
+        userName: user.name,
+        userEmail: user.email,
+        oldRole,
+        newRole: role,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('[API /usuarios/role] Erro:', error);
+    console.error('[API /usuarios/role] ❌ Erro:', error);
     return NextResponse.json(
-      { error: 'Erro ao atualizar cargo do usuário' },
+      { 
+        error: 'Erro ao atualizar cargo do usuário',
+        message: 'Ocorreu um erro ao processar a solicitação. Tente novamente.'
+      },
       { status: 500 }
     );
   } finally {
