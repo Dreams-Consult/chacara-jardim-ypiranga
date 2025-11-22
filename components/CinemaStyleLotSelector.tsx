@@ -30,6 +30,7 @@ export default function CinemaStyleLotSelector({
   const [isEditing, setIsEditing] = useState(false);
   const [editedLot, setEditedLot] = useState<Lot | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [pricePerM2Input, setPricePerM2Input] = useState<string>('');
 
   const sortedLots = [...lots].sort((a, b) => {
     const numA = parseInt(a.lotNumber) || 0;
@@ -54,6 +55,7 @@ export default function CinemaStyleLotSelector({
     };
 
     setEditedLot(lotWithCalculatedPrice);
+    setPricePerM2Input(lotWithCalculatedPrice.pricePerM2.toFixed(2));
     // Permite editar lotes disponíveis e bloqueados
     setIsEditing(!!onLotEdit && (lot.status === LotStatus.AVAILABLE || lot.status === LotStatus.BLOCKED));
   };
@@ -243,18 +245,27 @@ export default function CinemaStyleLotSelector({
                         type="number"
                         step="0.01"
                         min="0"
-                        value={editedLot.pricePerM2 || ''}
+                        value={pricePerM2Input}
                         onChange={(e) => {
                           const value = e.target.value;
+                          setPricePerM2Input(value);
                           const newPricePerM2 = value === '' ? 0 : parseFloat(value);
-                          const size = editedLot.size || 0;
-                          // Calcula com precisão: multiplica primeiro, depois arredonda
-                          const calculatedPrice = Math.round(size * newPricePerM2 * 100) / 100;
-                          setEditedLot({
-                            ...editedLot,
-                            pricePerM2: newPricePerM2,
-                            price: calculatedPrice
-                          });
+                          if (!isNaN(newPricePerM2)) {
+                            const size = editedLot.size || 0;
+                            // Calcula com precisão: multiplica primeiro, depois arredonda
+                            const calculatedPrice = Math.round(size * newPricePerM2 * 100) / 100;
+                            setEditedLot({
+                              ...editedLot,
+                              pricePerM2: newPricePerM2,
+                              price: calculatedPrice
+                            });
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value)) {
+                            setPricePerM2Input(value.toFixed(2));
+                          }
                         }}
                         className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="150.00"
