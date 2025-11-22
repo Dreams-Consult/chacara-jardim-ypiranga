@@ -16,10 +16,8 @@ interface ImportLotReservation {
   customer_email: string;
   customer_phone: string;
   customer_cpf?: string;
-  customer_address?: string;
   payment_method?: 'cash' | 'financing' | 'installments';
   status?: string; // Aceita qualquer string para mapear depois
-  notes?: string;
 }
 
 interface ImportLot {
@@ -198,16 +196,22 @@ export async function POST(request: NextRequest) {
                 `INSERT INTO purchase_requests (
                   customer_name, customer_email, customer_phone,
                   customer_cpf, message, payment_method, status,
+                  seller_name, seller_email, seller_phone, seller_cpf,
                   created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
                 [
                   reservation.customer_name,
                   reservation.customer_email,
                   reservation.customer_phone,
                   reservation.customer_cpf || null,
-                  reservation.notes || null, // 'notes' vira 'message'
+                  null, // message
                   reservation.payment_method || 'cash',
                   reservationStatus,
+                  // Dados do vendedor (importação assume vendedor padrão)
+                  'Sistema de Importação',
+                  'importacao@sistema.com',
+                  '00000000000',
+                  '00000000000',
                 ]
               );
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import axios from 'axios';
 
 // Componente para renderizar preview de PDF com zoom
 function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
@@ -117,11 +118,41 @@ export default function MapManagement() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mapsWithReservedLots, setMapsWithReservedLots] = useState<Record<string, { hasReserved: boolean; count: number }>>({});
 
   // Atualiza a lista de mapas a cada 3 segundos para todos os clientes
   useRealtimeUpdates(() => {
     loadMaps();
   }, 3000);
+
+  // Verificar lotes reservados/vendidos para cada mapa
+  useEffect(() => {
+    const checkReservedLots = async () => {
+      const results: Record<string, { hasReserved: boolean; count: number }> = {};
+      
+      for (const map of maps) {
+        try {
+          const response = await axios.get('/api/mapas/verificar-lotes-reservados', {
+            params: { mapId: map.id },
+            timeout: 5000,
+          });
+          results[map.id] = {
+            hasReserved: response.data.hasReservedOrSoldLots,
+            count: response.data.count
+          };
+        } catch (error) {
+          console.error(`Erro ao verificar lotes do mapa ${map.id}:`, error);
+          results[map.id] = { hasReserved: false, count: 0 };
+        }
+      }
+      
+      setMapsWithReservedLots(results);
+    };
+
+    if (maps.length > 0) {
+      checkReservedLots();
+    }
+  }, [maps]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -167,9 +198,26 @@ export default function MapManagement() {
     if (confirm('Tem certeza que deseja excluir este mapa e todos os lotes associados?')) {
       try {
         await deleteMapById(id);
-      } catch (err) {
+        alert('✅ Mapa excluído com sucesso!');
+      } catch (err: any) {
         console.error('Erro ao deletar:', err);
-        alert('Erro ao deletar mapa. Tente novamente.');
+        
+        // Tratar erro de lotes reservados/vendidos
+        if (err.error && err.count) {
+          alert(
+            `❌ Não é possível excluir este mapa\n\n` +
+            `Existem ${err.count} lote(s) com reservas ou vendas ativas.\n\n` +
+            `📋 O que fazer:\n` +
+            `1. Acesse a página de Reservas\n` +
+            `2. Cancele as reservas/vendas dos lotes deste mapa\n` +
+            `3. Tente excluir o mapa novamente\n\n` +
+            `💡 Dica: Você pode identificar os lotes pelos status "Reservado" ou "Vendido"`
+          );
+        } else if (err.error) {
+          alert(`❌ Erro ao excluir mapa\n\n${err.error}`);
+        } else {
+          alert('❌ Erro ao deletar mapa. Verifique sua conexão e tente novamente.');
+        }
       }
     }
   };
@@ -254,28 +302,40 @@ export default function MapManagement() {
                 />
                 {!filePreview && (
                   <p className="text-xs text-[var(--warning-dark)] mt-2 bg-[var(--warning)]/10 p-3 rounded-xl border-2 border-[var(--warning)]/30 font-medium">
-                    ⚠️ <span className="font-bold">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
-                    Para PDFs grandes, converta para imagem primeiro usando o script convert-pdf.sh
+                    ⚠️ <span className="font-bold">Tamanho máximo: 50MB para PDFs, 10MB para imagens.</span> As imagens serão automaticamente comprimidas.
                   </p>
                 )}
               </div>
               {filePreview && (
                 <div>
-                  <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
-                    Preview
+                  <label className="block text-sm font-bold text-[var(--foreground)] mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Preview da Imagem
                   </label>
-                  <div className="border-2 border-[var(--border)] rounded-xl overflow-hidden bg-gray-50">
+                  <div className="border-2 border-green-500/50 rounded-xl overflow-hidden bg-gray-50 shadow-md">
                     {selectedFile?.type === 'application/pdf' ? (
-                      <div className="p-8 text-center">
-                        <svg className="w-16 h-16 mx-auto mb-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="p-10 text-center bg-gradient-to-br from-red-50 to-orange-50">
+                        <svg className="w-20 h-20 mx-auto mb-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                         </svg>
-                        <p className="text-sm font-semibold text-gray-700 break-words px-2">{selectedFile?.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">Arquivo PDF selecionado</p>
+                        <p className="text-base font-bold text-gray-800 break-words px-2 mb-2">{selectedFile?.name}</p>
+                        <p className="text-sm text-gray-600">Arquivo PDF selecionado</p>
+                        <p className="text-xs text-gray-500 mt-2">O PDF será convertido automaticamente para visualização</p>
                       </div>
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={filePreview} alt="Preview" className="w-full max-h-64 object-contain" />
+                      <div className="p-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={filePreview} 
+                          alt="Preview" 
+                          className="w-full max-h-96 object-contain rounded-lg" 
+                        />
+                        <div className="text-center mt-2 pb-2">
+                          <p className="text-xs font-semibold text-gray-600">{selectedFile?.name}</p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -324,22 +384,24 @@ export default function MapManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {maps.map((map) => (
           <div key={map.id} className="bg-white border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-[var(--surface)] to-[var(--surface-hover)] flex items-center justify-center overflow-hidden">
+            <div className="h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative">
               {map.imageUrl && map.imageUrl.trim() !== '' ? (
                 map.imageUrl.startsWith('data:application/pdf') ? (
-                  <PDFPreview pdfUrl={map.imageUrl} mapName={map.name} />
+                  <div className="w-full h-full">
+                    <PDFPreview pdfUrl={map.imageUrl} mapName={map.name} />
+                  </div>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={map.imageUrl}
                     alt={map.name}
-                    className="max-w-full max-h-full object-contain"
+                    className="w-full h-full object-contain p-2"
                   />
                 )
               ) : (
-                <div className="text-[var(--foreground)]/60 text-center p-4">
-                  <svg className="w-16 h-16 mx-auto mb-2 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div className="text-gray-500 text-center p-4">
+                  <svg className="w-16 h-16 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <p className="text-sm font-semibold">Sem imagem</p>
                 </div>
@@ -349,6 +411,21 @@ export default function MapManagement() {
               <h3 className="font-bold text-lg text-[var(--surface)] mb-2">{map.name}</h3>
               {map.description && (
                 <p className="text-sm text-[var(--surface)] font-medium mb-3">{map.description}</p>
+              )}
+              {mapsWithReservedLots[map.id]?.hasReserved && (
+                <div className="mb-3 bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-xs font-bold text-orange-800">⚠️ Lotes Reservados/Vendidos</p>
+                      <p className="text-xs text-orange-700">
+                        {mapsWithReservedLots[map.id]?.count} lote(s) com reservas ativas
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
               <div className="space-y-1 mb-4">
                 <p className="text-xs text-[var(--surface)]/80 font-semibold">
@@ -365,12 +442,24 @@ export default function MapManagement() {
                 >
                   Gerenciar
                 </button>
-                <button
-                  onClick={() => handleDelete(map.id)}
-                  className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
-                >
-                  Excluir
-                </button>
+                {!mapsWithReservedLots[map.id]?.hasReserved ? (
+                  <button
+                    onClick={() => handleDelete(map.id)}
+                    className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    Excluir
+                  </button>
+                ) : (
+                  <div 
+                    className="px-4 py-2.5 bg-orange-500/90 text-white font-semibold rounded-xl cursor-not-allowed flex items-center gap-2" 
+                    title={`Este mapa possui ${mapsWithReservedLots[map.id]?.count || 0} lote(s) reservado(s) ou vendido(s). Cancele as reservas/vendas para poder excluir.`}
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Bloqueado
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ interface CinemaStyleLotSelectorProps {
   onLotSelect?: (lot: Lot) => void;
   onMultipleSelect?: (lots: Lot[]) => void;
   onLotEdit?: (lot: Lot) => void;
+  onLotDelete?: (lotId: string) => void;
   selectedLotIds?: string[];
   allowMultipleSelection?: boolean;
   lotsPerRow?: number;
@@ -20,6 +21,7 @@ export default function CinemaStyleLotSelector({
   onLotSelect,
   onMultipleSelect,
   onLotEdit,
+  onLotDelete,
   selectedLotIds = [],
   allowMultipleSelection = false,
   lotsPerRow = 10,
@@ -203,58 +205,93 @@ export default function CinemaStyleLotSelector({
                       className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white cursor-pointer"
                     >
                       <option value={LotStatus.AVAILABLE}>Disponível</option>
-                      <option value={LotStatus.RESERVED}>Reservado</option>
-                      <option value={LotStatus.SOLD}>Vendido</option>
                       <option value={LotStatus.BLOCKED}>Bloqueado</option>
                     </select>
+                    <p className="text-xs text-gray-400 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
                   </div>
 
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Área (m²) *</label>
                     <input
                       type="number"
-                      value={editedLot.size}
+                      step="0.01"
+                      min="0"
+                      value={editedLot.size || ''}
+                      onBlur={(e) => {
+                        // Arredonda ao perder o foco
+                        const value = parseFloat(e.target.value);
+                        if (!isNaN(value)) {
+                          const pricePerM2 = editedLot.pricePerM2 || 0;
+                          setEditedLot({
+                            ...editedLot,
+                            size: parseFloat(value.toFixed(2)),
+                            price: parseFloat((value * pricePerM2).toFixed(2))
+                          });
+                        }
+                      }}
                       onChange={(e) => {
-                        const newSize = parseFloat(e.target.value) || 0;
+                        const value = e.target.value;
+                        const newSize = value === '' ? 0 : parseFloat(value);
                         const pricePerM2 = editedLot.pricePerM2 || 0;
                         setEditedLot({
                           ...editedLot,
                           size: newSize,
-                          price: newSize * pricePerM2
+                          price: parseFloat((newSize * pricePerM2).toFixed(2))
                         });
                       }}
                       className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="300"
+                      placeholder="300.00"
                     />
                   </div>
 
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Preço por m² (R$) *</label>
-                    <input
-                      type="number"
-                      value={editedLot.pricePerM2}
-                      onChange={(e) => {
-                        const newPricePerM2 = parseFloat(e.target.value) || 0;
-                        const size = editedLot.size || 0;
-                        setEditedLot({
-                          ...editedLot,
-                          pricePerM2: newPricePerM2,
-                          price: size * newPricePerM2
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="150"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">R$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editedLot.pricePerM2 || ''}
+                        onBlur={(e) => {
+                          // Arredonda ao perder o foco
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value)) {
+                            const size = editedLot.size || 0;
+                            setEditedLot({
+                              ...editedLot,
+                              pricePerM2: parseFloat(value.toFixed(2)),
+                              price: parseFloat((size * value).toFixed(2))
+                            });
+                          }
+                        }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const newPricePerM2 = value === '' ? 0 : parseFloat(value);
+                          const size = editedLot.size || 0;
+                          setEditedLot({
+                            ...editedLot,
+                            pricePerM2: newPricePerM2,
+                            price: parseFloat((size * newPricePerM2).toFixed(2))
+                          });
+                        }}
+                        className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="150.00"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Preço Total (R$)</label>
-                    <input
-                      type="number"
-                      value={editedLot.price}
-                      readOnly
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white cursor-not-allowed"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">R$</span>
+                      <input
+                        type="text"
+                        value={editedLot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        readOnly
+                        className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white cursor-not-allowed"
+                      />
+                    </div>
                     <p className="text-xs text-gray-400 mt-1">Calculado automaticamente: Área × Preço/m²</p>
                   </div>
 
@@ -329,10 +366,19 @@ export default function CinemaStyleLotSelector({
                   )}
 
                   {selectedLotForModal.status !== LotStatus.AVAILABLE && selectedLotForModal.status !== LotStatus.BLOCKED && onLotEdit && (
-                    <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-4">
-                      <p className="text-yellow-300 text-sm">
-                        ⚠️ Este lote está {selectedLotForModal.status === LotStatus.RESERVED ? 'reservado' : 'vendido'}. Para editá-lo, cancele a {selectedLotForModal.status === LotStatus.RESERVED ? 'reserva' : 'venda'} primeiro.
-                      </p>
+                    <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <p className="font-bold text-orange-800 text-sm mb-1">⚠️ Lote com restrição</p>
+                          <p className="text-orange-700 text-sm">
+                            Este lote está <strong>{selectedLotForModal.status === LotStatus.RESERVED ? 'reservado' : 'vendido'}</strong>. 
+                            Para editá-lo ou excluí-lo, cancele primeiro a {selectedLotForModal.status === LotStatus.RESERVED ? 'reserva' : 'venda'} na página de <strong>Reservas</strong>.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
@@ -364,22 +410,42 @@ export default function CinemaStyleLotSelector({
                     Salvar Alterações
                   </button>
                 ) : (
-                  (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
-                    <button
-                      onClick={() => {
-                        setIsEditing(true);
-                        // Garante que pricePerM2 está calculado
-                        const lotWithCalculatedPrice = {
-                          ...selectedLotForModal,
-                          pricePerM2: selectedLotForModal.pricePerM2 || (selectedLotForModal.size > 0 ? selectedLotForModal.price / selectedLotForModal.size : 0)
-                        };
-                        setEditedLot(lotWithCalculatedPrice);
-                      }}
-                      className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
-                    >
-                      Editar Lote
-                    </button>
-                  )
+                  <>
+                    {(selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
+                      <>
+                        {onLotDelete && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Tem certeza que deseja excluir o lote ${selectedLotForModal.lotNumber}?`)) {
+                                onLotDelete(selectedLotForModal.id);
+                                setSelectedLotForModal(null);
+                              }
+                            }}
+                            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Excluir
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setIsEditing(true);
+                            // Garante que pricePerM2 está calculado
+                            const lotWithCalculatedPrice = {
+                              ...selectedLotForModal,
+                              pricePerM2: selectedLotForModal.pricePerM2 || (selectedLotForModal.size > 0 ? selectedLotForModal.price / selectedLotForModal.size : 0)
+                            };
+                            setEditedLot(lotWithCalculatedPrice);
+                          }}
+                          className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
+                        >
+                          Editar Lote
+                        </button>
+                      </>
+                    )}
+                  </>
                 )
               ) : (
                 <button

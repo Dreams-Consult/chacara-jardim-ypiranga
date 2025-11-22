@@ -57,17 +57,17 @@ export default function ImportMapPage() {
             status: "reserved",
             price: 45000,
             size: 250,
-            description: "Lote reservado",
+            description: "Lote reservado - Financiamento aprovado",
             features: ["Frente sul"],
             reservation: {
               customer_name: "João Silva",
               customer_email: "joao.silva@email.com",
               customer_phone: "(11) 98765-4321",
-              customer_cpf: "123.456.789-00",
+              customer_cpf: "12345678900",
               customer_address: "Rua Exemplo, 123 - São Paulo/SP",
               payment_method: "financing",
               status: "approved",
-              notes: "Cliente aprovado para financiamento"
+              notes: "Cliente aprovado para financiamento bancário"
             }
           },
           {
@@ -75,17 +75,17 @@ export default function ImportMapPage() {
             status: "sold",
             price: 48000,
             size: 260,
-            description: "Lote vendido",
+            description: "Lote vendido - Pagamento à vista",
             features: ["Meio de quadra"],
             reservation: {
               customer_name: "Maria Santos",
               customer_email: "maria.santos@email.com",
               customer_phone: "(11) 91234-5678",
-              customer_cpf: "987.654.321-00",
+              customer_cpf: "98765432100",
               customer_address: "Av. Principal, 456 - São Paulo/SP",
               payment_method: "cash",
               status: "completed",
-              notes: "Pagamento à vista realizado"
+              notes: "Pagamento à vista realizado com sucesso"
             }
           },
           {
@@ -95,12 +95,30 @@ export default function ImportMapPage() {
             size: 240,
             description: "Lote bloqueado para manutenção",
             features: []
+          },
+          {
+            lotNumber: "05",
+            status: "reserved",
+            price: 52000,
+            size: 280,
+            description: "Lote reservado - Aguardando documentação",
+            features: ["Frente leste"],
+            reservation: {
+              customer_name: "Carlos Mendes",
+              customer_email: "carlos.mendes@email.com",
+              customer_phone: "(11) 99999-8888",
+              customer_cpf: "11122233344",
+              customer_address: "Rua das Flores, 789 - São Paulo/SP",
+              payment_method: "installments",
+              status: "pending",
+              notes: "Aguardando análise de documentação para parcelamento"
+            }
           }
         ]
       },
       {
         name: "Quadra B",
-        description: "Segunda quadra",
+        description: "Segunda quadra com vista privilegiada",
         lots: [
           {
             lotNumber: "01",
@@ -108,24 +126,101 @@ export default function ImportMapPage() {
             price: 60000,
             size: 350,
             description: "Lote maior disponível",
-            features: ["Vista privilegiada"]
+            features: ["Vista privilegiada", "Esquina"]
           },
           {
             lotNumber: "02",
             status: "reserved",
             price: 55000,
             size: 320,
-            description: "Lote reservado com vista",
+            description: "Lote reservado com vista para o lago",
             features: ["Vista para lago"],
             reservation: {
               customer_name: "Pedro Oliveira",
               customer_email: "pedro.oliveira@email.com",
               customer_phone: "(11) 99876-5432",
-              customer_cpf: "456.789.123-00",
+              customer_cpf: "45678912300",
+              customer_address: "Alameda Santos, 321 - São Paulo/SP",
               payment_method: "installments",
               status: "pending",
-              notes: "Aguardando análise de crédito"
+              notes: "Aguardando análise de crédito para parcelamento em 60x"
             }
+          },
+          {
+            lotNumber: "03",
+            status: "sold",
+            price: 58000,
+            size: 330,
+            description: "Lote vendido - Vista panorâmica",
+            features: ["Vista panorâmica", "Frente norte"],
+            reservation: {
+              customer_name: "Ana Paula Costa",
+              customer_email: "ana.costa@email.com",
+              customer_phone: "(11) 97777-6666",
+              customer_cpf: "55566677788",
+              customer_address: "Rua Bela Vista, 100 - São Paulo/SP",
+              payment_method: "financing",
+              status: "completed",
+              notes: "Financiamento aprovado e documentação finalizada"
+            }
+          },
+          {
+            lotNumber: "04",
+            status: "available",
+            price: 57000,
+            size: 310,
+            description: "Lote disponível com área verde",
+            features: ["Próximo à área verde"]
+          }
+        ]
+      },
+      {
+        name: "Quadra C",
+        description: "Terceira quadra - Área comercial",
+        lots: [
+          {
+            lotNumber: "01",
+            status: "sold",
+            price: 75000,
+            size: 400,
+            description: "Lote comercial vendido",
+            features: ["Esquina comercial", "Frente dupla"],
+            reservation: {
+              customer_name: "Empresa XYZ Ltda",
+              customer_email: "contato@empresaxyz.com.br",
+              customer_phone: "(11) 3333-4444",
+              customer_cpf: "99999999000199",
+              customer_address: "Av. Comercial, 1000 - São Paulo/SP",
+              payment_method: "cash",
+              status: "completed",
+              notes: "Compra para construção de estabelecimento comercial"
+            }
+          },
+          {
+            lotNumber: "02",
+            status: "reserved",
+            price: 70000,
+            size: 380,
+            description: "Lote comercial reservado",
+            features: ["Localização estratégica"],
+            reservation: {
+              customer_name: "Roberto Ferreira",
+              customer_email: "roberto.ferreira@email.com",
+              customer_phone: "(11) 98888-7777",
+              customer_cpf: "22233344455",
+              customer_address: "Rua Comércio, 555 - São Paulo/SP",
+              payment_method: "financing",
+              status: "approved",
+              notes: "Aprovado para construção de loja. Entrada de 30%"
+            }
+          },
+          {
+            lotNumber: "03",
+            status: "blocked",
+            price: 68000,
+            size: 360,
+            description: "Lote bloqueado - Área verde preservada",
+            features: ["Preservação ambiental"]
           }
         ]
       }
@@ -513,20 +608,42 @@ export default function ImportMapPage() {
               <p className="font-semibold text-white mb-1">Status dos lotes:</p>
               <ul className="list-disc list-inside ml-4 space-y-1">
                 <li><code className="text-green-400">available</code>: Lote disponível para venda</li>
-                <li><code className="text-yellow-400">reserved</code>: Lote reservado (requer dados de reservation)</li>
-                <li><code className="text-red-400">sold</code>: Lote vendido (requer dados de reservation)</li>
+                <li><code className="text-yellow-400">reserved</code>: Lote reservado (requer dados de reservation) ⭐</li>
+                <li><code className="text-red-400">sold</code>: Lote vendido (requer dados de reservation) ⭐</li>
                 <li><code className="text-gray-400">blocked</code>: Lote bloqueado (indisponível)</li>
               </ul>
             </div>
-            <div>
-              <p className="font-semibold text-white mb-1">Dados de reserva (obrigatório para status reserved/sold):</p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li><code className="text-blue-400">reservation.customer_name</code>: Nome do cliente</li>
+            <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3">
+              <p className="font-semibold text-blue-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                ⭐ Dados de reserva (OBRIGATÓRIO para status reserved/sold):
+              </p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-blue-200">
+                <li><code className="text-blue-400">reservation.customer_name</code>: Nome completo do cliente</li>
                 <li><code className="text-blue-400">reservation.customer_email</code>: Email do cliente</li>
-                <li><code className="text-blue-400">reservation.customer_phone</code>: Telefone do cliente</li>
-                <li><code className="text-blue-400">reservation.customer_cpf</code>: CPF (opcional)</li>
+                <li><code className="text-blue-400">reservation.customer_phone</code>: Telefone com DDD</li>
+                <li><code className="text-blue-400">reservation.customer_cpf</code>: CPF (apenas números, 11 dígitos) ou CNPJ (14 dígitos) - opcional</li>
+                <li><code className="text-blue-400">reservation.customer_address</code>: Endereço completo (opcional)</li>
                 <li><code className="text-blue-400">reservation.payment_method</code>: cash, financing ou installments</li>
-                <li><code className="text-blue-400">reservation.status</code>: pending, approved, completed, etc.</li>
+                <li><code className="text-blue-400">reservation.status</code>: pending, approved, completed, cancelled ou rejected</li>
+                <li><code className="text-blue-400">reservation.notes</code>: Observações adicionais (opcional)</li>
+              </ul>
+            </div>
+            <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-3">
+              <p className="font-semibold text-yellow-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Importante sobre reservas:
+              </p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-yellow-200 text-xs">
+                <li>O sistema criará automaticamente registros em <code>purchase_requests</code></li>
+                <li>Cada lote reservado/vendido terá sua reserva vinculada em <code>purchase_request_lots</code></li>
+                <li>Status <code>approved</code> será convertido para <code>completed</code> no banco</li>
+                <li>Status <code>rejected</code> será convertido para <code>cancelled</code> no banco</li>
+                <li>O exemplo acima contém 6 lotes com reservas simuladas (3 reserved, 3 sold)</li>
               </ul>
             </div>
           </div>

@@ -288,10 +288,27 @@ export default function MapDetails() {
 
       if (confirm(message)) {
         await deleteBlock(blockId, mapId);
+        alert('✅ Quadra excluída com sucesso!');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao deletar quadra:', error);
-      alert('Erro ao deletar quadra. Tente novamente.');
+      
+      // Tratar erro de lotes reservados/vendidos
+      if (error.error && error.count) {
+        alert(
+          `❌ Não é possível excluir esta quadra\n\n` +
+          `Existem ${error.count} lote(s) com reservas ou vendas ativas.\n\n` +
+          `📋 O que fazer:\n` +
+          `1. Acesse a página de Reservas\n` +
+          `2. Cancele as reservas/vendas dos lotes desta quadra\n` +
+          `3. Tente excluir a quadra novamente\n\n` +
+          `💡 Dica: Você pode identificar os lotes pelos status "Reservado" ou "Vendido"`
+        );
+      } else if (error.error) {
+        alert(`❌ Erro ao excluir quadra\n\n${error.error}`);
+      } else {
+        alert('❌ Erro ao deletar quadra. Verifique sua conexão e tente novamente.');
+      }
     }
   };
 
@@ -325,35 +342,46 @@ export default function MapDetails() {
       }
 
       const lotToSave = {
-        ...lot,
-        blockId: selectedBlockForLot || undefined,
-        mapId,
-        updatedAt: new Date(),
+        id: lot.id,
+        mapId: mapId,
+        blockId: lot.blockId || selectedBlockForLot || null,
+        lotNumber: lot.lotNumber,
+        status: lot.status,
+        price: lot.price,
+        pricePerM2: lot.pricePerM2,
+        size: lot.size,
+        description: lot.description || '',
+        features: lot.features || [],
       };
 
       if (lot.id && lot.id !== '') {
-        await axios.patch(`${API_URL}/mapas/lotes/atualizar`, lotToSave, {
+        console.log('[MapDetails] 🔄 Atualizando lote existente:', lotToSave);
+        const response = await axios.patch(`${API_URL}/mapas/lotes/atualizar`, lotToSave, {
           headers: { 'Content-Type': 'application/json' },
           timeout: 10000,
         });
+        console.log('[MapDetails] ✅ Lote atualizado:', response.data);
       } else {
-        await axios.post(`${API_URL}/mapas/lotes/criar`, {
+        console.log('[MapDetails] ➕ Criando novo lote:', lotToSave);
+        const response = await axios.post(`${API_URL}/mapas/lotes/criar`, {
           ...lotToSave,
           id: Date.now().toString(),
-          createdAt: new Date(),
         }, {
           headers: { 'Content-Type': 'application/json' },
           timeout: 10000,
         });
+        console.log('[MapDetails] ✅ Lote criado:', response.data);
       }
 
       // Força refresh apenas dos cards de quadra
       setRefreshTrigger(prev => prev + 1);
       setIsAddingLot(false);
       setSelectedBlockForLot('');
-    } catch (error) {
+      alert('✅ Lote salvo com sucesso!');
+    } catch (error: any) {
       console.error('[MapDetails] ❌ Erro ao salvar lote:', error);
-      alert('Erro ao salvar lote. Tente novamente.');
+      const errorMessage = error.response?.data?.error || 'Erro ao salvar lote. Tente novamente.';
+      alert(`❌ ${errorMessage}`);
     }
   };
 
@@ -871,6 +899,7 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
         </label>
         <input
           type="number"
+          step="0.01"
           value={pricePerM2 || ''}
           onChange={(e) => setPricePerM2(parseFloat(e.target.value) || 0)}
           className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
@@ -897,6 +926,7 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
           <option value={LotStatus.AVAILABLE}>Disponível</option>
           <option value={LotStatus.BLOCKED}>Bloqueado</option>
         </select>
+        <p className="text-xs text-gray-500 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
       </div>
 
       <div>
@@ -959,6 +989,14 @@ function BlockCard({
   const [blockLots, setBlockLots] = useState<Lot[]>([]);
   const [isLoadingLots, setIsLoadingLots] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Verificar se existem lotes reservados ou vendidos
+  const hasReservedOrSoldLots = blockLots.some(
+    lot => lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD
+  );
+  const reservedOrSoldCount = blockLots.filter(
+    lot => lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD
+  ).length;
 
   useEffect(() => {
     const fetchLots = async () => {
@@ -1013,18 +1051,43 @@ function BlockCard({
             >
               Editar
             </button>
-            <button
-              onClick={() => handleDeleteBlock(block.id)}
-              className="px-4 py-2 bg-[var(--danger)] hover:bg-[var(--danger-dark)] text-white font-semibold rounded-lg transition-all"
-            >
-              Excluir
-            </button>
+            {!hasReservedOrSoldLots ? (
+              <button
+                onClick={() => handleDeleteBlock(block.id)}
+                className="px-4 py-2 bg-[var(--danger)] hover:bg-[var(--danger-dark)] text-white font-semibold rounded-lg transition-all"
+              >
+                Excluir
+              </button>
+            ) : (
+              <div className="px-4 py-2 bg-orange-500/90 text-white font-semibold rounded-lg cursor-not-allowed flex items-center gap-2" title={`Esta quadra possui ${reservedOrSoldCount} lote(s) reservado(s) ou vendido(s). Cancele as reservas/vendas para poder excluir.`}>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Bloqueado
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Lotes da Quadra */}
       <div className="p-5">
+        {hasReservedOrSoldLots && (
+          <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-bold text-orange-800 text-sm mb-1">⚠️ Quadra com lotes reservados/vendidos</p>
+                <p className="text-orange-700 text-sm">
+                  Esta quadra possui <strong>{reservedOrSoldCount} lote(s)</strong> com reservas ou vendas ativas.
+                  Para excluir esta quadra, cancele primeiro as reservas/vendas na página de <strong>Reservas</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {isLoadingLots ? (
           <div className="text-center py-8">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-full mb-3">

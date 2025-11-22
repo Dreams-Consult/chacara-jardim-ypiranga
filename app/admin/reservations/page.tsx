@@ -16,7 +16,8 @@ interface Reservation {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
-  customer_cpf: string;
+  customer_cpf: string | null;
+  payment_method: string | null;
   message: string | null;
   seller_name: string;
   seller_email: string;
@@ -24,6 +25,7 @@ interface Reservation {
   seller_cpf: string;
   status: 'pending' | 'completed' | 'cancelled';
   created_at: string;
+  lots?: any[];
 }
 
 export default function ReservationsPage() {
@@ -31,6 +33,8 @@ export default function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -126,6 +130,43 @@ export default function ReservationsPage() {
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao rejeitar reserva:', error);
       alert('Erro ao rejeitar reserva. Tente novamente.');
+    }
+  };
+
+  const handleEdit = (reservation: Reservation) => {
+    setEditingReservation({ ...reservation });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingReservation) return;
+
+    try {
+      await axios.put(`${API_URL}/reservas/atualizar`, {
+        id: editingReservation.id,
+        customer_name: editingReservation.customer_name,
+        customer_email: editingReservation.customer_email,
+        customer_phone: editingReservation.customer_phone,
+        customer_cpf: editingReservation.customer_cpf,
+        payment_method: editingReservation.payment_method,
+        message: editingReservation.message,
+        seller_name: editingReservation.seller_name,
+        seller_email: editingReservation.seller_email,
+        seller_phone: editingReservation.seller_phone,
+        seller_cpf: editingReservation.seller_cpf
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      });
+
+      console.log('[Reservations] ✅ Reserva editada com sucesso');
+      setIsEditModalOpen(false);
+      setEditingReservation(null);
+      loadData();
+      alert('✅ Reserva editada com sucesso!');
+    } catch (error) {
+      console.error('[Reservations] ❌ Erro ao editar reserva:', error);
+      alert('❌ Erro ao editar reserva. Tente novamente.');
     }
   };
 
@@ -300,46 +341,158 @@ export default function ReservationsPage() {
 
                 {/* Detalhes expandidos */}
                 {expandedReservation === reservation.id && (
-                  <div className="px-4 pb-4 space-y-3 border-t border-[var(--border)] pt-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-white/50 text-xs font-medium mb-1">CPF do Cliente</p>
-                        <p className="text-white font-mono text-sm">{reservation.customer_cpf}</p>
+                  <div className="px-4 pb-4 space-y-4 border-t border-[var(--border)] pt-4">
+                    {/* Informações do Cliente */}
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Dados do Cliente
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[var(--card-bg)] p-3 rounded-lg">
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Nome Completo</p>
+                          <p className="text-white font-medium text-sm">{reservation.customer_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Email</p>
+                          <p className="text-white text-sm">{reservation.customer_email}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
+                          <p className="text-white text-sm">{reservation.customer_phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">CPF/CNPJ</p>
+                          <p className="text-white font-mono text-sm">{reservation.customer_cpf || 'Não informado'}</p>
+                        </div>
+                        {reservation.customer_address && (
+                          <div className="sm:col-span-2">
+                            <p className="text-white/50 text-xs font-medium mb-1">Endereço</p>
+                            <p className="text-white text-sm">{reservation.customer_address}</p>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
-                        <p className="text-white text-sm">{reservation.customer_phone}</p>
+                    </div>
+
+                    {/* Informações da Venda */}
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Informações da Venda
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[var(--card-bg)] p-3 rounded-lg">
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Forma de Pagamento</p>
+                          <p className="text-white text-sm capitalize">
+                            {reservation.payment_method === 'cash' && '💵 À Vista'}
+                            {reservation.payment_method === 'financing' && '🏦 Financiamento'}
+                            {reservation.payment_method === 'installments' && '💳 Parcelamento'}
+                            {!reservation.payment_method && 'Não informado'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Data da Reserva</p>
+                          <p className="text-white text-sm">
+                            {new Date(reservation.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        {reservation.lots && reservation.lots.length > 0 && (
+                          <div className="sm:col-span-2">
+                            <p className="text-white/50 text-xs font-medium mb-1">Lotes Reservados</p>
+                            <div className="flex flex-wrap gap-2">
+                              {reservation.lots.map((lot: any) => (
+                                <span key={lot.id} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30">
+                                  Lote {lot.lot_number} - R$ {lot.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {reservation.message && (
+                          <div className="sm:col-span-2">
+                            <p className="text-white/50 text-xs font-medium mb-1">Mensagem do Cliente</p>
+                            <p className="text-white text-sm bg-[var(--background)] p-2 rounded">{reservation.message}</p>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-white/50 text-xs font-medium mb-1">Vendedor</p>
-                        <p className="text-white text-sm">{reservation.seller_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-white/50 text-xs font-medium mb-1">Data da Reserva</p>
-                        <p className="text-white text-sm">
-                          {new Date(reservation.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                    </div>
+
+                    {/* Informações do Vendedor */}
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Dados do Vendedor
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[var(--card-bg)] p-3 rounded-lg">
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Nome</p>
+                          <p className="text-white text-sm">{reservation.seller_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Email</p>
+                          <p className="text-white text-sm">{reservation.seller_email}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
+                          <p className="text-white text-sm">{reservation.seller_phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">CPF</p>
+                          <p className="text-white font-mono text-sm">{reservation.seller_cpf}</p>
+                        </div>
                       </div>
                     </div>
 
                     {/* Botões de ação */}
-                    {reservation.status === 'pending' && (
-                      <div className="flex flex-col sm:flex-row gap-2 pt-3">
-                        <button
-                          onClick={() => handleApprove(reservation.id)}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Aprovar Reserva
-                        </button>
+                    <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-[var(--border)]">
+                      {/* Botão de Editar */}
+                      <button
+                        onClick={() => handleEdit(reservation)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Editar Dados
+                      </button>
+
+                      {reservation.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleApprove(reservation.id)}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Aprovar Reserva
+                          </button>
+                          <button
+                            onClick={() => handleReject(reservation.id)}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Rejeitar Reserva
+                          </button>
+                        </>
+                      )}
+
+                      {/* Botão de cancelamento para reservas concluídas (apenas ADMIN e DEV) */}
+                      {reservation.status === 'completed' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
                         <button
                           onClick={() => handleReject(reservation.id)}
                           className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
@@ -347,27 +500,15 @@ export default function ReservationsPage() {
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
-                          Rejeitar Reserva
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Botão de cancelamento para reservas concluídas (apenas ADMIN e DEV) */}
-                    {reservation.status === 'completed' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
-                      <div className="flex flex-col gap-2 pt-3">
-                        <button
-                          onClick={() => handleReject(reservation.id)}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
                           Cancelar Venda
                         </button>
-                        <p className="text-xs text-white/40 text-center">
-                          ⚠️ Isso marcará o lote como disponível novamente
-                        </p>
-                      </div>
+                      )}
+                    </div>
+
+                    {reservation.status === 'completed' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
+                      <p className="text-xs text-white/40 text-center -mt-2">
+                        ⚠️ Cancelar venda marcará o lote como disponível novamente
+                      </p>
                     )}
                   </div>
                 )}
@@ -376,6 +517,197 @@ export default function ReservationsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Edição */}
+      {isEditModalOpen && editingReservation && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-3xl shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-[var(--card-bg)] border-b border-[var(--border)] p-6 z-10">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Editar Reserva #{editingReservation.id}
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingReservation(null);
+                  }}
+                  className="text-white/60 hover:text-white transition-colors p-2"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Dados do Cliente */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Dados do Cliente
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Nome Completo *</label>
+                    <input
+                      type="text"
+                      value={editingReservation.customer_name}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, customer_name: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="Nome do cliente"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Email *</label>
+                    <input
+                      type="email"
+                      value={editingReservation.customer_email}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, customer_email: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Telefone *</label>
+                    <input
+                      type="tel"
+                      value={editingReservation.customer_phone}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, customer_phone: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="(11) 98765-4321"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">CPF/CNPJ</label>
+                    <input
+                      type="text"
+                      value={editingReservation.customer_cpf || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, customer_cpf: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] font-mono"
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dados do Vendedor */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Dados do Vendedor
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Nome do Vendedor *</label>
+                    <input
+                      type="text"
+                      value={editingReservation.seller_name || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, seller_name: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="Nome do vendedor"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Email do Vendedor *</label>
+                    <input
+                      type="email"
+                      value={editingReservation.seller_email || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, seller_email: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="vendedor@exemplo.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Telefone do Vendedor *</label>
+                    <input
+                      type="tel"
+                      value={editingReservation.seller_phone || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, seller_phone: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="(11) 98765-4321"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">CPF do Vendedor *</label>
+                    <input
+                      type="text"
+                      value={editingReservation.seller_cpf || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, seller_cpf: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] font-mono"
+                      placeholder="00000000000"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dados da Venda */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Informações da Venda
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Forma de Pagamento</label>
+                    <select
+                      value={editingReservation.payment_method || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, payment_method: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] cursor-pointer"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="cash">💵 À Vista</option>
+                      <option value="financing">🏦 Financiamento</option>
+                      <option value="installments">💳 Parcelamento</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Mensagem do Cliente</label>
+                    <textarea
+                      value={editingReservation.message || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, message: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      rows={3}
+                      placeholder="Mensagem ou solicitação do cliente"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-[var(--card-bg)] border-t border-[var(--border)] p-6 flex gap-3">
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingReservation(null);
+                }}
+                className="flex-1 px-6 py-3 bg-[var(--surface)] hover:bg-[var(--background)] text-white font-semibold rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Salvar Alterações
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

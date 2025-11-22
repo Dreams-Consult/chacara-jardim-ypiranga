@@ -105,8 +105,12 @@ export function useBlockOperations() {
 
       console.log('[useBlockOperations] ✅ Quadra deletada com sucesso');
       await loadBlocks(mapId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[useBlockOperations] ❌ Erro ao deletar quadra:', error);
+      // Repassar mensagem de erro do backend
+      if (error.response?.data) {
+        throw error.response.data;
+      }
       throw error;
     }
   }, [loadBlocks]);

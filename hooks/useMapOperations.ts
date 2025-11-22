@@ -76,13 +76,17 @@ export function useMapOperations() {
 
   const deleteMapById = useCallback(async (id: string) => {
     try {
-     await axios.delete(`${API_URL}/mapas/deletar`, {
-      params: { mapId: id },
-      timeout: 10000,
-    });
+      await axios.delete(`${API_URL}/mapas/deletar`, {
+        params: { mapId: id },
+        timeout: 10000,
+      });
       await loadMaps();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao deletar mapa:', error);
+      // Repassar mensagem de erro do backend
+      if (error.response?.data) {
+        throw error.response.data;
+      }
       throw error;
     }
   }, [loadMaps]);
@@ -101,8 +105,8 @@ export function useMapOperations() {
             const compressedDataUrl = await compressImage(dataUrl, 1920, 1080, 0.7);
             const size = getBase64Size(compressedDataUrl);
 
-            if (size > 4) {
-              alert('Imagem muito grande! Por favor, use uma imagem menor ou de menor qualidade.');
+            if (size > 10) {
+              alert('Imagem muito grande! Por favor, use uma imagem menor ou de menor qualidade (máximo 10MB).');
               reject(new Error('Imagem muito grande'));
               return;
             }
@@ -128,8 +132,8 @@ export function useMapOperations() {
           } else if (file.type === 'application/pdf') {
             const size = getBase64Size(dataUrl);
 
-            if (size > 4) {
-              alert('PDF muito grande! Por favor, converta para imagem primeiro usando o script convert-pdf.sh ou use uma ferramenta online.');
+            if (size > 50) {
+              alert('PDF muito grande! Por favor, use um arquivo menor (máximo 50MB).');
               reject(new Error('PDF muito grande'));
               return;
             }
@@ -145,7 +149,7 @@ export function useMapOperations() {
               resolve();
             } catch (error) {
               console.error('Erro ao salvar PDF:', error);
-              alert(error instanceof Error ? error.message : 'Erro ao salvar PDF. Converta para imagem primeiro.');
+              alert(error instanceof Error ? error.message : 'Erro ao salvar PDF.');
               reject(error);
             }
           }
