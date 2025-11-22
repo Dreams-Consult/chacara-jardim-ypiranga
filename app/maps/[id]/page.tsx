@@ -8,7 +8,7 @@ import InteractiveMap from '@/components/InteractiveMap';
 import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function MapViewPage() {
   const params = useParams();
@@ -18,10 +18,10 @@ export default function MapViewPage() {
   const [map, setMap] = useState<Map | null>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string>('');
-  const [lots, setLots] = useState<Lot[]>([]);
+  const [allLots, setAllLots] = useState<Lot[]>([]); // Todos os lotes do mapa
+  const [lots, setLots] = useState<Lot[]>([]); // Lotes filtrados da quadra selecionada
   const [selectedLots, setSelectedLots] = useState<Lot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingLots, setLoadingLots] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [lotsPerRow, setLotsPerRow] = useState(15);
@@ -60,18 +60,45 @@ export default function MapViewPage() {
 
         if (Array.isArray(blocksResponse.data)) {
           const blocksData = blocksResponse.data.map((block: any) => ({
-            id: block.id,
+            id: block.id.toString(),
             mapId: block.mapId,
             name: block.name,
             description: block.description || '',
             createdAt: new Date(block.createdAt),
             updatedAt: new Date(block.updatedAt),
           }));
+          console.log('[MapViewPage] Quadras carregadas:', blocksData);
           setBlocks(blocksData);
 
-          // Se houver quadras, selecionar a primeira automaticamente
-          if (blocksData.length > 0) {
-            setSelectedBlockId(blocksData[0].id);
+          // Carregar TODOS os lotes do mapa de uma vez
+          const lotsResponse = await axios.get(`${API_URL}/mapas/lotes`, {
+            params: { mapId }, // Sem blockId = todos os lotes
+            timeout: 10000,
+          });
+
+          console.log('[MapViewPage] Resposta de lotes:', lotsResponse.data);
+          const lotsData = lotsResponse.data[0];
+          if (lotsData && lotsData.lots && Array.isArray(lotsData.lots)) {
+            const lotsWithMapId = lotsData.lots.map((lot: any) => ({
+              ...lot,
+              mapId: lotsData.mapId || mapId,
+              blockId: lot.blockId?.toString() || null, // Garantir que é string
+              createdAt: lot.createdAt ? new Date(lot.createdAt) : new Date(),
+              updatedAt: lot.updatedAt ? new Date(lot.updatedAt) : new Date(),
+            }));
+            console.log('[MapViewPage] Lotes carregados:', lotsWithMapId.length, 'lotes');
+            console.log('[MapViewPage] Lotes completos:', lotsWithMapId);
+            setAllLots(lotsWithMapId);
+
+            // Se houver quadras, selecionar a primeira automaticamente e filtrar lotes
+            if (blocksData.length > 0) {
+              const firstBlockId = blocksData[0].id;
+              console.log('[MapViewPage] Primeira quadra ID:', firstBlockId, 'Nome:', blocksData[0].name);
+              setSelectedBlockId(firstBlockId);
+              const filteredLots = lotsWithMapId.filter((lot: Lot) => lot.blockId === firstBlockId);
+              console.log('[MapViewPage] Lotes filtrados para quadra', firstBlockId, ':', filteredLots.length);
+              setLots(filteredLots);
+            }
           }
         }
       }
@@ -83,34 +110,20 @@ export default function MapViewPage() {
     }
   };
 
-  const loadBlockLots = async (blockId: string) => {
-    if (!blockId) return;
-
-    try {
-      setLoadingLots(true);
-      const response = await axios.get(`${API_URL}/mapas/lotes`, {
-        params: { mapId, blockId },
-        timeout: 10000,
-      });
-
-      const data = response.data[0];
-      if (data && data.lots && Array.isArray(data.lots)) {
-        const lotsWithMapId = data.lots.map((lot: Lot) => ({
-          ...lot,
-          mapId: data.mapId || mapId,
-          createdAt: new Date(lot.createdAt),
-          updatedAt: new Date(lot.updatedAt),
-        }));
-        setLots(lotsWithMapId);
-      } else {
-        setLots([]);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar lotes da quadra:', err);
+  const filterLotsByBlock = (blockId: string) => {
+    if (!blockId) {
       setLots([]);
-    } finally {
-      setLoadingLots(false);
+      return;
     }
+
+    console.log('[MapViewPage] filterLotsByBlock - blockId:', blockId, 'tipo:', typeof blockId);
+    console.log('[MapViewPage] allLots:', allLots.length);
+    const filteredLots = allLots.filter(lot => {
+      console.log('[MapViewPage] Comparando lot.blockId:', lot.blockId, 'tipo:', typeof lot.blockId, 'com blockId:', blockId);
+      return lot.blockId === blockId;
+    });
+    console.log('[MapViewPage] Filtrando lotes - blockId:', blockId, 'encontrados:', filteredLots.length);
+    setLots(filteredLots);
   };
 
   useEffect(() => {
@@ -121,11 +134,11 @@ export default function MapViewPage() {
   }, [mapId]);
 
   useEffect(() => {
-    if (selectedBlockId) {
-      loadBlockLots(selectedBlockId);
+    if (selectedBlockId && allLots.length > 0) {
+      filterLotsByBlock(selectedBlockId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBlockId]);
+  }, [selectedBlockId, allLots]);
 
   const handleMultipleSelect = (lots: Lot[]) => {
     setSelectedLots(lots);
@@ -142,9 +155,8 @@ export default function MapViewPage() {
   const handlePurchaseSuccess = () => {
     setIsPurchaseModalOpen(false);
     setSelectedLots([]);
-    if (selectedBlockId) {
-      loadBlockLots(selectedBlockId);
-    }
+    // Recarregar todos os lotes do mapa
+    loadMapData();
   };
 
   if (loading) {
@@ -200,7 +212,7 @@ export default function MapViewPage() {
             <div className="bg-white/5 rounded-lg p-4">
               <InteractiveMap
                 imageUrl={map.imageUrl}
-                lots={lots}
+                lots={allLots}
                 selectedLotIds={selectedLots.map(l => l.id)}
                 isEditMode={false}
               />
@@ -223,7 +235,7 @@ export default function MapViewPage() {
                   key={block.id}
                   onClick={() => {
                     setSelectedBlockId(block.id);
-                    setSelectedLots([]);
+                    setSelectedLots([]); // Limpa seleção ao trocar de quadra
                   }}
                   className={`p-4 rounded-xl font-semibold transition-all ${
                     selectedBlockId === block.id
@@ -269,26 +281,17 @@ export default function MapViewPage() {
                 <span className="text-white font-medium">{lotsPerRow}</span>
               </div>
               <div className="text-white/80 text-sm">
-                {loadingLots ? (
-                  <span className="flex items-center gap-2">
-                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Carregando lotes...
+                Total de lotes na quadra: <span className="font-bold text-white">{lots.length}</span>
+                {allLots.length > 0 && (
+                  <span className="text-white/60 ml-2">
+                    ({allLots.length} no total do loteamento)
                   </span>
-                ) : (
-                  <>
-                    Total de lotes na quadra: <span className="font-bold text-white">{lots.length}</span>
-                  </>
                 )}
               </div>
             </div>
 
             {/* Seletor de Lotes Estilo Cinema */}
-            {loadingLots ? (
-              <div className="mb-8 bg-[var(--card-bg)] rounded-xl p-12 text-center">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                <p className="text-white/70">Carregando lotes da quadra...</p>
-              </div>
-            ) : lots.length > 0 ? (
+            {lots.length > 0 ? (
               <div className="mb-8">
                 <CinemaStyleLotSelector
                   lots={lots}

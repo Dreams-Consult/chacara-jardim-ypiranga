@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from 'next/server';
+import mysql from 'mysql2/promise';
+
+// Forçar rota dinâmica
+export const dynamic = 'force-dynamic';
+
+// Configuração do banco de dados
+const dbConfig = {
+  host: 'localhost',
+  port: 3306,
+  user: 'maia',
+  password: 'ForTheHorde!',
+  database: 'vale_dos_carajas',
+};
+
+/**
+ * GET /api/mapas/lotes?mapId=123&blockId=456
+ * Retorna lotes de um mapa (e opcionalmente de uma quadra específica)
+ */
+export async function GET(request: NextRequest) {
+  let connection;
+  
+  try {
+    const { searchParams } = new URL(request.url);
+    const mapId = searchParams.get('mapId');
+    const blockId = searchParams.get('blockId');
+
+    if (!mapId) {
+      return NextResponse.json(
+        { error: 'mapId é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[API /mapas/lotes GET] Buscando lotes - mapId:', mapId, 'blockId:', blockId);
+
+    // Conectar ao banco de dados
+    connection = await mysql.createConnection(dbConfig);
+
+    // Construir query com ou sem filtro de blockId
+    let query = 'SELECT * FROM lots WHERE map_id = ?';
+    const params: any[] = [mapId];
+
+    if (blockId) {
+      query += ' AND block_id = ?';
+      params.push(blockId);
+    }
+
+    query += ' ORDER BY lot_number ASC';
+
+    // Executar query
+    const [rows] = await connection.execute(query, params);
+
+    if (!Array.isArray(rows)) {
+      return NextResponse.json([{ mapId, lots: [] }], { status: 200 });
+    }
+
+    // Formatar lotes (mesmo formato esperado pelo frontend)
+    const lots = rows.map((lot: any) => ({
+      id: lot.id?.toString() || '',
+      mapId: lot.map_id?.toString() || mapId,
+      blockId: lot.block_id?.toString() || null,
+      blockName: lot.block_name || null,
+      lotNumber: lot.lot_number || '',
+      status: lot.status || 'available',
+      price: lot.price ? Number(lot.price) : 0,
+      pricePerM2: lot.price_per_m2 ? Number(lot.price_per_m2) : null,
+      size: lot.size ? Number(lot.size) : 0,
+      description: lot.description || '',
+      features: lot.features ? JSON.parse(lot.features) : [],
+      createdAt: lot.created_at || new Date(),
+      updatedAt: lot.updated_at || new Date(),
+    }));
+
+    // Retorna no formato esperado pelo frontend
+    const response = [
+      {
+        mapId,
+        lots,
+      }
+    ];
+
+    console.log('[API /mapas/lotes GET] ✅ Lotes encontrados:', lots.length);
+    return NextResponse.json(response, { status: 200 });
+  } catch (error) {
+    console.error('[API /mapas/lotes GET] ❌ Erro:', error);
+    return NextResponse.json(
+      { error: 'Erro ao buscar lotes' },
+      { status: 500 }
+    );
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+}

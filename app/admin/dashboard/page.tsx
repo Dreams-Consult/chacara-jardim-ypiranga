@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Map, Lot, LotStatus, UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function DashboardPage() {
   const router = useRouter();

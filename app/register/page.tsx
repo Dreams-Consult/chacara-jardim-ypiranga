@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { UserRole, UserStatus } from '@/types';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({

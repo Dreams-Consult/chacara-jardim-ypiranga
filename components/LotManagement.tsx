@@ -9,7 +9,7 @@ import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { useBlockOperations } from '@/hooks/useBlockOperations';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function LotManagement() {
   const searchParams = useSearchParams();
@@ -146,7 +146,7 @@ export default function LotManagement() {
   const updateLotToAPI = async (lot: Lot) => {
     try {
       console.log('[LotManagement] 📝 Atualizando lote:', lot);
-      await axios.patch(`${API_URL}/mapas/lotes`, lot, {
+      await axios.patch(`${API_URL}/mapas/lotes/atualizar`, lot, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });

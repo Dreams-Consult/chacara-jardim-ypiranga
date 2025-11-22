@@ -8,7 +8,7 @@ import { Map, Block } from '@/types';
 import { useBlockOperations } from '@/hooks/useBlockOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function BlockManagement() {
   const searchParams = useSearchParams();
@@ -138,16 +138,11 @@ export default function BlockManagement() {
   const handleDeleteBlock = async (blockId: string) => {
     const lotCount = lotCounts[blockId] || 0;
     
-    if (lotCount > 0) {
-      alert(
-        `❌ Não é possível excluir esta quadra!\n\n` +
-        `Esta quadra possui ${lotCount} lote(s) cadastrado(s).\n\n` +
-        `Para excluir esta quadra, primeiro remova ou transfira todos os lotes para outra quadra.`
-      );
-      return;
-    }
+    const message = lotCount > 0
+      ? `Esta quadra possui ${lotCount} lote(s) cadastrado(s) que serão excluídos.\n\nTem certeza que deseja continuar?`
+      : 'Tem certeza que deseja excluir esta quadra?';
 
-    if (confirm('Tem certeza que deseja excluir esta quadra?')) {
+    if (confirm(message)) {
       try {
         await deleteBlock(blockId, mapId);
       } catch (error) {

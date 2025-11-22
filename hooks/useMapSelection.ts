@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Map, Lot, LotStatus, Block } from '@/types';
-import { useRealtimeUpdates } from './useRealtimeUpdates';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export const useMapSelection = () => {
   const [maps, setMaps] = useState<Map[]>([]);
@@ -18,19 +17,12 @@ export const useMapSelection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingBlocks, setIsLoadingBlocks] = useState(false);
   const [isLoadingLots, setIsLoadingLots] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Atualização automática a cada 3 segundos para sincronizar reservas e novos mapas
-  useRealtimeUpdates(() => {
-    console.log('🔄 Auto-refresh da página pública: recarregando mapas e lotes...');
-    setRefreshKey(prev => prev + 1);
-  }, 10000);
 
   // Buscar apenas informações dos mapas (sem lotes)
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        console.log('📍 [Página Pública] Buscando mapas da API... (refreshKey:', refreshKey, ')');
+        console.log('📍 [Página Pública] Buscando mapas da API...');
         const response = await axios.get(`${API_URL}/mapas`);
         const mapsData = response.data;
         console.log('✅ [Página Pública] Resposta da API /mapas:', mapsData);
@@ -97,7 +89,7 @@ export const useMapSelection = () => {
     };
 
     fetchMaps();
-  }, [refreshKey]);
+  }, []);
 
   // Função para carregar quadras de um mapa específico
   const loadBlocksForMap = async (mapId: string) => {
@@ -225,10 +217,13 @@ export const useMapSelection = () => {
 
   const handlePurchaseSuccess = useCallback(() => {
     setShowPurchaseModal(false);
-    setRefreshKey((prev) => prev + 1);
+    // Recarregar dados manualmente após sucesso
+    if (selectedMap) {
+      loadBlocksForMap(selectedMap.id);
+    }
     alert(`${selectedLots.length === 1 ? 'Seu interesse foi registrado' : 'Seus interesses foram registrados'} com sucesso! ${selectedLots.length === 1 ? 'O lote foi reservado' : 'Os lotes foram reservados'}. Entraremos em contato em breve.`);
     setSelectedLots([]);
-  }, [selectedLots.length]);
+  }, [selectedLots.length, selectedMap]);
 
   const handlePurchaseClose = useCallback(() => {
     setShowPurchaseModal(false);

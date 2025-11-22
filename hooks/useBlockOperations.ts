@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { Block } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export function useBlockOperations() {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -79,7 +79,7 @@ export function useBlockOperations() {
         updatedAt: new Date(),
       };
 
-      await axios.patch(`${API_URL}/mapas/quadras`, updatedBlock, {
+      await axios.patch(`${API_URL}/mapas/quadras/atualizar`, updatedBlock, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });

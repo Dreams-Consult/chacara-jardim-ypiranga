@@ -4,7 +4,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { User, UserRole, UserStatus } from '@/types';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 interface AuthContextType {
   user: User | null;
@@ -39,25 +39,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Validar sessão ao montar o componente e em intervalos
+  // Validar sessão ao montar o componente
   useEffect(() => {
+    if (!mounted) return;
+
     // Verificar se há dados de sessão no localStorage
     const validateSession = () => {
       if (typeof window === 'undefined') return;
 
       const storedUser = localStorage.getItem('currentUser');
-      const userData = localStorage.getItem('userData');
 
-      // Se há um usuário no estado mas não no localStorage, fazer logout
-      if (user && !storedUser && !userData) {
-        console.log('[AuthContext] ⚠️ Sessão perdida - fazendo logout automático');
-        setUser(null);
-      }
-
-      // Se há dados no localStorage mas não no estado, restaurar
-      if (!user && (storedUser || userData)) {
+      // Se não há usuário no estado mas há no localStorage, restaurar
+      if (!user && storedUser) {
         try {
-          const parsedUser = JSON.parse(storedUser || userData || '');
+          const parsedUser = JSON.parse(storedUser);
           console.log('[AuthContext] 🔄 Restaurando sessão do localStorage');
           setUser(parsedUser);
         } catch (e) {
@@ -75,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const intervalId = setInterval(validateSession, 30000);
 
     return () => clearInterval(intervalId);
-  }, [user]);
+  }, [user, mounted]);
 
   const login = async (cpf: string, password: string): Promise<boolean> => {
     try {

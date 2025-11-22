@@ -6,7 +6,7 @@ import { User, UserRole, UserStatus } from '@/types';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function UsersPage() {
   const { canAccessUsers, user: currentUser } = useAuth();

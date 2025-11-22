@@ -8,7 +8,7 @@ import { useBlockOperations } from '@/hooks/useBlockOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function MapDetails() {
   const searchParams = useSearchParams();
@@ -171,19 +171,14 @@ export default function MapDetails() {
 
   const handleDeleteBlock = async (blockId: string) => {
     try {
-      // Busca lotes da quadra usando a API com blockId
+      // Busca lotes da quadra para informar o usuário
       const lotsInBlock = await loadLotsForBlock(blockId);
       
-      if (lotsInBlock.length > 0) {
-        alert(
-          `❌ Não é possível excluir esta quadra!\n\n` +
-          `Esta quadra possui ${lotsInBlock.length} lote(s) cadastrado(s).\n\n` +
-          `Para excluir esta quadra, primeiro remova ou transfira todos os lotes.`
-        );
-        return;
-      }
+      const message = lotsInBlock.length > 0
+        ? `Esta quadra possui ${lotsInBlock.length} lote(s) cadastrado(s) que serão excluídos.\n\nTem certeza que deseja continuar?`
+        : 'Tem certeza que deseja excluir esta quadra?';
 
-      if (confirm('Tem certeza que deseja excluir esta quadra?')) {
+      if (confirm(message)) {
         await deleteBlock(blockId, mapId);
       }
     } catch (error) {
@@ -229,7 +224,7 @@ export default function MapDetails() {
       };
 
       if (lot.id && lot.id !== '') {
-        await axios.patch(`${API_URL}/mapas/lotes`, lotToSave, {
+        await axios.patch(`${API_URL}/mapas/lotes/atualizar`, lotToSave, {
           headers: { 'Content-Type': 'application/json' },
           timeout: 10000,
         });
