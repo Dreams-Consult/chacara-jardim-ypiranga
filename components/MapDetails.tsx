@@ -263,26 +263,35 @@ export default function MapDetails() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione um arquivo de imagem válido');
+    // Validar tipo de arquivo (imagem ou PDF)
+    const isImage = file.type.startsWith('image/');
+    const isPDF = file.type === 'application/pdf';
+    
+    if (!isImage && !isPDF) {
+      alert('Por favor, selecione uma imagem (JPG, PNG, GIF) ou um arquivo PDF');
       return;
     }
 
-    // Validar tamanho (máximo 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 5MB');
+    // Validar tamanho (máximo 50MB para PDF, 10MB para imagem)
+    const maxSize = isPDF ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`O arquivo deve ter no máximo ${isPDF ? '50MB' : '10MB'}`);
       return;
     }
 
     setImageFile(file);
     
-    // Criar preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Criar preview (apenas para imagens)
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Para PDF, mostrar ícone
+      setImagePreview('PDF');
+    }
   };
 
   const handleUploadImage = async () => {
@@ -291,59 +300,82 @@ export default function MapDetails() {
     setIsUploadingImage(true);
 
     try {
-      // Converter imagem para base64
+      const isPDF = imageFile.type === 'application/pdf';
+      
+      // Converter arquivo para base64
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const base64Image = e.target?.result as string;
+        const base64Data = e.target?.result as string;
 
         try {
-          // Obter dimensões da imagem
-          const img = new Image();
-          img.onload = async () => {
-            const width = img.width;
-            const height = img.height;
-
-            // Enviar para API
+          if (isPDF) {
+            // Para PDF, enviar direto sem verificar dimensões
             await axios.post(`${API_URL}/mapas/atualizar-imagem`, {
               mapId,
-              imageUrl: base64Image,
-              width,
-              height,
+              imageUrl: base64Data,
+              width: 800,  // Valor padrão para PDFs
+              height: 600, // Valor padrão para PDFs
             }, {
               headers: {
                 'Content-Type': 'application/json',
               },
-              timeout: 30000,
+              timeout: 120000,
             });
 
-            console.log('[MapDetails] ✅ Imagem atualizada');
-            alert('✅ Imagem atualizada com sucesso!');
+            console.log('[MapDetails] ✅ PDF atualizado');
+            alert('✅ PDF atualizado com sucesso!');
             setIsEditingImage(false);
             setImageFile(null);
             setImagePreview('');
             setIsUploadingImage(false);
-            // Recarregar dados do mapa
             loadMapData();
-          };
-          img.onerror = () => {
-            alert('Erro ao processar imagem');
-            setIsUploadingImage(false);
-          };
-          img.src = base64Image;
+          } else {
+            // Para imagem, obter dimensões
+            const img = new Image();
+            img.onload = async () => {
+              const width = img.width;
+              const height = img.height;
+
+              await axios.post(`${API_URL}/mapas/atualizar-imagem`, {
+                mapId,
+                imageUrl: base64Data,
+                width,
+                height,
+              }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                timeout: 30000,
+              });
+
+              console.log('[MapDetails] ✅ Imagem atualizada');
+              alert('✅ Imagem atualizada com sucesso!');
+              setIsEditingImage(false);
+              setImageFile(null);
+              setImagePreview('');
+              setIsUploadingImage(false);
+              loadMapData();
+            };
+            img.onerror = () => {
+              alert('Erro ao processar imagem');
+              setIsUploadingImage(false);
+            };
+            img.src = base64Data;
+          }
         } catch (err: any) {
-          console.error('[MapDetails] ❌ Erro ao enviar imagem:', err);
-          alert(err.response?.data?.error || 'Erro ao fazer upload da imagem');
+          console.error('[MapDetails] ❌ Erro ao enviar arquivo:', err);
+          alert(err.response?.data?.error || 'Erro ao fazer upload do arquivo');
           setIsUploadingImage(false);
         }
       };
       reader.onerror = () => {
-        alert('Erro ao ler arquivo de imagem');
+        alert('Erro ao ler arquivo');
         setIsUploadingImage(false);
       };
       reader.readAsDataURL(imageFile);
     } catch (err) {
       console.error('[MapDetails] ❌ Erro:', err);
-      alert('Erro ao processar imagem');
+      alert('Erro ao processar arquivo');
       setIsUploadingImage(false);
     }
   };
@@ -556,28 +588,38 @@ export default function MapDetails() {
 
               <div>
                 <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
-                  Selecionar Nova Imagem
+                  Selecionar Arquivo
                 </label>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,application/pdf"
                   onChange={handleImageSelect}
                   disabled={isUploadingImage}
                   className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white file:font-semibold hover:file:bg-blue-600 transition-colors disabled:opacity-50"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB
+                  Formatos aceitos: JPG, PNG, GIF, PDF. Tamanho máximo: 10MB (imagens) ou 50MB (PDF)
                 </p>
               </div>
 
               {imagePreview && (
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-2">Preview:</p>
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full max-h-64 object-contain bg-gray-100 rounded-lg border-2 border-blue-500"
-                  />
+                  {imagePreview === 'PDF' ? (
+                    <div className="w-full h-40 bg-gray-100 rounded-lg border-2 border-blue-500 flex flex-col items-center justify-center">
+                      <svg className="w-16 h-16 text-red-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-gray-700 font-semibold">{imageFile?.name}</p>
+                      <p className="text-gray-500 text-sm">Arquivo PDF selecionado</p>
+                    </div>
+                  ) : (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full max-h-64 object-contain bg-gray-100 rounded-lg border-2 border-blue-500"
+                    />
+                  )}
                 </div>
               )}
             </div>

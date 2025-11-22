@@ -150,26 +150,35 @@ export default function ImportMapPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      setError('Por favor, selecione um arquivo de imagem válido');
+    // Validar tipo de arquivo (imagem ou PDF)
+    const isImage = file.type.startsWith('image/');
+    const isPDF = file.type === 'application/pdf';
+    
+    if (!isImage && !isPDF) {
+      setError('Por favor, selecione uma imagem (JPG, PNG, GIF) ou um arquivo PDF');
       return;
     }
 
-    // Validar tamanho (máximo 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('A imagem deve ter no máximo 5MB');
+    // Validar tamanho (máximo 50MB para PDF, 10MB para imagem)
+    const maxSize = isPDF ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError(`O arquivo deve ter no máximo ${isPDF ? '50MB' : '10MB'}`);
       return;
     }
 
     setImageFile(file);
     
-    // Criar preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Criar preview (apenas para imagens)
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Para PDF, mostrar ícone
+      setImagePreview('PDF');
+    }
     setError('');
   };
 
@@ -180,54 +189,74 @@ export default function ImportMapPage() {
     setError('');
 
     try {
-      // Converter imagem para base64
+      const isPDF = imageFile.type === 'application/pdf';
+      
+      // Converter arquivo para base64
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const base64Image = e.target?.result as string;
+        const base64Data = e.target?.result as string;
 
         try {
-          // Obter dimensões da imagem
-          const img = new Image();
-          img.onload = async () => {
-            const width = img.width;
-            const height = img.height;
-
-            // Enviar para API
+          if (isPDF) {
+            // Para PDF, enviar direto sem verificar dimensões
             const response = await axios.post(`${API_URL}/mapas/atualizar-imagem`, {
               mapId: success.mapId,
-              imageUrl: base64Image,
-              width,
-              height,
+              imageUrl: base64Data,
+              width: 800,  // Valor padrão para PDFs
+              height: 600, // Valor padrão para PDFs
             }, {
               headers: {
                 'Content-Type': 'application/json',
               },
-              timeout: 30000,
+              timeout: 120000,
             });
 
-            console.log('[ImportMap] ✅ Imagem atualizada:', response.data);
+            console.log('[ImportMap] ✅ PDF atualizado:', response.data);
             setImageUploaded(true);
             setIsUploadingImage(false);
-          };
-          img.onerror = () => {
-            setError('Erro ao processar imagem');
-            setIsUploadingImage(false);
-          };
-          img.src = base64Image;
+          } else {
+            // Para imagem, obter dimensões
+            const img = new Image();
+            img.onload = async () => {
+              const width = img.width;
+              const height = img.height;
+
+              const response = await axios.post(`${API_URL}/mapas/atualizar-imagem`, {
+                mapId: success.mapId,
+                imageUrl: base64Data,
+                width,
+                height,
+              }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                timeout: 30000,
+              });
+
+              console.log('[ImportMap] ✅ Imagem atualizada:', response.data);
+              setImageUploaded(true);
+              setIsUploadingImage(false);
+            };
+            img.onerror = () => {
+              setError('Erro ao processar imagem');
+              setIsUploadingImage(false);
+            };
+            img.src = base64Data;
+          }
         } catch (err: any) {
-          console.error('[ImportMap] ❌ Erro ao enviar imagem:', err);
-          setError(err.response?.data?.error || 'Erro ao fazer upload da imagem');
+          console.error('[ImportMap] ❌ Erro ao enviar arquivo:', err);
+          setError(err.response?.data?.error || 'Erro ao fazer upload do arquivo');
           setIsUploadingImage(false);
         }
       };
       reader.onerror = () => {
-        setError('Erro ao ler arquivo de imagem');
+        setError('Erro ao ler arquivo');
         setIsUploadingImage(false);
       };
       reader.readAsDataURL(imageFile);
     } catch (err) {
       console.error('[ImportMap] ❌ Erro:', err);
-      setError('Erro ao processar imagem');
+      setError('Erro ao processar arquivo');
       setIsUploadingImage(false);
     }
   };
@@ -267,26 +296,36 @@ export default function ImportMapPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Adicionar Imagem do Mapa (Opcional)
+                    Adicionar Imagem ou PDF (Opcional)
                   </h4>
                   <p className="text-blue-200 text-sm mb-3">
-                    Faça upload de uma imagem do mapa do loteamento
+                    Faça upload de uma imagem ou PDF do mapa do loteamento
                   </p>
                   <div className="space-y-3">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,application/pdf"
                       onChange={handleImageSelect}
                       disabled={isUploadingImage}
                       className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-blue-500 file:text-white file:text-sm file:font-semibold hover:file:bg-blue-600 transition-colors disabled:opacity-50"
                     />
                     {imagePreview && (
                       <div className="relative">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="w-full max-h-64 object-contain bg-gray-900 rounded-lg"
-                        />
+                        {imagePreview === 'PDF' ? (
+                          <div className="w-full h-40 bg-gray-900 rounded-lg flex flex-col items-center justify-center border border-gray-700">
+                            <svg className="w-16 h-16 text-red-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-white font-semibold">{imageFile?.name}</p>
+                            <p className="text-gray-400 text-sm">Arquivo PDF selecionado</p>
+                          </div>
+                        ) : (
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full max-h-64 object-contain bg-gray-900 rounded-lg"
+                          />
+                        )}
                       </div>
                     )}
                     {imageFile && !isUploadingImage && (
@@ -306,7 +345,7 @@ export default function ImportMapPage() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span>Enviando imagem...</span>
+                        <span>Enviando arquivo...</span>
                       </div>
                     )}
                   </div>
@@ -319,7 +358,7 @@ export default function ImportMapPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                    Imagem adicionada com sucesso!
+                    Arquivo adicionado com sucesso!
                   </p>
                 </div>
               )}

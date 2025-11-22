@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Lot, LotArea, LotStatus } from '@/types';
 import { useInteractiveMap } from '@/hooks/useInteractiveMap';
 
@@ -27,6 +27,67 @@ export default function InteractiveMap({
   drawingMode = 'polygon',
   previewArea = null,
 }: InteractiveMapProps) {
+  const [isPDF, setIsPDF] = useState(false);
+  const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Detectar se é PDF e converter para imagem
+  useEffect(() => {
+    if (imageUrl && imageUrl.startsWith('data:application/pdf')) {
+      setIsPDF(true);
+      setIsConverting(true);
+      
+      // Converter PDF para canvas usando pdf.js
+      const loadPDF = async () => {
+        try {
+          // Importar pdf.js dinamicamente
+          const pdfjsLib = await import('pdfjs-dist');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+          // Carregar PDF
+          const loadingTask = pdfjsLib.getDocument(imageUrl);
+          const pdf = await loadingTask.promise;
+          
+          // Pegar primeira página
+          const page = await pdf.getPage(1);
+          
+          // Configurar escala para boa qualidade
+          const scale = 2;
+          const viewport = page.getViewport({ scale });
+          
+          // Criar canvas temporário
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          
+          // Renderizar PDF no canvas
+          if (context) {
+            await page.render({
+              canvasContext: context,
+              viewport: viewport
+            }).promise;
+            
+            // Converter canvas para imagem
+            const imageData = canvas.toDataURL('image/png');
+            setPdfImageUrl(imageData);
+          }
+        } catch (error) {
+          console.error('[InteractiveMap] Erro ao converter PDF:', error);
+        } finally {
+          setIsConverting(false);
+        }
+      };
+
+      loadPDF();
+    } else {
+      setIsPDF(false);
+      setPdfImageUrl('');
+    }
+  }, [imageUrl]);
+
+  const effectiveImageUrl = isPDF ? pdfImageUrl : imageUrl;
+
   const {
     canvasRef,
     imageRef,
@@ -48,7 +109,7 @@ export default function InteractiveMap({
     handleFinishDrawing,
     handleCancelDrawing,
   } = useInteractiveMap({
-    imageUrl,
+    imageUrl: effectiveImageUrl,
     lots,
     onLotClick,
     isEditMode,
@@ -61,10 +122,21 @@ export default function InteractiveMap({
 
   return (
     <div ref={containerRef} className="relative">
-      {imageUrl && imageUrl.trim() !== '' ? (
+      {isConverting && (
+        <div className="border-2 border-gray-300 rounded-lg p-12 text-center bg-gray-50">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4">
+            <svg className="w-8 h-8 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-gray-600 font-medium mb-2">Convertendo PDF...</p>
+          <p className="text-gray-500 text-sm">Por favor, aguarde</p>
+        </div>
+      )}
+      {!isConverting && effectiveImageUrl && effectiveImageUrl.trim() !== '' ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={imageRef} src={imageUrl} alt="Map" className="hidden" />
+          <img ref={imageRef} src={effectiveImageUrl} alt="Map" className="hidden" />
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
@@ -89,7 +161,8 @@ export default function InteractiveMap({
         </div>
       )}
 
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      {!isConverting && (
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
           onClick={handleZoomIn}
           className="bg-white hover:bg-gray-50 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl cursor-pointer"
@@ -114,7 +187,8 @@ export default function InteractiveMap({
         <div className="bg-white px-3 py-1 rounded-lg shadow-lg border border-gray-200 text-xs text-gray-700 text-center">
           {Math.round(scale * 100)}%
         </div>
-      </div>
+        </div>
+      )}
 
       {isEditMode && drawingMode === 'polygon' && drawingPoints.length > 0 && (
         <div className="absolute bottom-4 left-4 flex gap-2">

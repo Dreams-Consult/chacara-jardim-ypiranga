@@ -151,6 +151,11 @@ export function useInteractiveMap({
       return;
     }
 
+    // Não tentar carregar PDFs diretamente - aguardar conversão
+    if (imageUrl.startsWith('data:application/pdf')) {
+      return;
+    }
+
     const handleLoad = () => {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
