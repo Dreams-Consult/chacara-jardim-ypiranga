@@ -27,7 +27,24 @@ export async function DELETE(request: NextRequest) {
 
     connection = await mysql.createConnection(dbConfig);
 
-    // Primeiro deletar todos os lotes da quadra
+    // Verificar se há lotes reservados ou vendidos na quadra
+    const [lotsCheck]: any = await connection.execute(
+      `SELECT COUNT(*) as count FROM lots 
+       WHERE block_id = ? AND status IN ('reserved', 'sold')`,
+      [blockId]
+    );
+
+    if (lotsCheck[0].count > 0) {
+      return NextResponse.json(
+        { 
+          error: `Não é possível excluir esta quadra. Existem ${lotsCheck[0].count} lote(s) reservado(s) ou vendido(s).`,
+          count: lotsCheck[0].count
+        },
+        { status: 409 }
+      );
+    }
+
+    // Primeiro deletar todos os lotes da quadra (apenas disponíveis)
     const [lotsResult]: any = await connection.execute(
       'DELETE FROM lots WHERE block_id = ?',
       [blockId]

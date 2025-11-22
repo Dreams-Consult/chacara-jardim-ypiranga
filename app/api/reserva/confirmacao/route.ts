@@ -4,10 +4,12 @@ import mysql from 'mysql2/promise';
 const dbConfig = {
   host: 'localhost',
   port: 3306,
-  user: 'root',
+  user: 'maia',
   password: 'ForTheHorde!',
   database: 'vale_dos_carajas',
 };
+
+export const dynamic = 'force-dynamic';
 
 export async function PUT(request: NextRequest) {
   let connection;
@@ -41,43 +43,45 @@ export async function PUT(request: NextRequest) {
     await connection.beginTransaction();
 
     try {
-      // Buscar reserva e lote associado
-      const [reservations] = await connection.execute(
-        'SELECT lot_id FROM purchase_requests WHERE id = ?',
+      // Buscar todos os lotes associados à reserva via purchase_request_lots
+      const [lotRelations] = await connection.execute(
+        'SELECT lot_id FROM purchase_request_lots WHERE purchase_request_id = ?',
         [reservationId]
       );
 
-      if (!Array.isArray(reservations) || reservations.length === 0) {
+      if (!Array.isArray(lotRelations) || lotRelations.length === 0) {
         await connection.rollback();
         return NextResponse.json(
-          { error: 'Reserva não encontrada' },
+          { error: 'Reserva não encontrada ou sem lotes associados' },
           { status: 404 }
         );
       }
 
-      const lotId = (reservations[0] as any).lot_id;
+      const lotIds = (lotRelations as any[]).map(rel => rel.lot_id);
 
       // Atualizar status da reserva
       await connection.execute(
-        'UPDATE purchase_requests SET status = ?, updated_at = NOW() WHERE id = ?',
+        'UPDATE purchase_requests SET status = ? WHERE id = ?',
         [status, reservationId]
       );
 
-      // Atualizar status do lote
+      // Atualizar status de todos os lotes associados
+      const placeholders = lotIds.map(() => '?').join(',');
       await connection.execute(
-        'UPDATE lots SET status = ?, updated_at = NOW() WHERE id = ?',
-        [lotStatus, lotId]
+        `UPDATE lots SET status = ?, updated_at = NOW() WHERE id IN (${placeholders})`,
+        [lotStatus, ...lotIds]
       );
 
       await connection.commit();
 
-      console.log('[API /reserva/confirmacao] Reserva atualizada:', reservationId);
+      console.log(`[API /reserva/confirmacao] Reserva ${reservationId} atualizada: ${status}, ${lotIds.length} lote(s) -> ${lotStatus}`);
       return NextResponse.json(
         {
           message: 'Reserva atualizada com sucesso',
           reservationId,
           status,
           lotStatus,
+          lotsUpdated: lotIds.length,
         },
         { status: 200 }
       );

@@ -28,6 +28,23 @@ export async function DELETE(request: NextRequest) {
 
     connection = await mysql.createConnection(dbConfig);
 
+    // Verificar se há lotes reservados ou vendidos no mapa
+    const [lotsCheck]: any = await connection.execute(
+      `SELECT COUNT(*) as count FROM lots 
+       WHERE map_id = ? AND status IN ('reserved', 'sold')`,
+      [mapId]
+    );
+
+    if (lotsCheck[0].count > 0) {
+      return NextResponse.json(
+        { 
+          error: `Não é possível excluir este mapa. Existem ${lotsCheck[0].count} lote(s) reservado(s) ou vendido(s).`,
+          count: lotsCheck[0].count
+        },
+        { status: 409 }
+      );
+    }
+
     await connection.execute(
       'DELETE FROM maps WHERE id = ?',
       [mapId]

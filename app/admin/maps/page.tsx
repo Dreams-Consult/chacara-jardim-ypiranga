@@ -197,8 +197,11 @@ export default function AdminMapsLotsPage() {
               ) : lots.length > 0 ? (
                 <CinemaStyleLotSelector
                   lots={lots}
-                  onMultipleSelect={(selectedLots) => {
-                    selectedLots.forEach(lot => handleToggleLotSelection(lot));
+                  onMultipleSelect={(lots) => {
+                    // Recebe um array com um único lote para fazer toggle
+                    if (lots.length === 1) {
+                      handleToggleLotSelection(lots[0]);
+                    }
                   }}
                   selectedLotIds={selectedLots.map(l => l.id)}
                   allowMultipleSelection={true}

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 
+export const dynamic = 'force-dynamic';
+
 const dbConfig = {
   host: 'localhost',
   port: 3306,
-  user: 'root',
+  user: 'maia',
   password: 'ForTheHorde!',
   database: 'vale_dos_carajas',
 };
@@ -48,10 +50,10 @@ export async function POST(request: NextRequest) {
     await connection.beginTransaction();
 
     try {
-      // Verificar se todos os lotes estão disponíveis
+      // Verificar se todos os lotes estão disponíveis e pegar map_id
       const placeholders = lotIds.map(() => '?').join(',');
       const [lotsCheck] = await connection.execute(
-        `SELECT id, status FROM lots WHERE id IN (${placeholders})`,
+        `SELECT id, status, map_id, block_id FROM lots WHERE id IN (${placeholders})`,
         lotIds
       );
 
@@ -66,33 +68,53 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Criar solicitações de compra para cada lote
-      const purchaseIds = [];
-      for (const lotId of lotIds) {
-        const [result] = await connection.execute(
-          `INSERT INTO purchase_requests (
-            lot_id, seller_id, customer_name, customer_email, customer_phone,
-            customer_cpf, message, seller_name, seller_email, seller_phone,
-            seller_cpf, status, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())`,
-          [
-            lotId,
-            sellerId || null,
-            customerName,
-            customerEmail,
-            customerPhone.replace(/\D/g, ''),
-            customerCPF.replace(/\D/g, ''),
-            message || null,
-            sellerName || '',
-            sellerEmail || '',
-            sellerPhone ? sellerPhone.replace(/\D/g, '') : '',
-            sellerCPF ? sellerCPF.replace(/\D/g, '') : '',
-          ]
+      if (lotsArray.length === 0) {
+        await connection.rollback();
+        return NextResponse.json(
+          { error: 'Nenhum lote encontrado' },
+          { status: 404 }
         );
-        purchaseIds.push((result as any).insertId);
       }
 
-      // Atualizar status dos lotes para 'reserved'
+      // Pegar o map_id do primeiro lote (todos devem ser do mesmo mapa)
+      const firstLot = lotsArray[0];
+      const mapId = firstLot.map_id;
+
+      // 1. Criar um único registro em purchase_requests
+      const [purchaseResult] = await connection.execute(
+        `INSERT INTO purchase_requests (
+          seller_id, customer_name, customer_email, customer_phone,
+          customer_cpf, message, payment_method, seller_name, seller_email, 
+          seller_phone, seller_cpf, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+        [
+          sellerId || null,
+          customerName,
+          customerEmail,
+          customerPhone.replace(/\D/g, ''),
+          customerCPF.replace(/\D/g, ''),
+          message || null,
+          'cash', // payment_method padrão
+          sellerName || null,
+          sellerEmail || null,
+          sellerPhone ? sellerPhone.replace(/\D/g, '') : null,
+          sellerCPF ? sellerCPF.replace(/\D/g, '') : null,
+        ]
+      );
+
+      const purchaseRequestId = (purchaseResult as any).insertId;
+
+      // 2. Criar registros em purchase_request_lots para cada lote
+      for (const lot of lotsArray) {
+        await connection.execute(
+          `INSERT INTO purchase_request_lots (
+            purchase_request_id, lot_id
+          ) VALUES (?, ?)`,
+          [purchaseRequestId, lot.id]
+        );
+      }
+
+      // 3. Atualizar status dos lotes para 'reserved'
       await connection.execute(
         `UPDATE lots SET status = 'reserved', updated_at = NOW() WHERE id IN (${placeholders})`,
         lotIds
@@ -101,11 +123,11 @@ export async function POST(request: NextRequest) {
       // Commit da transação
       await connection.commit();
 
-      console.log('[API /mapas/lotes/reservar] Reservas criadas:', purchaseIds);
+      console.log('[API /mapas/lotes/reservar] Reserva criada:', purchaseRequestId, 'com', lotIds.length, 'lotes');
       return NextResponse.json(
         {
-          message: `${purchaseIds.length} reserva(s) criada(s) com sucesso`,
-          purchaseIds,
+          message: `Reserva criada com sucesso para ${lotIds.length} lote(s)`,
+          purchaseRequestId,
           lotIds,
         },
         { status: 201 }

@@ -18,11 +18,30 @@ export async function GET(request: NextRequest) {
   try {
     connection = await mysql.createConnection(dbConfig);
 
-    const [rows] = await connection.execute(
+    // Buscar todas as reservas
+    const [reservations] = await connection.execute(
       'SELECT * FROM purchase_requests ORDER BY created_at DESC'
     );
 
-    return NextResponse.json(rows || [], { status: 200 });
+    // Para cada reserva, buscar os lotes associados
+    const reservationsWithLots = await Promise.all(
+      (reservations as any[]).map(async (reservation) => {
+        const [lots] = await connection!.execute(
+          `SELECT l.*, prl.purchase_request_id 
+           FROM purchase_request_lots prl
+           INNER JOIN lots l ON prl.lot_id = l.id
+           WHERE prl.purchase_request_id = ?`,
+          [reservation.id]
+        );
+
+        return {
+          ...reservation,
+          lots: lots || [],
+        };
+      })
+    );
+
+    return NextResponse.json(reservationsWithLots || [], { status: 200 });
   } catch (error) {
     console.error('[API /reservas GET] Erro:', error);
     return NextResponse.json(

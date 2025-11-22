@@ -159,39 +159,18 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
       const sellerInfo = getSellerData();
 
       const requestData = {
-        lots: lots.map(lot => ({
-          id: lot.id,
-          mapId: lot.mapId,
-          lotNumber: lot.lotNumber,
-          // area removida - não existe mais no retorno
-          status: 'reserved',
-          price: lot.price,
-          size: lot.size,
-          description: lot.description,
-          features: lot.features,
-          createdAt: lot.createdAt,
-          updatedAt: lot.updatedAt,
-        })),
-        customer: {
-          name: formData.customerName,
-          email: formData.customerEmail,
-          phone: formData.customerPhone,
-          cpf: formData.customerCPF,
-          message: formData.message || null,
-        },
-        seller: {
-          id: sellerInfo.id, // ID do vendedor do localStorage
-          name: formData.sellerName,
-          email: formData.sellerEmail,
-          phone: formData.sellerPhone,
-          cpf: formData.sellerCPF,
-        },
-        purchaseRequest: {
-          paymentMethod: formData.otherPayment || formData.paymentMethod,
-          lotIds: lots.map(lot => lot.id), // Array de IDs dos lotes
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        }
+        lotIds: lots.map(lot => lot.id),
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        customerCPF: formData.customerCPF,
+        message: formData.message || null,
+        sellerId: sellerInfo?.id || null,
+        sellerName: formData.sellerName,
+        sellerEmail: formData.sellerEmail,
+        sellerPhone: formData.sellerPhone,
+        sellerCPF: formData.sellerCPF,
+        paymentMethod: formData.otherPayment || formData.paymentMethod,
       };
 
       console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s) e ID do vendedor:`, sellerInfo?.id);

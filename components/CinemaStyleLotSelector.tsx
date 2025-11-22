@@ -58,20 +58,11 @@ export default function CinemaStyleLotSelector({
   const handleAddLot = () => {
     if (!selectedLotForModal) return;
 
-    if (allowMultipleSelection) {
-      const isSelected = selectedLotIds.includes(selectedLotForModal.id);
-      let newSelection: string[];
-
-      if (isSelected) {
-        newSelection = selectedLotIds.filter(id => id !== selectedLotForModal.id);
-      } else {
-        newSelection = [...selectedLotIds, selectedLotForModal.id];
-      }
-
-      const selectedLots = sortedLots.filter(l => newSelection.includes(l.id));
-      onMultipleSelect?.(selectedLots);
-    } else {
-      onLotSelect?.(selectedLotForModal);
+    if (allowMultipleSelection && onMultipleSelect) {
+      // Apenas notificar qual lote foi clicado para toggle
+      onMultipleSelect([selectedLotForModal]);
+    } else if (onLotSelect) {
+      onLotSelect(selectedLotForModal);
     }
 
     setSelectedLotForModal(null);

@@ -158,20 +158,22 @@ export const useMapSelection = () => {
         return;
       }
 
-      // A API agora retorna um array direto de lotes
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        const lotsData = response.data.map((lot: any) => ({
+      // A API retorna { mapId, lots: [] }
+      const responseData = response.data[0];
+      
+      if (responseData && Array.isArray(responseData.lots) && responseData.lots.length > 0) {
+        const lotsData = responseData.lots.map((lot: any) => ({
           id: lot.id?.toString() || '',
-          mapId: lot.map_id?.toString() || mapId,
-          blockId: lot.block_id?.toString() || blockId,
-          lotNumber: lot.lot_number || '',
+          mapId: lot.mapId?.toString() || mapId,
+          blockId: lot.blockId?.toString() || blockId,
+          lotNumber: lot.lotNumber || '',
           status: lot.status as LotStatus || LotStatus.AVAILABLE,
           price: parseFloat(lot.price) || 0,
           size: parseFloat(lot.size) || 0,
           description: lot.description || '',
           features: lot.features ? (typeof lot.features === 'string' ? JSON.parse(lot.features) : lot.features) : [],
-          createdAt: new Date(lot.created_at),
-          updatedAt: new Date(lot.updated_at),
+          createdAt: new Date(lot.createdAt),
+          updatedAt: new Date(lot.updatedAt),
         }));
 
         console.log(`✅ [Página Pública] ${lotsData.length} lotes carregados para a quadra ${blockId}`);
