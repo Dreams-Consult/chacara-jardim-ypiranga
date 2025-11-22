@@ -24,6 +24,10 @@ export default function MapDetails() {
   const [isAddingLot, setIsAddingLot] = useState(false);
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedBlockForLot, setSelectedBlockForLot] = useState<string>('');
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
 
@@ -255,6 +259,95 @@ export default function MapDetails() {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecione um arquivo de imagem válido');
+      return;
+    }
+
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Criar preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadImage = async () => {
+    if (!imageFile || !mapId) return;
+
+    setIsUploadingImage(true);
+
+    try {
+      // Converter imagem para base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Image = e.target?.result as string;
+
+        try {
+          // Obter dimensões da imagem
+          const img = new Image();
+          img.onload = async () => {
+            const width = img.width;
+            const height = img.height;
+
+            // Enviar para API
+            await axios.post(`${API_URL}/mapas/atualizar-imagem`, {
+              mapId,
+              imageUrl: base64Image,
+              width,
+              height,
+            }, {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              timeout: 30000,
+            });
+
+            console.log('[MapDetails] ✅ Imagem atualizada');
+            alert('✅ Imagem atualizada com sucesso!');
+            setIsEditingImage(false);
+            setImageFile(null);
+            setImagePreview('');
+            setIsUploadingImage(false);
+            // Recarregar dados do mapa
+            loadMapData();
+          };
+          img.onerror = () => {
+            alert('Erro ao processar imagem');
+            setIsUploadingImage(false);
+          };
+          img.src = base64Image;
+        } catch (err: any) {
+          console.error('[MapDetails] ❌ Erro ao enviar imagem:', err);
+          alert(err.response?.data?.error || 'Erro ao fazer upload da imagem');
+          setIsUploadingImage(false);
+        }
+      };
+      reader.onerror = () => {
+        alert('Erro ao ler arquivo de imagem');
+        setIsUploadingImage(false);
+      };
+      reader.readAsDataURL(imageFile);
+    } catch (err) {
+      console.error('[MapDetails] ❌ Erro:', err);
+      alert('Erro ao processar imagem');
+      setIsUploadingImage(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--background)] p-6 flex items-center justify-center">
@@ -306,12 +399,23 @@ export default function MapDetails() {
             <h1 className="text-3xl font-bold text-white">{map.name}</h1>
             {map.description && <p className="text-white/70 mt-1">{map.description}</p>}
           </div>
-          <button
-            onClick={handleAddBlock}
-            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
-          >
-            + Adicionar Quadra
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setIsEditingImage(true)}
+              className="px-5 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {map.imageUrl ? 'Editar Imagem' : 'Adicionar Imagem'}
+            </button>
+            <button
+              onClick={handleAddBlock}
+              className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+            >
+              + Adicionar Quadra
+            </button>
+          </div>
         </div>
       </div>
 
@@ -423,6 +527,96 @@ export default function MapDetails() {
                 setSelectedBlockForLot('');
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Adicionar/Editar Imagem */}
+      {isEditingImage && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl border-2 border-blue-500/30">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {map.imageUrl ? 'Editar Imagem do Mapa' : 'Adicionar Imagem do Mapa'}
+            </h2>
+            
+            <div className="space-y-4">
+              {map.imageUrl && !imagePreview && (
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Imagem Atual:</p>
+                  <img
+                    src={map.imageUrl}
+                    alt="Imagem atual do mapa"
+                    className="w-full max-h-64 object-contain bg-gray-100 rounded-lg border-2 border-gray-300"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                  Selecionar Nova Imagem
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  disabled={isUploadingImage}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white file:font-semibold hover:file:bg-blue-600 transition-colors disabled:opacity-50"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB
+                </p>
+              </div>
+
+              {imagePreview && (
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Preview:</p>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full max-h-64 object-contain bg-gray-100 rounded-lg border-2 border-blue-500"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setIsEditingImage(false);
+                  setImageFile(null);
+                  setImagePreview('');
+                }}
+                disabled={isUploadingImage}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUploadImage}
+                disabled={!imageFile || isUploadingImage}
+                className="flex-1 px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isUploadingImage ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Salvar Imagem
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -630,15 +824,16 @@ function BlockCard({
             </p>
           </div>
           <div className="flex gap-2">
-            {isHovered && (
-              <button
-                onClick={() => handleAddLotToBlock(block.id)}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all backdrop-blur-sm"
-                title="Adicionar lote nesta quadra"
-              >
-                + Lote
-              </button>
-            )}
+            <button
+              onClick={() => handleAddLotToBlock(block.id)}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all backdrop-blur-sm flex items-center gap-2"
+              title="Adicionar lote nesta quadra"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              Lote
+            </button>
             <button
               onClick={() => {
                 setEditingBlock(block);

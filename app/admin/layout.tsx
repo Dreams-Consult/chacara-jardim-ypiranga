@@ -237,6 +237,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </svg>
                       <span>Gerenciar Mapas</span>
                     </Link>
+                    <Link
+                      href="/admin/import-map"
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                        pathname === '/admin/import-map'
+                          ? 'bg-[var(--surface)] text-[var(--primary)]'
+                          : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span>Importar Loteamento</span>
+                    </Link>
                     {showLotManagement && (
                       <Link
                         href="/admin/lot-management"
