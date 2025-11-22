@@ -49,15 +49,51 @@ export default function ImportMapPage() {
             status: "available",
             price: 50000,
             size: 300,
-            description: "Lote de esquina",
+            description: "Lote de esquina disponível",
             features: ["Esquina", "Frente norte"]
           },
           {
             lotNumber: "02",
-            status: "available",
+            status: "reserved",
             price: 45000,
             size: 250,
-            description: "Lote regular",
+            description: "Lote reservado",
+            features: ["Frente sul"],
+            reservation: {
+              customer_name: "João Silva",
+              customer_email: "joao.silva@email.com",
+              customer_phone: "(11) 98765-4321",
+              customer_cpf: "123.456.789-00",
+              customer_address: "Rua Exemplo, 123 - São Paulo/SP",
+              payment_method: "financing",
+              status: "approved",
+              notes: "Cliente aprovado para financiamento"
+            }
+          },
+          {
+            lotNumber: "03",
+            status: "sold",
+            price: 48000,
+            size: 260,
+            description: "Lote vendido",
+            features: ["Meio de quadra"],
+            reservation: {
+              customer_name: "Maria Santos",
+              customer_email: "maria.santos@email.com",
+              customer_phone: "(11) 91234-5678",
+              customer_cpf: "987.654.321-00",
+              customer_address: "Av. Principal, 456 - São Paulo/SP",
+              payment_method: "cash",
+              status: "completed",
+              notes: "Pagamento à vista realizado"
+            }
+          },
+          {
+            lotNumber: "04",
+            status: "blocked",
+            price: 47000,
+            size: 240,
+            description: "Lote bloqueado para manutenção",
             features: []
           }
         ]
@@ -71,8 +107,25 @@ export default function ImportMapPage() {
             status: "available",
             price: 60000,
             size: 350,
-            description: "Lote maior",
+            description: "Lote maior disponível",
             features: ["Vista privilegiada"]
+          },
+          {
+            lotNumber: "02",
+            status: "reserved",
+            price: 55000,
+            size: 320,
+            description: "Lote reservado com vista",
+            features: ["Vista para lago"],
+            reservation: {
+              customer_name: "Pedro Oliveira",
+              customer_email: "pedro.oliveira@email.com",
+              customer_phone: "(11) 99876-5432",
+              customer_cpf: "456.789.123-00",
+              payment_method: "installments",
+              status: "pending",
+              notes: "Aguardando análise de crédito"
+            }
           }
         ]
       }
@@ -444,16 +497,38 @@ export default function ImportMapPage() {
           <pre className="bg-black rounded-lg p-4 overflow-x-auto text-sm text-green-400">
             {JSON.stringify(exampleJson, null, 2)}
           </pre>
-          <div className="mt-4 text-white/70 text-sm space-y-1">
-            <p><strong>Campos obrigatórios:</strong></p>
-            <ul className="list-disc list-inside ml-4 space-y-1">
-              <li><code className="text-blue-400">name</code>: Nome do mapa</li>
-              <li><code className="text-blue-400">blocks</code>: Array de quadras (pelo menos 1)</li>
-              <li><code className="text-blue-400">blocks[].name</code>: Nome da quadra</li>
-              <li><code className="text-blue-400">lots[].lotNumber</code>: Número do lote</li>
-              <li><code className="text-blue-400">lots[].price</code>: Preço do lote</li>
-              <li><code className="text-blue-400">lots[].size</code>: Tamanho em m²</li>
-            </ul>
+          <div className="mt-4 text-white/70 text-sm space-y-3">
+            <div>
+              <p className="font-semibold text-white mb-1">Campos obrigatórios:</p>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                <li><code className="text-blue-400">name</code>: Nome do mapa</li>
+                <li><code className="text-blue-400">blocks</code>: Array de quadras (pelo menos 1)</li>
+                <li><code className="text-blue-400">blocks[].name</code>: Nome da quadra</li>
+                <li><code className="text-blue-400">lots[].lotNumber</code>: Número do lote</li>
+                <li><code className="text-blue-400">lots[].price</code>: Preço do lote</li>
+                <li><code className="text-blue-400">lots[].size</code>: Tamanho em m²</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-1">Status dos lotes:</p>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                <li><code className="text-green-400">available</code>: Lote disponível para venda</li>
+                <li><code className="text-yellow-400">reserved</code>: Lote reservado (requer dados de reservation)</li>
+                <li><code className="text-red-400">sold</code>: Lote vendido (requer dados de reservation)</li>
+                <li><code className="text-gray-400">blocked</code>: Lote bloqueado (indisponível)</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-1">Dados de reserva (obrigatório para status reserved/sold):</p>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                <li><code className="text-blue-400">reservation.customer_name</code>: Nome do cliente</li>
+                <li><code className="text-blue-400">reservation.customer_email</code>: Email do cliente</li>
+                <li><code className="text-blue-400">reservation.customer_phone</code>: Telefone do cliente</li>
+                <li><code className="text-blue-400">reservation.customer_cpf</code>: CPF (opcional)</li>
+                <li><code className="text-blue-400">reservation.payment_method</code>: cash, financing ou installments</li>
+                <li><code className="text-blue-400">reservation.status</code>: pending, approved, completed, etc.</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}

@@ -11,6 +11,17 @@ const dbConfig = {
   database: 'vale_dos_carajas',
 };
 
+interface ImportLotReservation {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  customer_cpf?: string;
+  customer_address?: string;
+  payment_method?: 'cash' | 'financing' | 'installments';
+  status?: string; // Aceita qualquer string para mapear depois
+  notes?: string;
+}
+
 interface ImportLot {
   lotNumber: string;
   status?: string;
@@ -18,6 +29,7 @@ interface ImportLot {
   size: number;
   description?: string;
   features?: string[];
+  reservation?: ImportLotReservation;
 }
 
 interface ImportBlock {
@@ -128,10 +140,10 @@ export async function POST(request: NextRequest) {
               );
             }
 
-            const lotId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
             const features = lotData.features ? JSON.stringify(lotData.features) : null;
 
-            await connection.execute(
+            // Criar o lote (sem id, deixa o AUTO_INCREMENT gerar)
+            const [lotResult] = await connection.execute(
               `INSERT INTO lots (
                 map_id, block_id, lot_number, status, price, size, 
                 description, features, created_at, updated_at
@@ -148,7 +160,68 @@ export async function POST(request: NextRequest) {
               ]
             );
 
+            const lotId = (lotResult as any).insertId;
             totalLots++;
+
+            // Se o lote está reservado ou vendido e tem dados de reserva, criar purchase_request
+            if (
+              (lotData.status === 'reserved' || lotData.status === 'sold') && 
+              lotData.reservation
+            ) {
+              const reservation = lotData.reservation;
+              
+              // Validar dados obrigatórios da reserva
+              if (!reservation.customer_name || !reservation.customer_email || !reservation.customer_phone) {
+                await connection.rollback();
+                return NextResponse.json(
+                  { 
+                    error: 'Dados de reserva incompletos', 
+                    message: `Lote ${lotData.lotNumber} (${lotData.status}) requer customer_name, customer_email e customer_phone na reserva` 
+                  },
+                  { status: 400 }
+                );
+              }
+
+              // Mapear status da reserva para valores válidos na tabela
+              // Valores aceitos: 'pending', 'contacted', 'completed', 'cancelled'
+              let reservationStatus = 'pending';
+              if (reservation.status === 'completed' || reservation.status === 'approved') {
+                reservationStatus = 'completed';
+              } else if (reservation.status === 'cancelled' || reservation.status === 'rejected') {
+                reservationStatus = 'cancelled';
+              } else if (reservation.status === 'contacted') {
+                reservationStatus = 'contacted';
+              }
+
+              // Criar purchase_request com a estrutura correta (sem map_id e lot_id)
+              const [purchaseResult] = await connection.execute(
+                `INSERT INTO purchase_requests (
+                  customer_name, customer_email, customer_phone,
+                  customer_cpf, message, payment_method, status,
+                  created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+                [
+                  reservation.customer_name,
+                  reservation.customer_email,
+                  reservation.customer_phone,
+                  reservation.customer_cpf || null,
+                  reservation.notes || null, // 'notes' vira 'message'
+                  reservation.payment_method || 'cash',
+                  reservationStatus,
+                ]
+              );
+
+              const purchaseRequestId = (purchaseResult as any).insertId;
+
+              // Criar relacionamento em purchase_request_lots
+              await connection.execute(
+                `INSERT INTO purchase_request_lots (purchase_request_id, lot_id)
+                 VALUES (?, ?)`,
+                [purchaseRequestId, lotId]
+              );
+
+              console.log(`[API /mapas/importar]       💰 Reserva criada para lote ${lotData.lotNumber} (Cliente: ${reservation.customer_name})`);
+            }
           }
 
           console.log(`[API /mapas/importar]     🏠 ${blockData.lots.length} lotes criados`);

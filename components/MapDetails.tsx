@@ -10,10 +10,11 @@ import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
 
 const API_URL = '/api';
 
-// Componente para renderizar preview de PDF
+// Componente para renderizar preview de PDF com zoom
 function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
   const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
   const [isConverting, setIsConverting] = useState(true);
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     const convertPDF = async () => {
@@ -66,12 +67,40 @@ function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
 
   if (pdfImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={pdfImageUrl}
-        alt={mapName}
-        className="max-w-full h-auto rounded-lg shadow-md"
-      />
+      <div className="relative">
+        <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+          <button
+            onClick={() => setZoom(Math.min(zoom + 0.25, 3))}
+            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200"
+            title="Zoom In"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setZoom(Math.max(zoom - 0.25, 0.5))}
+            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200"
+            title="Zoom Out"
+          >
+            -
+          </button>
+          <button
+            onClick={() => setZoom(1)}
+            className="bg-white hover:bg-gray-100 text-gray-800 font-medium text-xs py-2 px-3 rounded-lg shadow-lg border border-gray-200"
+            title="Reset"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+        </div>
+        <div className="overflow-auto max-h-[800px] rounded-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={pdfImageUrl}
+            alt={mapName}
+            className="rounded-lg shadow-md"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.2s' }}
+          />
+        </div>
+      </div>
     );
   }
 

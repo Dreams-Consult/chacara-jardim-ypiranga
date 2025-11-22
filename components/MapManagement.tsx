@@ -6,10 +6,11 @@ import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
-// Componente para renderizar preview de PDF
+// Componente para renderizar preview de PDF com zoom
 function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
   const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
   const [isConverting, setIsConverting] = useState(true);
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     const convertPDF = async () => {
@@ -61,12 +62,40 @@ function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
 
   if (pdfImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={pdfImageUrl}
-        alt={mapName}
-        className="max-w-full max-h-full object-contain"
-      />
+      <div className="relative">
+        <div className="absolute top-2 right-2 flex gap-2 z-10">
+          <button
+            onClick={() => setZoom(Math.min(zoom + 0.25, 3))}
+            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1 px-2 rounded shadow"
+            title="Zoom In"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setZoom(Math.max(zoom - 0.25, 0.5))}
+            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1 px-2 rounded shadow"
+            title="Zoom Out"
+          >
+            -
+          </button>
+          <button
+            onClick={() => setZoom(1)}
+            className="bg-white hover:bg-gray-100 text-gray-800 text-xs py-1 px-2 rounded shadow"
+            title="Reset"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+        </div>
+        <div className="overflow-auto max-h-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={pdfImageUrl}
+            alt={mapName}
+            className="object-contain"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -85,22 +114,52 @@ export default function MapManagement() {
   const { maps, isLoading, deleteMapById, processFileUpload, loadMaps } = useMapOperations();
   const [isCreating, setIsCreating] = useState(false);
   const [editingMap, setEditingMap] = useState<Map | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Atualiza a lista de mapas a cada 3 segundos para todos os clientes
   useRealtimeUpdates(() => {
     loadMaps();
   }, 3000);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setSelectedFile(file);
+    
+    // Criar preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setFilePreview(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedFile) {
+      alert('Por favor, selecione um arquivo');
+      return;
+    }
+
+    if (!editingMap?.name?.trim()) {
+      alert('Por favor, preencha o nome do mapa');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await processFileUpload(file, editingMap);
+      await processFileUpload(selectedFile, editingMap);
       setIsCreating(false);
       setEditingMap(null);
+      setSelectedFile(null);
+      setFilePreview('');
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,8 +208,8 @@ export default function MapManagement() {
       ) : null}
 
       {isCreating && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
               <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -190,23 +249,72 @@ export default function MapManagement() {
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={handleFileUpload}
-                  className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20"
+                  disabled={isSubmitting}
+                  className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20 disabled:opacity-50"
                 />
-                <p className="text-xs text-[var(--warning-dark)] mt-2 bg-[var(--warning)]/10 p-3 rounded-xl border-2 border-[var(--warning)]/30 font-medium">
-                  ⚠️ <span className="font-bold">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
-                  Para PDFs grandes, converta para imagem primeiro usando o script convert-pdf.sh
-                </p>
+                {!filePreview && (
+                  <p className="text-xs text-[var(--warning-dark)] mt-2 bg-[var(--warning)]/10 p-3 rounded-xl border-2 border-[var(--warning)]/30 font-medium">
+                    ⚠️ <span className="font-bold">Tamanho máximo recomendado: 4MB.</span> A imagem será automaticamente comprimida.
+                    Para PDFs grandes, converta para imagem primeiro usando o script convert-pdf.sh
+                  </p>
+                )}
               </div>
+              {filePreview && (
+                <div>
+                  <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                    Preview
+                  </label>
+                  <div className="border-2 border-[var(--border)] rounded-xl overflow-hidden bg-gray-50">
+                    {selectedFile?.type === 'application/pdf' ? (
+                      <div className="p-8 text-center">
+                        <svg className="w-16 h-16 mx-auto mb-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                        </svg>
+                        <p className="text-sm font-semibold text-gray-700 break-words px-2">{selectedFile?.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">Arquivo PDF selecionado</p>
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={filePreview} alt="Preview" className="w-full max-h-64 object-contain" />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex gap-2 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <button
                 onClick={() => {
                   setIsCreating(false);
                   setEditingMap(null);
+                  setSelectedFile(null);
+                  setFilePreview('');
                 }}
-                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer"
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !selectedFile || !editingMap?.name?.trim()}
+                className="flex-1 px-4 py-3 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary)]/90 transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Criar Mapa
+                  </>
+                )}
               </button>
             </div>
           </div>
