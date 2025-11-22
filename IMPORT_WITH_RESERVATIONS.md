@@ -39,11 +39,13 @@ O sistema de importação agora suporta a criação automática de **reservas e 
             "customer_name": "João Silva",
             "customer_email": "joao.silva@email.com",
             "customer_phone": "(11) 98765-4321",
-            "customer_cpf": "123.456.789-00",
-            "customer_address": "Rua Exemplo, 123 - São Paulo/SP",
+            "customer_cpf": "12345678900",
             "payment_method": "financing",
             "status": "approved",
-            "notes": "Cliente aprovado para financiamento"
+            "seller_name": "Maria Vendedora",
+            "seller_email": "maria.vendedora@empresa.com",
+            "seller_phone": "11987654321",
+            "seller_cpf": "98765432100"
           }
         },
         {
@@ -57,11 +59,13 @@ O sistema de importação agora suporta a criação automática de **reservas e 
             "customer_name": "Maria Santos",
             "customer_email": "maria.santos@email.com",
             "customer_phone": "(11) 91234-5678",
-            "customer_cpf": "987.654.321-00",
-            "customer_address": "Av. Principal, 456 - São Paulo/SP",
+            "customer_cpf": "98765432100",
             "payment_method": "cash",
             "status": "completed",
-            "notes": "Pagamento à vista realizado"
+            "seller_name": "Pedro Corretor",
+            "seller_email": "pedro.corretor@empresa.com",
+            "seller_phone": "11912345678",
+            "seller_cpf": "12312312300"
           }
         },
         {
@@ -110,9 +114,13 @@ O sistema de importação agora suporta a criação automática de **reservas e 
     "customer_name": "João Silva",
     "customer_email": "joao.silva@email.com",
     "customer_phone": "(11) 98765-4321",
-    "customer_cpf": "123.456.789-00",
+    "customer_cpf": "12345678900",
     "payment_method": "financing",
-    "status": "approved"
+    "status": "approved",
+    "seller_name": "Maria Vendedora",
+    "seller_email": "maria.vendedora@empresa.com",
+    "seller_phone": "11987654321",
+    "seller_cpf": "98765432100"
   }
 }
 ```
@@ -135,7 +143,11 @@ O sistema de importação agora suporta a criação automática de **reservas e 
     "customer_email": "maria.santos@email.com",
     "customer_phone": "(11) 91234-5678",
     "payment_method": "cash",
-    "status": "completed"
+    "status": "completed",
+    "seller_name": "Pedro Corretor",
+    "seller_email": "pedro.corretor@empresa.com",
+    "seller_phone": "11912345678",
+    "seller_cpf": "12312312300"
   }
 }
 ```
@@ -169,11 +181,19 @@ O sistema de importação agora suporta a criação automática de **reservas e 
 
 | Campo | Tipo | Valores | Descrição |
 |-------|------|---------|-----------|
-| `customer_cpf` | string | - | CPF do cliente (formato: 123.456.789-00) |
-| `customer_address` | string | - | Endereço completo do cliente |
+| `customer_cpf` | string | - | CPF do cliente (somente números: 12345678900) |
 | `payment_method` | string | `cash`, `financing`, `installments` | Método de pagamento (padrão: `cash`) |
 | `status` | string | `pending`, `approved`, `rejected`, `completed`, `cancelled` | Status da reserva (padrão: `pending`) |
-| `notes` | string | - | Observações sobre a reserva |
+| `seller_name` | string | - | Nome do vendedor/corretor responsável |
+| `seller_email` | string | - | Email do vendedor/corretor |
+| `seller_phone` | string | - | Telefone do vendedor (somente números: 11987654321) |
+| `seller_cpf` | string | - | CPF do vendedor (somente números: 12345678900) |
+
+**Observação**: Se os campos do vendedor não forem fornecidos, o sistema usará valores padrão:
+- `seller_name`: "Sistema de Importação"
+- `seller_email`: "importacao@sistema.com"
+- `seller_phone`: "00000000000"
+- `seller_cpf`: "00000000000"
 
 ### Status da Reserva
 
@@ -297,7 +317,11 @@ INSERT INTO purchase_request_lots (
             "customer_email": "carlos@email.com",
             "customer_phone": "(11) 99999-9999",
             "payment_method": "installments",
-            "status": "pending"
+            "status": "pending",
+            "seller_name": "Ana Corretora",
+            "seller_email": "ana.corretora@empresa.com",
+            "seller_phone": "11999999999",
+            "seller_cpf": "45645645600"
           }
         }
       ]
@@ -316,7 +340,10 @@ INSERT INTO purchase_request_lots (
             "customer_phone": "(11) 88888-8888",
             "payment_method": "cash",
             "status": "completed",
-            "notes": "Pagamento realizado em 20/11/2025"
+            "seller_name": "Ricardo Vendedor",
+            "seller_email": "ricardo.vendedor@empresa.com",
+            "seller_phone": "11888888888",
+            "seller_cpf": "78978978900"
           }
         },
         {"lotNumber": "02", "status": "blocked", "price": 55000, "size": 320}
