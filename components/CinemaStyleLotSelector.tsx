@@ -29,6 +29,7 @@ export default function CinemaStyleLotSelector({
   const [selectedLotForModal, setSelectedLotForModal] = useState<Lot | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedLot, setEditedLot] = useState<Lot | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const sortedLots = [...lots].sort((a, b) => {
     const numA = parseInt(a.lotNumber) || 0;
@@ -217,26 +218,16 @@ export default function CinemaStyleLotSelector({
                       step="0.01"
                       min="0"
                       value={editedLot.size || ''}
-                      onBlur={(e) => {
-                        // Arredonda ao perder o foco
-                        const value = parseFloat(e.target.value);
-                        if (!isNaN(value)) {
-                          const pricePerM2 = editedLot.pricePerM2 || 0;
-                          setEditedLot({
-                            ...editedLot,
-                            size: parseFloat(value.toFixed(2)),
-                            price: parseFloat((value * pricePerM2).toFixed(2))
-                          });
-                        }
-                      }}
                       onChange={(e) => {
                         const value = e.target.value;
                         const newSize = value === '' ? 0 : parseFloat(value);
                         const pricePerM2 = editedLot.pricePerM2 || 0;
+                        // Calcula com precisão: multiplica primeiro, depois arredonda
+                        const calculatedPrice = Math.round(newSize * pricePerM2 * 100) / 100;
                         setEditedLot({
                           ...editedLot,
                           size: newSize,
-                          price: parseFloat((newSize * pricePerM2).toFixed(2))
+                          price: calculatedPrice
                         });
                       }}
                       className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -253,26 +244,16 @@ export default function CinemaStyleLotSelector({
                         step="0.01"
                         min="0"
                         value={editedLot.pricePerM2 || ''}
-                        onBlur={(e) => {
-                          // Arredonda ao perder o foco
-                          const value = parseFloat(e.target.value);
-                          if (!isNaN(value)) {
-                            const size = editedLot.size || 0;
-                            setEditedLot({
-                              ...editedLot,
-                              pricePerM2: parseFloat(value.toFixed(2)),
-                              price: parseFloat((size * value).toFixed(2))
-                            });
-                          }
-                        }}
                         onChange={(e) => {
                           const value = e.target.value;
                           const newPricePerM2 = value === '' ? 0 : parseFloat(value);
                           const size = editedLot.size || 0;
+                          // Calcula com precisão: multiplica primeiro, depois arredonda
+                          const calculatedPrice = Math.round(size * newPricePerM2 * 100) / 100;
                           setEditedLot({
                             ...editedLot,
                             pricePerM2: newPricePerM2,
-                            price: parseFloat((size * newPricePerM2).toFixed(2))
+                            price: calculatedPrice
                           });
                         }}
                         className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -415,18 +396,24 @@ export default function CinemaStyleLotSelector({
                       <>
                         {onLotDelete && (
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               if (confirm(`Tem certeza que deseja excluir o lote ${selectedLotForModal.lotNumber}?`)) {
-                                onLotDelete(selectedLotForModal.id);
-                                setSelectedLotForModal(null);
+                                setIsDeleting(true);
+                                try {
+                                  await onLotDelete(selectedLotForModal.id);
+                                  setSelectedLotForModal(null);
+                                } finally {
+                                  setIsDeleting(false);
+                                }
                               }
                             }}
-                            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+                            disabled={isDeleting}
+                            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Excluir
+                            {isDeleting ? 'Excluindo...' : 'Excluir'}
                           </button>
                         )}
                         <button

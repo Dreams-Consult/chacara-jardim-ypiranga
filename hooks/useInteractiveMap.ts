@@ -474,11 +474,63 @@ export function useInteractiveMap({
   }, [handleWheel]);
 
   const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev + 0.2, 5));
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Zoom centralizado no centro do canvas visível
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Converte para coordenadas do canvas
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const canvasCenterX = centerX * scaleX;
+    const canvasCenterY = centerY * scaleY;
+
+    // Ponto na imagem original sob o centro
+    const imagePointX = (canvasCenterX - offset.x) / scale;
+    const imagePointY = (canvasCenterY - offset.y) / scale;
+
+    // Nova escala
+    const newScale = Math.min(scale + 0.2, 5);
+
+    // Novo offset para manter o ponto central fixo
+    const newOffsetX = canvasCenterX - imagePointX * newScale;
+    const newOffsetY = canvasCenterY - imagePointY * newScale;
+
+    setScale(newScale);
+    setOffset({ x: newOffsetX, y: newOffsetY });
   };
 
   const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev - 0.2, 0.5));
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Zoom centralizado no centro do canvas visível
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Converte para coordenadas do canvas
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const canvasCenterX = centerX * scaleX;
+    const canvasCenterY = centerY * scaleY;
+
+    // Ponto na imagem original sob o centro
+    const imagePointX = (canvasCenterX - offset.x) / scale;
+    const imagePointY = (canvasCenterY - offset.y) / scale;
+
+    // Nova escala
+    const newScale = Math.max(scale - 0.2, 0.5);
+
+    // Novo offset para manter o ponto central fixo
+    const newOffsetX = canvasCenterX - imagePointX * newScale;
+    const newOffsetY = canvasCenterY - imagePointY * newScale;
+
+    setScale(newScale);
+    setOffset({ x: newOffsetX, y: newOffsetY });
   };
 
   const handleResetZoom = () => {

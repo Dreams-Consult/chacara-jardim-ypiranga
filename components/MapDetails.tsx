@@ -698,10 +698,10 @@ export default function MapDetails() {
 
       {/* Modal de Adicionar Lote */}
       {isAddingLot && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
-            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white p-4 sm:p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[95vh] overflow-y-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-[var(--foreground)] mb-4 sm:mb-6 flex items-center gap-2">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
               Adicionar Lote
@@ -859,42 +859,42 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-800">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
+        <p className="text-xs sm:text-sm text-blue-800">
           <strong>Quadra:</strong> {blockName || 'Não identificada'}
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
           Número do Lote *
         </label>
         <input
           type="text"
           value={lotNumber}
           onChange={(e) => setLotNumber(e.target.value)}
-          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
           placeholder="Ex: 01, A1, etc"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
           Área (m²) *
         </label>
         <input
           type="number"
           value={size || ''}
           onChange={(e) => setSize(parseFloat(e.target.value) || 0)}
-          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
           placeholder="300"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
           Preço por m² (R$) *
         </label>
         <input
@@ -902,56 +902,56 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
           step="0.01"
           value={pricePerM2 || ''}
           onChange={(e) => setPricePerM2(parseFloat(e.target.value) || 0)}
-          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
           placeholder="150"
         />
       </div>
 
-      <div className="bg-gray-100 rounded-lg p-3">
-        <p className="text-sm text-gray-600">Preço Total</p>
-        <p className="text-2xl font-bold text-gray-900">
+      <div className="bg-gray-100 rounded-lg p-2 sm:p-3">
+        <p className="text-xs sm:text-sm text-gray-600">Preço Total</p>
+        <p className="text-xl sm:text-2xl font-bold text-gray-900">
           R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
           Status
         </label>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as LotStatus)}
-          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium cursor-pointer focus:ring-2 focus:ring-[var(--primary)]"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium cursor-pointer focus:ring-2 focus:ring-[var(--primary)] text-sm sm:text-base"
         >
           <option value={LotStatus.AVAILABLE}>Disponível</option>
           <option value={LotStatus.BLOCKED}>Bloqueado</option>
         </select>
-        <p className="text-xs text-gray-500 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
+        <p className="text-[10px] sm:text-xs text-gray-500 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
           Descrição
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
           placeholder="Informações adicionais sobre o lote"
           rows={3}
         />
       </div>
 
-      <div className="flex gap-2 pt-4">
+      <div className="flex gap-2 pt-2 sm:pt-4">
         <button
           onClick={onCancel}
-          className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+          className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors cursor-pointer text-sm sm:text-base"
         >
           Cancelar
         </button>
         <button
           onClick={handleSubmit}
-          className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] transition-all cursor-pointer"
+          className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] transition-all cursor-pointer text-sm sm:text-base"
         >
           Adicionar
         </button>
@@ -1054,7 +1054,8 @@ function BlockCard({
             {!hasReservedOrSoldLots ? (
               <button
                 onClick={() => handleDeleteBlock(block.id)}
-                className="px-4 py-2 bg-[var(--danger)] hover:bg-[var(--danger-dark)] text-white font-semibold rounded-lg transition-all"
+                disabled={isLoadingLots}
+                className="px-4 py-2 bg-[var(--danger)] hover:bg-[var(--danger-dark)] text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--danger)]"
               >
                 Excluir
               </button>

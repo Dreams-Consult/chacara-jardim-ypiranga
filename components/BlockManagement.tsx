@@ -298,7 +298,8 @@ export default function BlockManagement() {
                   </button>
                   <button
                     onClick={() => handleDeleteBlock(block.id)}
-                    className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+                    disabled={isLoading}
+                    className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--danger)]"
                   >
                     Excluir
                   </button>
