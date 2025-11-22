@@ -10,12 +10,16 @@ import { LotStatus } from '@/types';
 export default function AdminMapsLotsPage() {
   const {
     maps,
+    blocks,
+    selectedBlock,
     lots,
     selectedMap,
     selectedLots, // Mudado de selectedLot para selectedLots
     viewingLot,
     showPurchaseModal,
     isLoading,
+    isLoadingBlocks,
+    isLoadingLots,
     availableLotsCount,
     reservedLotsCount,
     soldLotsCount,
@@ -27,6 +31,7 @@ export default function AdminMapsLotsPage() {
     handlePurchaseClose,
     handleViewClose,
     selectMap,
+    selectBlock,
     isLotSelected, // Helper para verificar se está selecionado
   } = useMapSelection();
 
@@ -68,6 +73,172 @@ export default function AdminMapsLotsPage() {
               </option>
             ))}
           </select>
+        </div>
+      )}
+
+      {selectedMap && (
+        <>
+          {isLoadingBlocks && (
+            <div className="mb-6 text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
+              <p className="text-white/70">Carregando quadras...</p>
+            </div>
+          )}
+
+          {!isLoadingBlocks && blocks.length === 0 && (
+            <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
+              <p className="text-yellow-500 font-semibold">
+                Nenhuma quadra cadastrada neste mapa.
+              </p>
+            </div>
+          )}
+
+          {/* Estatísticas e Legenda */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] p-6">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Estatísticas
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-[var(--success)] rounded-full shadow-md"></div>
+                    <span className="text-sm font-semibold text-white">Disponível</span>
+                  </div>
+                  <span className="font-bold text-white text-xl">{availableLotsCount}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-[var(--warning)] rounded-full shadow-md"></div>
+                    <span className="text-sm font-semibold text-white">Reservado</span>
+                  </div>
+                  <span className="font-bold text-white text-xl">{reservedLotsCount}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-[var(--danger)] rounded-full shadow-md"></div>
+                    <span className="text-sm font-semibold text-white">Vendido</span>
+                  </div>
+                  <span className="font-bold text-white text-xl">{soldLotsCount}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] p-6">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Legenda
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-hover)] hover:bg-gradient-to-r hover:from-[var(--success)]/10 hover:to-transparent transition-all border-2 border-transparent hover:border-[var(--success)]/30">
+                  <div className="w-5 h-5 bg-[var(--success)] rounded shadow-md"></div>
+                  <span className="text-sm font-semibold text-[var(--foreground)]">Disponível para compra</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-hover)] hover:bg-gradient-to-r hover:from-[var(--warning)]/10 hover:to-transparent transition-all border-2 border-transparent hover:border-[var(--warning)]/30">
+                  <div className="w-5 h-5 bg-[var(--warning)] rounded shadow-md"></div>
+                  <span className="text-sm font-semibold text-[var(--foreground)]">Reservado</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-hover)] hover:bg-gradient-to-r hover:from-[var(--danger)]/10 hover:to-transparent transition-all border-2 border-transparent hover:border-[var(--danger)]/30">
+                  <div className="w-5 h-5 bg-[var(--danger)] rounded shadow-md"></div>
+                  <span className="text-sm font-semibold text-white">Vendido</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Seleção de Quadras */}
+          {blocks.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-white mb-2">Selecione uma Quadra</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {blocks.map((block) => (
+                  <button
+                    key={block.id}
+                    onClick={() => selectBlock(block.id)}
+                    className={`p-4 rounded-xl font-semibold transition-all ${
+                      selectedBlock?.id === block.id
+                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-105'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-xs mb-1">Quadra</div>
+                    <div className="text-lg font-bold">{block.name}</div>
+                    {block.description && (
+                      <div className="text-xs mt-1 opacity-80 truncate">{block.description}</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Seletor Cinema-Style */}
+          <div className="mb-8">
+            <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] p-6">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Selecione os Lotes
+                {selectedBlock && <span className="text-white/60 text-lg">- {selectedBlock.name}</span>}
+              </h2>
+              <p className="text-white/70 mb-6">Clique nos lotes abaixo para selecioná-los. Você pode selecionar múltiplos lotes de uma vez.</p>
+              
+              {isLoadingLots ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                  <p className="text-white/70">Carregando lotes da quadra...</p>
+                </div>
+              ) : lots.length > 0 ? (
+                <CinemaStyleLotSelector
+                  lots={lots}
+                  onMultipleSelect={(selectedLots) => {
+                    selectedLots.forEach(lot => handleToggleLotSelection(lot));
+                  }}
+                  selectedLotIds={selectedLots.map(l => l.id)}
+                  allowMultipleSelection={true}
+                  lotsPerRow={15}
+                />
+              ) : selectedBlock ? (
+                <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-700">
+                  <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                  <p className="text-white/70 text-lg font-semibold mb-2">
+                    Nenhum lote disponível nesta quadra
+                  </p>
+                  <p className="text-white/50 text-sm">
+                    Selecione outra quadra acima para ver os lotes disponíveis
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-blue-500/10 rounded-xl border-2 border-dashed border-blue-500/30">
+                  <svg className="w-16 h-16 mx-auto mb-4 text-blue-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-blue-400 text-lg font-semibold">
+                    Selecione uma quadra acima para visualizar os lotes
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {maps.length === 0 && (
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)]/20 rounded-full mb-4 shadow-md">
+            <svg className="w-10 h-10 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <p className="text-white text-lg font-semibold">Nenhum mapa disponível no momento.</p>
         </div>
       )}
 
@@ -147,40 +318,7 @@ export default function AdminMapsLotsPage() {
               </div>
             </div>
           </div>
-
-          {/* Seletor Cinema-Style */}
-          <div className="mb-8">
-            <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] p-6">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Selecione os Lotes
-              </h2>
-              <p className="text-white/70 mb-6">Clique nos lotes abaixo para selecioná-los. Você pode selecionar múltiplos lotes de uma vez.</p>
-              <CinemaStyleLotSelector
-                lots={lots}
-                onMultipleSelect={(selectedLots) => {
-                  selectedLots.forEach(lot => handleToggleLotSelection(lot));
-                }}
-                selectedLotIds={selectedLots.map(l => l.id)}
-                allowMultipleSelection={true}
-                lotsPerRow={15}
-              />
-            </div>
-          </div>
         </>
-      )}
-
-      {maps.length === 0 && (
-        <div className="text-center py-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)]/20 rounded-full mb-4 shadow-md">
-            <svg className="w-10 h-10 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-          </div>
-          <p className="text-white text-lg font-semibold">Nenhum mapa disponível no momento.</p>
-        </div>
       )}
 
       {/* Barra de Ação Flutuante para Seleção Múltipla */}
@@ -377,15 +515,7 @@ export default function AdminMapsLotsPage() {
               </div>
               )}
 
-              {/* Informações da área desenhada */}
-              {viewingLot.area && viewingLot.area.points.length > 0 && (
-              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                <label className="block text-sm font-medium text-blue-800 mb-2">Área Desenhada</label>
-                <p className="text-sm text-blue-700">
-                ✓ {viewingLot.area.points.length} pontos definidos no mapa
-                </p>
-              </div>
-              )}
+              {/* Área desenhada removida - lot.area.points não existe mais */}
             </div>
 
             {/* Footer */}

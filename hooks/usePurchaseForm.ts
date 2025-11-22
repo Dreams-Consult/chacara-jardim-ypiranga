@@ -163,7 +163,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
           id: lot.id,
           mapId: lot.mapId,
           lotNumber: lot.lotNumber,
-          area: lot.area,
+          // area removida - não existe mais no retorno
           status: 'reserved',
           price: lot.price,
           size: lot.size,

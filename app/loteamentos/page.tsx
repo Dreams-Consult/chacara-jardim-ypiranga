@@ -19,28 +19,22 @@ export default function PublicMapsPage() {
   const loadMaps = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/mapas/lotes`, { timeout: 10000 });
+      const response = await axios.get(`${API_URL}/mapas`, { timeout: 10000 });
 
       if (Array.isArray(response.data)) {
-        const uniqueMaps = response.data.reduce((acc: Map[], item: any) => {
-          const existingMap = acc.find(m => m.id === (item.mapId || item.id));
-          if (!existingMap) {
-            acc.push({
-              id: item.mapId || item.id,
-              name: item.name || `Mapa ${item.mapId || item.id}`,
-              description: item.description || '',
-              imageUrl: item.imageUrl || '',
-              imageType: 'image',
-              width: item.width || 800,
-              height: item.height || 600,
-              createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-              updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
-            });
-          }
-          return acc;
-        }, []);
+        const mapsData = response.data.map((item: any) => ({
+          id: item.mapId || item.id,
+          name: item.name || `Mapa ${item.mapId || item.id}`,
+          description: item.description || '',
+          imageUrl: item.imageUrl || '',
+          imageType: 'image' as const,
+          width: item.width || 800,
+          height: item.height || 600,
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+          updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
+        }));
 
-        setMaps(uniqueMaps);
+        setMaps(mapsData);
       }
     } catch (error) {
       console.error('Erro ao carregar mapas:', error);

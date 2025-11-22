@@ -18,21 +18,26 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    // Inicializar com usuário do localStorage para persistir sessão
+  const [user, setUser] = useState<User | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Marcar como montado e restaurar usuário do localStorage
+  useEffect(() => {
+    setMounted(true);
+    
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('currentUser');
       if (storedUser) {
         try {
-          return JSON.parse(storedUser);
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
         } catch (e) {
           console.error('[AuthContext] Erro ao recuperar usuário:', e);
           localStorage.removeItem('currentUser');
         }
       }
     }
-    return null;
-  });
+  }, []);
 
   // Validar sessão ao montar o componente e em intervalos
   useEffect(() => {

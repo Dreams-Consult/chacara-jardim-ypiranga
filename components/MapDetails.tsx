@@ -1,0 +1,698 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import axios from 'axios';
+import { Map, Block, Lot, LotStatus } from '@/types';
+import { useBlockOperations } from '@/hooks/useBlockOperations';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+export default function MapDetails() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const mapId = searchParams.get('mapId') || '';
+
+  const [map, setMap] = useState<Map | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger para forçar refresh dos cards
+  
+  // Estados para modais
+  const [isAddingBlock, setIsAddingBlock] = useState(false);
+  const [isAddingLot, setIsAddingLot] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<Block | null>(null);
+  const [selectedBlockForLot, setSelectedBlockForLot] = useState<string>('');
+
+  const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
+
+  // Função para carregar lotes de uma quadra específica
+  const loadLotsForBlock = useCallback(async (blockId: string) => {
+    if (!mapId) return [];
+
+    try {
+      console.log(`[MapDetails] 🔄 Carregando lotes da quadra ${blockId}...`);
+      const response = await axios.get(`${API_URL}/mapas/lotes`, {
+        params: { mapId, blockId },
+        timeout: 10000,
+      });
+
+      const data = response.data[0];
+      if (data && data.lots && Array.isArray(data.lots)) {
+        return data.lots.map((lot: Lot) => ({
+          ...lot,
+          mapId: data.mapId || mapId,
+          createdAt: new Date(lot.createdAt),
+          updatedAt: new Date(lot.updatedAt),
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao buscar lotes da quadra:', error);
+      return [];
+    }
+  }, [mapId]);
+
+  const loadMapData = useCallback(async () => {
+    if (!mapId) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      console.log(`[MapDetails] 🔄 Carregando dados do mapa ${mapId}...`);
+      const response = await axios.get(`${API_URL}/mapas`, {
+        timeout: 10000,
+      });
+
+      // Buscar o mapa específico pelo ID
+      const data = response.data.find((m: any) => m.mapId === mapId || m.id === mapId);
+      
+      if (data) {
+        const mapObj: Map = {
+          id: data.mapId || data.id || mapId,
+          name: data.name || `Mapa ${data.mapId || mapId}`,
+          description: data.description || '',
+          imageUrl: data.imageUrl || '',
+          imageType: 'image',
+          width: data.width || 800,
+          height: data.height || 600,
+          createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+          updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
+        };
+        setMap(mapObj);
+      } else {
+        // Se não encontrou o mapa, cria um padrão
+        const defaultMap: Map = {
+          id: mapId,
+          name: `Mapa ${mapId}`,
+          description: '',
+          imageUrl: '',
+          imageType: 'image',
+          width: 800,
+          height: 600,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setMap(defaultMap);
+      }
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao buscar dados:', error);
+      // Em caso de erro, cria um mapa padrão
+      const defaultMap: Map = {
+        id: mapId,
+        name: `Mapa ${mapId}`,
+        description: '',
+        imageUrl: '',
+        imageType: 'image',
+        width: 800,
+        height: 600,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setMap(defaultMap);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [mapId]);
+
+  useEffect(() => {
+    if (mapId) {
+      loadMapData();
+      loadBlocks(mapId);
+    }
+  }, [mapId, loadMapData, loadBlocks]);
+
+  useRealtimeUpdates(() => {
+    if (mapId) {
+      loadMapData();
+      loadBlocks(mapId);
+    }
+  }, 10000);
+
+  const handleAddBlock = () => {
+    setEditingBlock({
+      id: '',
+      mapId,
+      name: '',
+      description: '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    setIsAddingBlock(true);
+  };
+
+  const handleSaveBlock = async () => {
+    if (!editingBlock) return;
+
+    if (!editingBlock.name || editingBlock.name.trim() === '') {
+      alert('❌ Nome da quadra é obrigatório');
+      return;
+    }
+
+    try {
+      if (editingBlock.id) {
+        await updateBlock(editingBlock);
+      } else {
+        await createBlock({
+          mapId: editingBlock.mapId,
+          name: editingBlock.name,
+          description: editingBlock.description,
+        });
+      }
+      setIsAddingBlock(false);
+      setEditingBlock(null);
+    } catch (error) {
+      console.error('Erro ao salvar quadra:', error);
+      alert('Erro ao salvar quadra. Tente novamente.');
+    }
+  };
+
+  const handleDeleteBlock = async (blockId: string) => {
+    try {
+      // Busca lotes da quadra usando a API com blockId
+      const lotsInBlock = await loadLotsForBlock(blockId);
+      
+      if (lotsInBlock.length > 0) {
+        alert(
+          `❌ Não é possível excluir esta quadra!\n\n` +
+          `Esta quadra possui ${lotsInBlock.length} lote(s) cadastrado(s).\n\n` +
+          `Para excluir esta quadra, primeiro remova ou transfira todos os lotes.`
+        );
+        return;
+      }
+
+      if (confirm('Tem certeza que deseja excluir esta quadra?')) {
+        await deleteBlock(blockId, mapId);
+      }
+    } catch (error) {
+      console.error('Erro ao deletar quadra:', error);
+      alert('Erro ao deletar quadra. Tente novamente.');
+    }
+  };
+
+  const handleAddLotToBlock = (blockId: string) => {
+    setSelectedBlockForLot(blockId);
+    setIsAddingLot(true);
+  };
+
+  const handleSaveLot = async (lot: Lot) => {
+    try {
+      console.log('[MapDetails] 📤 Salvando lote:', lot);
+      
+      if (!lot.lotNumber || lot.lotNumber.trim() === '') {
+        alert('❌ Número do lote é obrigatório');
+        return;
+      }
+
+      if (!lot.size || lot.size <= 0) {
+        alert('❌ Informe o tamanho do lote (m²)');
+        return;
+      }
+
+      if (!lot.pricePerM2 || lot.pricePerM2 <= 0) {
+        alert('❌ Informe o preço por m² do lote');
+        return;
+      }
+
+      if (!lot.price || lot.price <= 0) {
+        alert('❌ O preço total do lote deve ser maior que zero');
+        return;
+      }
+
+      const lotToSave = {
+        ...lot,
+        blockId: selectedBlockForLot || undefined,
+        mapId,
+        updatedAt: new Date(),
+      };
+
+      if (lot.id && lot.id !== '') {
+        await axios.patch(`${API_URL}/mapas/lotes`, lotToSave, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        });
+      } else {
+        await axios.post(`${API_URL}/mapas/lotes/criar`, {
+          ...lotToSave,
+          id: Date.now().toString(),
+          createdAt: new Date(),
+        }, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        });
+      }
+
+      // Força refresh apenas dos cards de quadra
+      setRefreshTrigger(prev => prev + 1);
+      setIsAddingLot(false);
+      setSelectedBlockForLot('');
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao salvar lote:', error);
+      alert('Erro ao salvar lote. Tente novamente.');
+    }
+  };
+
+  const handleEditLot = async (lot: Lot) => {
+    await handleSaveLot(lot);
+    // Força refresh dos cards após editar lote
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
+            <svg className="w-8 h-8 text-[var(--accent)] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-white font-semibold">Carregando dados do mapa...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!map) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4 shadow-md">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-white font-semibold mb-2">Erro ao carregar mapa</p>
+          <button
+            onClick={() => router.push('/admin/map-management')}
+            className="px-4 py-2 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors"
+          >
+            Voltar para Mapas
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[var(--background)] p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <button
+          onClick={() => router.push('/admin/map-management')}
+          className="text-[var(--accent)] hover:text-[var(--accent-light)] font-medium hover:underline mb-4 transition-colors cursor-pointer"
+        >
+          ← Voltar para Mapas
+        </button>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">{map.name}</h1>
+            {map.description && <p className="text-white/70 mt-1">{map.description}</p>}
+          </div>
+          <button
+            onClick={handleAddBlock}
+            className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+          >
+            + Adicionar Quadra
+          </button>
+        </div>
+      </div>
+
+      {/* Lista de Quadras */}
+      <div className="space-y-6">
+        {!blocks || blocks.length === 0 ? (
+          <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-[var(--accent)]/40 shadow-[var(--shadow-md)]">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
+              <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <p className="text-white text-lg font-semibold mb-2">Nenhuma quadra cadastrada</p>
+            <p className="text-white/70 text-sm font-medium">Clique em "Adicionar Quadra" para começar a organizar seus lotes</p>
+          </div>
+        ) : (
+          blocks.map((block) => (
+            <BlockCard
+              key={`${block.id}-${refreshTrigger}`}
+              block={block}
+              mapId={mapId}
+              loadLotsForBlock={loadLotsForBlock}
+              handleAddLotToBlock={handleAddLotToBlock}
+              handleEditLot={handleEditLot}
+              handleDeleteBlock={handleDeleteBlock}
+              setEditingBlock={setEditingBlock}
+              setIsAddingBlock={setIsAddingBlock}
+              allBlocks={blocks}
+              refreshTrigger={refreshTrigger}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Modal de Adicionar/Editar Quadra */}
+      {isAddingBlock && editingBlock && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              {editingBlock.id ? 'Editar Quadra' : 'Adicionar Quadra'}
+            </h2>
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                  Nome da Quadra *
+                </label>
+                <input
+                  type="text"
+                  value={editingBlock.name}
+                  onChange={(e) => setEditingBlock({ ...editingBlock, name: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
+                  placeholder="Ex: Quadra A, Quadra 1, Setor Norte"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                  Descrição
+                </label>
+                <textarea
+                  value={editingBlock.description || ''}
+                  onChange={(e) => setEditingBlock({ ...editingBlock, description: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
+                  placeholder="Descrição opcional da quadra"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setIsAddingBlock(false);
+                  setEditingBlock(null);
+                }}
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveBlock}
+                className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] cursor-pointer"
+              >
+                {editingBlock.id ? 'Salvar' : 'Adicionar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Adicionar Lote */}
+      {isAddingLot && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              Adicionar Lote
+            </h2>
+            <LotForm
+              blockId={selectedBlockForLot}
+              blockName={blocks.find(b => b.id === selectedBlockForLot)?.name || ''}
+              onSave={handleSaveLot}
+              onCancel={() => {
+                setIsAddingLot(false);
+                setSelectedBlockForLot('');
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Componente de formulário de lote
+interface LotFormProps {
+  blockId: string;
+  blockName: string;
+  onSave: (lot: Lot) => void;
+  onCancel: () => void;
+}
+
+function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
+  const [lotNumber, setLotNumber] = useState('');
+  const [size, setSize] = useState<number>(0);
+  const [pricePerM2, setPricePerM2] = useState<number>(0);
+  const [description, setDescription] = useState('');
+  const [status, setStatus] = useState<LotStatus>(LotStatus.AVAILABLE);
+
+  const totalPrice = size * pricePerM2;
+
+  const handleSubmit = () => {
+    const lot: Lot = {
+      id: '',
+      mapId: '',
+      blockId,
+      lotNumber,
+      status,
+      price: totalPrice,
+      pricePerM2,
+      size,
+      description,
+      features: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    onSave(lot);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p className="text-sm text-blue-800">
+          <strong>Quadra:</strong> {blockName || 'Não identificada'}
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+          Número do Lote *
+        </label>
+        <input
+          type="text"
+          value={lotNumber}
+          onChange={(e) => setLotNumber(e.target.value)}
+          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          placeholder="Ex: 01, A1, etc"
+          autoFocus
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+          Área (m²) *
+        </label>
+        <input
+          type="number"
+          value={size || ''}
+          onChange={(e) => setSize(parseFloat(e.target.value) || 0)}
+          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          placeholder="300"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+          Preço por m² (R$) *
+        </label>
+        <input
+          type="number"
+          value={pricePerM2 || ''}
+          onChange={(e) => setPricePerM2(parseFloat(e.target.value) || 0)}
+          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          placeholder="150"
+        />
+      </div>
+
+      <div className="bg-gray-100 rounded-lg p-3">
+        <p className="text-sm text-gray-600">Preço Total</p>
+        <p className="text-2xl font-bold text-gray-900">
+          R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+          Status
+        </label>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as LotStatus)}
+          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium cursor-pointer focus:ring-2 focus:ring-[var(--primary)]"
+        >
+          <option value={LotStatus.AVAILABLE}>Disponível</option>
+          <option value={LotStatus.BLOCKED}>Bloqueado</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+          Descrição
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          placeholder="Informações adicionais sobre o lote"
+          rows={3}
+        />
+      </div>
+
+      <div className="flex gap-2 pt-4">
+        <button
+          onClick={onCancel}
+          className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] transition-all cursor-pointer"
+        >
+          Adicionar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Componente de Card de Quadra com carregamento dinâmico de lotes
+interface BlockCardProps {
+  block: Block;
+  mapId: string;
+  loadLotsForBlock: (blockId: string) => Promise<Lot[]>;
+  handleAddLotToBlock: (blockId: string) => void;
+  handleEditLot: (lot: Lot) => Promise<void>;
+  handleDeleteBlock: (blockId: string) => Promise<void>;
+  setEditingBlock: (block: Block) => void;
+  setIsAddingBlock: (isAdding: boolean) => void;
+  allBlocks: Block[];
+  refreshTrigger: number;
+}
+
+function BlockCard({
+  block,
+  mapId,
+  loadLotsForBlock,
+  handleAddLotToBlock,
+  handleEditLot,
+  handleDeleteBlock,
+  setEditingBlock,
+  setIsAddingBlock,
+  allBlocks,
+  refreshTrigger,
+}: BlockCardProps) {
+  const [blockLots, setBlockLots] = useState<Lot[]>([]);
+  const [isLoadingLots, setIsLoadingLots] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    const fetchLots = async () => {
+      setIsLoadingLots(true);
+      const lots = await loadLotsForBlock(block.id);
+      setBlockLots(lots);
+      setIsLoadingLots(false);
+    };
+
+    fetchLots();
+  }, [block.id, loadLotsForBlock, refreshTrigger]);
+
+  return (
+    <div
+      className="bg-white border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Header da Quadra */}
+      <div className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] p-5 relative">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-white mb-1">{block.name}</h3>
+            {block.description && (
+              <p className="text-white/80 text-sm">{block.description}</p>
+            )}
+            <p className="text-white/70 text-sm mt-2">
+              {isLoadingLots ? (
+                'Carregando lotes...'
+              ) : (
+                `${blockLots.length} ${blockLots.length === 1 ? 'lote cadastrado' : 'lotes cadastrados'}`
+              )}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {isHovered && (
+              <button
+                onClick={() => handleAddLotToBlock(block.id)}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all backdrop-blur-sm"
+                title="Adicionar lote nesta quadra"
+              >
+                + Lote
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setEditingBlock(block);
+                setIsAddingBlock(true);
+              }}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all backdrop-blur-sm"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => handleDeleteBlock(block.id)}
+              className="px-4 py-2 bg-[var(--danger)] hover:bg-[var(--danger-dark)] text-white font-semibold rounded-lg transition-all"
+            >
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Lotes da Quadra */}
+      <div className="p-5">
+        {isLoadingLots ? (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-full mb-3">
+              <svg className="w-6 h-6 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm">Carregando lotes...</p>
+          </div>
+        ) : blockLots && blockLots.length > 0 ? (
+          <CinemaStyleLotSelector
+            lots={blockLots}
+            blocks={allBlocks}
+            onLotEdit={handleEditLot}
+            selectedLotIds={[]}
+            allowMultipleSelection={false}
+            lotsPerRow={15}
+          />
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+            <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <p className="text-gray-600 font-medium mb-2">Nenhum lote cadastrado nesta quadra</p>
+            <p className="text-gray-500 text-sm mb-4">Passe o mouse sobre a quadra e clique em "+ Lote"</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

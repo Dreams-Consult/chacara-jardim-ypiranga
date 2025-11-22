@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 export default function MapManagement() {
+  const router = useRouter();
   const { maps, isLoading, deleteMapById, processFileUpload, loadMaps } = useMapOperations();
   const [isCreating, setIsCreating] = useState(false);
   const [editingMap, setEditingMap] = useState<Map | null>(null);
@@ -176,12 +177,12 @@ export default function MapManagement() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Link
-                  href={`/admin/lot-management?mapId=${map.id}`}
-                  className="flex-1 px-4 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] text-center transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+                <button
+                  onClick={() => router.push(`/admin/map-details?mapId=${map.id}`)}
+                  className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] text-center transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
                 >
-                  Gerenciar Lotes
-                </Link>
+                  Gerenciar
+                </button>
                 <button
                   onClick={() => handleDelete(map.id)}
                   className="px-4 py-2.5 bg-[var(--danger)] text-white font-semibold rounded-xl hover:bg-[var(--danger-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"

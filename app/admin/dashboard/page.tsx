@@ -72,21 +72,9 @@ export default function DashboardPage() {
             }
 
             return data.lots.map((lot: LotData) => {
-              let parsedArea = lot.area;
-              if (lot.area && typeof lot.area.points === 'string') {
-                try {
-                  parsedArea = {
-                    ...lot.area,
-                    points: JSON.parse(lot.area.points as unknown as string),
-                  };
-                } catch (e) {
-                  console.error('Erro ao parsear area.points:', e);
-                }
-              }
-
+              // lot.area não existe mais no retorno da API
               return {
                 ...lot,
-                area: parsedArea,
                 mapId: map.id,
                 createdAt: new Date(lot.createdAt),
                 updatedAt: new Date(lot.updatedAt),

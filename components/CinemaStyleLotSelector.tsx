@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lot, LotStatus } from '@/types';
+import { Lot, LotStatus, Block } from '@/types';
 
 interface CinemaStyleLotSelectorProps {
   lots: Lot[];
+  blocks?: Block[];
   onLotSelect?: (lot: Lot) => void;
   onMultipleSelect?: (lots: Lot[]) => void;
   onLotEdit?: (lot: Lot) => void;
@@ -15,6 +16,7 @@ interface CinemaStyleLotSelectorProps {
 
 export default function CinemaStyleLotSelector({
   lots,
+  blocks = [],
   onLotSelect,
   onMultipleSelect,
   onLotEdit,
@@ -184,6 +186,24 @@ export default function CinemaStyleLotSelector({
                     />
                   </div>
 
+                  {blocks.length > 0 && (
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2">Quadra</label>
+                      <select
+                        value={editedLot.blockId || ''}
+                        onChange={(e) => setEditedLot({ ...editedLot, blockId: e.target.value || undefined })}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white cursor-pointer focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Sem quadra</option>
+                        {blocks.map((block) => (
+                          <option key={block.id} value={block.id}>
+                            {block.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Status</label>
                     <select
@@ -288,6 +308,15 @@ export default function CinemaStyleLotSelector({
                       <p className="font-bold text-lg text-white">{selectedLotForModal.size}m²</p>
                     </div>
                   </div>
+
+                  {selectedLotForModal.blockId && blocks.length > 0 && (
+                    <div className="bg-gray-800 rounded-xl p-4">
+                      <p className="text-gray-400 text-sm mb-1">Quadra</p>
+                      <p className="font-bold text-lg text-white">
+                        {blocks.find(b => b.id === selectedLotForModal.blockId)?.name || 'Não identificada'}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="bg-gray-800 rounded-xl p-4">
                     <p className="text-gray-400 text-sm mb-1">Valor Total</p>

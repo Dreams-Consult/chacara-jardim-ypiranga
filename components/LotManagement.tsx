@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import { Map, Lot, LotStatus } from '@/types';
+import { Map, Lot, LotStatus, Block } from '@/types';
 import InteractiveMap from '@/components/InteractiveMap';
 import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { useBlockOperations } from '@/hooks/useBlockOperations';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -14,11 +15,16 @@ export default function LotManagement() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const mapId = searchParams.get('mapId') || '';
+  const blockIdParam = searchParams.get('blockId') || '';
 
   const [map, setMap] = useState<Map | null>(null);
   const [lots, setLots] = useState<Lot[]>([]);
   const [viewingLot, setViewingLot] = useState<Lot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedBlockId, setSelectedBlockId] = useState<string>(blockIdParam);
+  const [selectedBlockForNewLot, setSelectedBlockForNewLot] = useState<string>('');
+
+  const { blocks, loadBlocks } = useBlockOperations();
 
   const loadData = useCallback(async () => {
     if (!mapId) return;
@@ -82,6 +88,12 @@ export default function LotManagement() {
       setIsLoading(false);
     }
   }, [mapId]);
+
+  useEffect(() => {
+    if (mapId) {
+      loadBlocks(mapId);
+    }
+  }, [mapId, loadBlocks]);
 
   useEffect(() => {
     loadData();
@@ -316,6 +328,7 @@ export default function LotManagement() {
     const newLot: Lot = {
       id: '',
       mapId,
+      blockId: selectedBlockForNewLot || undefined,
       lotNumber: tempLotNumber,
       status: LotStatus.AVAILABLE,
       price: 0,
@@ -330,6 +343,7 @@ export default function LotManagement() {
     try {
       await saveLotToAPI(newLot);
       alert('✅ Novo lote criado! Clique nele para editar as informações.');
+      setSelectedBlockForNewLot('');
     } catch (err) {
       console.error('Erro ao criar lote:', err);
       alert('Erro ao criar novo lote. Tente novamente.');
@@ -352,7 +366,7 @@ export default function LotManagement() {
     <div className="p-6">
       <div className="mb-6">
         <button
-          onClick={() => router.push('/admin/maps')}
+          onClick={() => router.push('/admin/map-management')}
           className="text-blue-700 hover:text-blue-900 font-medium hover:underline mb-2 transition-colors cursor-pointer"
         >
           ← Voltar para Mapas
@@ -364,6 +378,12 @@ export default function LotManagement() {
           </div>
           <div className="flex gap-3 items-center">
             <button
+              onClick={() => router.push(`/admin/blocks?mapId=${mapId}`)}
+              className="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
+            >
+              Gerenciar Quadras
+            </button>
+            <button
               onClick={handleNewLot}
               className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
             >
@@ -372,6 +392,65 @@ export default function LotManagement() {
           </div>
         </div>
       </div>
+
+      {/* Seletor de Quadra para Novo Lote */}
+      {blocks.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md mb-6">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">
+              Quadra para novo lote:
+            </label>
+            <select
+              value={selectedBlockForNewLot}
+              onChange={(e) => setSelectedBlockForNewLot(e.target.value)}
+              className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 font-medium cursor-pointer focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Sem quadra</option>
+              {blocks.map((block) => (
+                <option key={block.id} value={block.id}>
+                  {block.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm text-gray-500">
+              {selectedBlockForNewLot 
+                ? `Próximo lote será criado na quadra "${blocks.find(b => b.id === selectedBlockForNewLot)?.name}"` 
+                : 'Próximo lote será criado sem quadra'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Filtro de Quadras */}
+      {blocks.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md mb-6">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">
+              Filtrar por quadra:
+            </label>
+            <select
+              value={selectedBlockId}
+              onChange={(e) => setSelectedBlockId(e.target.value)}
+              className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 font-medium cursor-pointer focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todas as quadras</option>
+              {blocks.map((block) => (
+                <option key={block.id} value={block.id}>
+                  {block.name}
+                </option>
+              ))}
+            </select>
+            {selectedBlockId && (
+              <button
+                onClick={() => setSelectedBlockId('')}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Limpar filtro
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6">
         {/* Mapa (apenas visualização) */}
@@ -393,19 +472,37 @@ export default function LotManagement() {
         {/* Seletor estilo Cinema */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Lotes Cadastrados</h2>
-          {lots.length > 0 ? (
-            <CinemaStyleLotSelector
-              lots={lots}
-              onLotEdit={handleEditLot}
-              selectedLotIds={[]}
-              allowMultipleSelection={false}
-              lotsPerRow={15}
-            />
-          ) : (
-            <p className="text-gray-600 text-center py-8">
-              Nenhum lote cadastrado ainda. Clique em "Novo Lote" para começar.
-            </p>
-          )}
+          {(() => {
+            const filteredLots = selectedBlockId 
+              ? lots.filter(lot => lot.blockId === selectedBlockId)
+              : lots;
+            
+            return filteredLots.length > 0 ? (
+              <>
+                {selectedBlockId && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Mostrando {filteredLots.length} lote(s)</strong> da quadra "{blocks.find(b => b.id === selectedBlockId)?.name}"
+                    </p>
+                  </div>
+                )}
+                <CinemaStyleLotSelector
+                  lots={filteredLots}
+                  blocks={blocks}
+                  onLotEdit={handleEditLot}
+                  selectedLotIds={[]}
+                  allowMultipleSelection={false}
+                  lotsPerRow={15}
+                />
+              </>
+            ) : (
+              <p className="text-gray-600 text-center py-8">
+                {selectedBlockId 
+                  ? `Nenhum lote cadastrado na quadra "${blocks.find(b => b.id === selectedBlockId)?.name}". Clique em "Novo Lote" para começar.`
+                  : 'Nenhum lote cadastrado ainda. Clique em "Novo Lote" para começar.'}
+              </p>
+            );
+          })()}
         </div>
       </div>
 

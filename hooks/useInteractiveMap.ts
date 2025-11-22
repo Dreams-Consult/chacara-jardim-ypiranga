@@ -51,45 +51,9 @@ export function useInteractiveMap({
     isHovered: boolean,
     isSelected: boolean
   ) => {
-    if (lot.area.points.length < 3) return;
-
-    ctx.beginPath();
-    ctx.moveTo(lot.area.points[0].x, lot.area.points[0].y);
-    lot.area.points.forEach((point) => {
-      ctx.lineTo(point.x, point.y);
-    });
-    ctx.closePath();
-
-
-    let fillColor = 'rgba(34, 197, 94, 0.3)'; // Disponível (verde)
-    let strokeColor = '#22c55e';
-
-    if (lot.status === LotStatus.RESERVED) {
-      fillColor = 'rgba(251, 191, 36, 0.3)'; // Amarelo
-      strokeColor = '#fbbf24';
-    } else if (lot.status === LotStatus.SOLD) {
-      fillColor = 'rgba(239, 68, 68, 0.3)'; // Vermelho
-      strokeColor = '#ef4444';
-    } else if (lot.status === LotStatus.BLOCKED) {
-      fillColor = 'rgba(107, 114, 128, 0.3)'; // Cinza
-      strokeColor = '#6b7280';
-    }
-
-    if (isHovered) {
-      fillColor = fillColor.replace('0.3', '0.5');
-      strokeColor = '#000';
-    }
-
-    if (isSelected) {
-      fillColor = 'rgba(59, 130, 246, 0.5)';
-      strokeColor = '#3b82f6';
-    }
-
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = isHovered || isSelected ? 3 : 2;
-    ctx.stroke();
+    // Lotes agora não possuem área desenhada (lot.area.points removido)
+    // Função mantida para compatibilidade mas não desenha nada
+    return;
   };
 
   const redraw = useCallback(() => {
@@ -111,10 +75,11 @@ export function useInteractiveMap({
 
     ctx.drawImage(img, 0, 0);
 
-    lots.forEach((lot) => {
-      const isSelected = lot.id === selectedLotId || selectedLotIds.includes(lot.id);
-      drawLot(ctx, lot, lot.id === hoveredLot?.id, isSelected);
-    });
+    // Lotes não são mais desenhados no mapa (lot.area.points removido)
+    // lots.forEach((lot) => {
+    //   const isSelected = lot.id === selectedLotId || selectedLotIds.includes(lot.id);
+    //   drawLot(ctx, lot, lot.id === hoveredLot?.id, isSelected);
+    // });
 
     // Desenho de polígono (modo antigo)
     if (isEditMode && drawingMode === 'polygon' && drawingPoints.length > 0) {

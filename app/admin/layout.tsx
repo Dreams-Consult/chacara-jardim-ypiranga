@@ -10,29 +10,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout, canAccessUsers } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
   // Estado para controlar visibilidade do sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Inicializar showLotManagement lendo localStorage (só roda uma vez)
-  const [showLotManagement, setShowLotManagement] = useState(() => {
-    // Durante SSR, retornar false
-    // Durante CSR, ler do localStorage
-    return false; // Sempre false no SSR e primeira renderização no client
-  });
+  // Inicializar showLotManagement como false para evitar hydration mismatch
+  const [showLotManagement, setShowLotManagement] = useState(false);
 
-  // Após montar, verificar localStorage
+  // Garantir que o componente está montado antes de renderizar
   useEffect(() => {
-    const visited = localStorage.getItem('hasVisitedMapManagement') === 'true';
-    if (visited) {
-      // Agendar atualização para próximo tick para evitar setState síncrono
-      Promise.resolve().then(() => setShowLotManagement(true));
-    }
+    setMounted(true);
   }, []);
+
+  // Após montar, verificar localStorage (apenas no cliente)
+  useEffect(() => {
+    if (mounted) {
+      const visited = localStorage.getItem('hasVisitedMapManagement') === 'true';
+      if (visited) {
+        setShowLotManagement(true);
+      }
+    }
+  }, [mounted]);
 
   // Fechar sidebar ao mudar de página em mobile
   useEffect(() => {
-    Promise.resolve().then(() => setSidebarOpen(false));
+    setSidebarOpen(false);
   }, [pathname]);
 
   // Validar sessão e redirecionar
@@ -45,12 +48,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Marcar como visitado quando entrar em map-management
   useEffect(() => {
-    if (pathname === '/admin/map-management' && !showLotManagement) {
+    if (mounted && pathname === '/admin/map-management' && !showLotManagement) {
       localStorage.setItem('hasVisitedMapManagement', 'true');
-      // Agendar atualização para próximo tick
-      Promise.resolve().then(() => setShowLotManagement(true));
+      setShowLotManagement(true);
     }
-  }, [pathname, showLotManagement]);
+  }, [pathname, showLotManagement, mounted]);
 
   const handleLogout = () => {
     logout();
@@ -79,6 +81,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   };
 
+  // Não renderizar até montar no cliente (evita hydration mismatch)
+  if (!mounted) {
+    return null;
+  }
+
   if (!isAuthenticated || !user) {
     return null;
   }
@@ -94,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const hasToolsAvailable = user.role !== UserRole.VENDEDOR || canAccessUsers;
 
   return (
-    <div suppressHydrationWarning className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-[var(--background)]">
       <div className="flex">
         {/* Overlay para mobile */}
         {sidebarOpen && (
