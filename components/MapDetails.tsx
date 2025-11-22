@@ -731,17 +731,6 @@ export default function MapDetails() {
             </h2>
             
             <div className="space-y-4">
-              {map.imageUrl && !imagePreview && (
-                <div className="mb-4">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Imagem Atual:</p>
-                  <img
-                    src={map.imageUrl}
-                    alt="Imagem atual do mapa"
-                    className="w-full max-h-64 object-contain bg-gray-100 rounded-lg border-2 border-gray-300"
-                  />
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
                   Selecionar Arquivo
