@@ -1,10 +1,84 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+
+// Componente para renderizar preview de PDF
+function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
+  const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
+  const [isConverting, setIsConverting] = useState(true);
+
+  useEffect(() => {
+    const convertPDF = async () => {
+      try {
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        
+        const scale = 1;
+        const viewport = page.getViewport({ scale });
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        if (context) {
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
+          
+          const imageData = canvas.toDataURL('image/png');
+          setPdfImageUrl(imageData);
+        }
+      } catch (error) {
+        console.error('[PDFPreview] Erro ao converter PDF:', error);
+      } finally {
+        setIsConverting(false);
+      }
+    };
+
+    convertPDF();
+  }, [pdfUrl]);
+
+  if (isConverting) {
+    return (
+      <div className="text-center p-4">
+        <svg className="w-12 h-12 mx-auto mb-2 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <p className="text-xs font-semibold text-gray-600">Carregando PDF...</p>
+      </div>
+    );
+  }
+
+  if (pdfImageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={pdfImageUrl}
+        alt={mapName}
+        className="max-w-full max-h-full object-contain"
+      />
+    );
+  }
+
+  return (
+    <div className="text-center p-4">
+      <svg className="w-16 h-16 mx-auto mb-2 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+      </svg>
+      <p className="text-sm font-bold text-gray-700">Erro ao carregar PDF</p>
+    </div>
+  );
+}
 
 export default function MapManagement() {
   const router = useRouter();
@@ -144,15 +218,15 @@ export default function MapManagement() {
           <div key={map.id} className="bg-white border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
             <div className="h-48 bg-gradient-to-br from-[var(--surface)] to-[var(--surface-hover)] flex items-center justify-center overflow-hidden">
               {map.imageUrl && map.imageUrl.trim() !== '' ? (
-                map.imageType === 'image' ? (
+                map.imageUrl.startsWith('data:application/pdf') ? (
+                  <PDFPreview pdfUrl={map.imageUrl} mapName={map.name} />
+                ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={map.imageUrl}
                     alt={map.name}
                     className="max-w-full max-h-full object-contain"
                   />
-                ) : (
-                  <div className="text-[var(--foreground)] font-bold">PDF: {map.name}</div>
                 )
               ) : (
                 <div className="text-[var(--foreground)]/60 text-center p-4">
