@@ -203,7 +203,7 @@ export default function RegisterPage() {
               Criar Conta
             </h1>
             <p className="text-gray-600 mt-2">
-              Chácara Jardim Ipiranga
+              Imobiliária Vale dos Carajás
             </p>
           </div>
 

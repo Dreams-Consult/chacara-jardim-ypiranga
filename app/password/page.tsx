@@ -51,7 +51,7 @@ export default function PasswordPage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Chácara Jardim Ipiranga
+              Imobiliária Vale dos Carajás
             </h1>
           </div>
 

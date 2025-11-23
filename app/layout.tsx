@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vale dos Carajás - Chácara Jardim Ipiranga",
-  description: "Loteamento de chácaras em ambiente natural preservado",
+  title: "Imobiliária Vale dos Carajás",
+  description: "Sistema de gerenciamento de loteamentos",
 };
 
 export const viewport: Viewport = {
