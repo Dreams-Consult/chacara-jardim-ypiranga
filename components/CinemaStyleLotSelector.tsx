@@ -104,16 +104,17 @@ export default function CinemaStyleLotSelector({
   const totalSize = selectedLots.reduce((sum, lot) => sum + lot.size, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h3 className="text-white font-semibold mb-4 text-center text-lg">
+    <div className="space-y-4 md:space-y-6">
+      <div className="bg-gray-800 rounded-xl p-3 sm:p-4 md:p-6 shadow-lg">
+        <h3 className="text-white font-semibold mb-3 md:mb-4 text-center text-base md:text-lg">
           Selecione o(s) Lote(s)
         </h3>
 
         <div
-          className="grid gap-2 justify-center"
+          className="grid gap-1.5 sm:gap-2 justify-center"
           style={{
-            gridTemplateColumns: `repeat(${lotsPerRow}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(auto-fill, minmax(${typeof window !== 'undefined' && window.innerWidth < 640 ? '45px' : '60px'}, 1fr))`,
+            maxWidth: '100%',
           }}
         >
           {sortedLots.map((lot) => {
@@ -127,14 +128,15 @@ export default function CinemaStyleLotSelector({
                   relative aspect-square rounded-lg border-2
                   transition-all duration-200
                   flex items-center justify-center
+                  min-h-[45px] sm:min-h-[60px]
                   ${getLotColor(lot)}
-                  ${isClickable ? 'cursor-pointer transform hover:scale-105' : 'cursor-not-allowed opacity-70'}
-                  ${isSelected ? 'ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-900' : ''}
+                  ${isClickable ? 'cursor-pointer active:scale-95 sm:hover:scale-105 touch-manipulation' : 'cursor-not-allowed opacity-70'}
+                  ${isSelected ? 'ring-2 ring-blue-300 ring-offset-1 sm:ring-offset-2 ring-offset-gray-900' : ''}
                 `}
                 onClick={() => handleLotClick(lot)}
                 title={`Lote ${lot.lotNumber} - ${lot.status}`}
               >
-                <span className="text-white font-bold text-sm select-none">
+                <span className="text-white font-bold text-xs sm:text-sm select-none">
                   {lot.lotNumber}
                 </span>
               </div>
@@ -145,11 +147,11 @@ export default function CinemaStyleLotSelector({
 
       {/* Modal de detalhes do lote */}
       {selectedLotForModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-gray-900 rounded-2xl max-w-lg w-full shadow-2xl border border-gray-700 my-8 max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-700 flex-shrink-0">
+        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl max-w-lg w-full shadow-2xl border-t sm:border border-gray-700 sm:my-8 max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div className="p-4 sm:p-6 border-b border-gray-700 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-xl sm:text-2xl font-bold text-white">
                   Lote {selectedLotForModal.lotNumber}
                 </h3>
                 <button
@@ -158,7 +160,8 @@ export default function CinemaStyleLotSelector({
                     setIsEditing(false);
                     setEditedLot(null);
                   }}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-white transition-colors p-2 -m-2 touch-manipulation"
+                  aria-label="Fechar"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -167,7 +170,7 @@ export default function CinemaStyleLotSelector({
               </div>
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 overflow-y-auto flex-1">
               {isEditing && editedLot ? (
                 // Modo de edição
                 <>
@@ -177,7 +180,7 @@ export default function CinemaStyleLotSelector({
                       type="text"
                       value={editedLot.lotNumber}
                       onChange={(e) => setEditedLot({ ...editedLot, lotNumber: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholder="Ex: 01, A1, etc"
                     />
                   </div>
@@ -188,7 +191,7 @@ export default function CinemaStyleLotSelector({
                       <select
                         value={editedLot.blockId || ''}
                         onChange={(e) => setEditedLot({ ...editedLot, blockId: e.target.value || undefined })}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white cursor-pointer focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base cursor-pointer focus:ring-2 focus:ring-blue-500 touch-manipulation"
                       >
                         <option value="">Sem quadra</option>
                         {blocks.map((block) => (
@@ -205,7 +208,7 @@ export default function CinemaStyleLotSelector({
                     <select
                       value={editedLot.status}
                       onChange={(e) => setEditedLot({ ...editedLot, status: e.target.value as LotStatus })}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white cursor-pointer"
+                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base cursor-pointer touch-manipulation"
                     >
                       <option value={LotStatus.AVAILABLE}>Disponível</option>
                       <option value={LotStatus.BLOCKED}>Bloqueado</option>
@@ -232,7 +235,7 @@ export default function CinemaStyleLotSelector({
                           price: calculatedPrice
                         });
                       }}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholder="300.00"
                     />
                   </div>
@@ -240,7 +243,7 @@ export default function CinemaStyleLotSelector({
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Preço por m² (R$) *</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">R$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
                       <input
                         type="number"
                         step="0.01"
@@ -267,7 +270,7 @@ export default function CinemaStyleLotSelector({
                             setPricePerM2Input(value.toFixed(2));
                           }
                         }}
-                        className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                         placeholder="150.00"
                       />
                     </div>
@@ -276,12 +279,12 @@ export default function CinemaStyleLotSelector({
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Preço Total (R$)</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">R$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
                       <input
                         type="text"
                         value={editedLot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         readOnly
-                        className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white cursor-not-allowed"
+                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-base cursor-not-allowed"
                       />
                     </div>
                     <p className="text-xs text-gray-400 mt-1">Calculado automaticamente: Área × Preço/m²</p>
@@ -292,7 +295,7 @@ export default function CinemaStyleLotSelector({
                     <textarea
                       value={editedLot.description || ''}
                       onChange={(e) => setEditedLot({ ...editedLot, description: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation resize-none"
                       rows={3}
                       placeholder="Informações adicionais sobre o lote"
                     />
@@ -301,10 +304,10 @@ export default function CinemaStyleLotSelector({
               ) : (
                 // Modo de visualização
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-800 rounded-xl p-4">
-                      <p className="text-gray-400 text-sm mb-1">Status</p>
-                      <p className={`font-bold text-lg ${
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
+                      <p className="text-gray-400 text-xs sm:text-sm mb-1">Status</p>
+                      <p className={`font-bold text-base sm:text-lg ${
                         selectedLotForModal.status === LotStatus.AVAILABLE
                           ? 'text-green-400'
                           : selectedLotForModal.status === LotStatus.RESERVED
@@ -323,36 +326,36 @@ export default function CinemaStyleLotSelector({
                       </p>
                     </div>
 
-                    <div className="bg-gray-800 rounded-xl p-4">
-                      <p className="text-gray-400 text-sm mb-1">Área</p>
-                      <p className="font-bold text-lg text-white">{selectedLotForModal.size}m²</p>
+                    <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
+                      <p className="text-gray-400 text-xs sm:text-sm mb-1">Área</p>
+                      <p className="font-bold text-base sm:text-lg text-white">{selectedLotForModal.size}m²</p>
                     </div>
                   </div>
 
                   {selectedLotForModal.blockId && blocks.length > 0 && (
-                    <div className="bg-gray-800 rounded-xl p-4">
-                      <p className="text-gray-400 text-sm mb-1">Quadra</p>
-                      <p className="font-bold text-lg text-white">
+                    <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
+                      <p className="text-gray-400 text-xs sm:text-sm mb-1">Quadra</p>
+                      <p className="font-bold text-base sm:text-lg text-white">
                         {blocks.find(b => b.id === selectedLotForModal.blockId)?.name || 'Não identificada'}
                       </p>
                     </div>
                   )}
 
-                  <div className="bg-gray-800 rounded-xl p-4">
-                    <p className="text-gray-400 text-sm mb-1">Valor Total</p>
-                    <p className="font-bold text-2xl text-white">
+                  <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
+                    <p className="text-gray-400 text-xs sm:text-sm mb-1">Valor Total</p>
+                    <p className="font-bold text-xl sm:text-2xl text-white">
                       R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                     {selectedLotForModal.pricePerM2 && (
-                      <p className="text-gray-400 text-sm mt-1">
+                      <p className="text-gray-400 text-xs sm:text-sm mt-1">
                         R$ {selectedLotForModal.pricePerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/m²
                       </p>
                     )}
                   </div>
 
                   {selectedLotForModal.description && (
-                    <div className="bg-gray-800 rounded-xl p-4">
-                      <p className="text-gray-400 text-sm mb-2">Descrição</p>
+                    <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
+                      <p className="text-gray-400 text-xs sm:text-sm mb-2">Descrição</p>
                       <p className="text-white text-sm">{selectedLotForModal.description}</p>
                     </div>
                   )}
@@ -377,14 +380,14 @@ export default function CinemaStyleLotSelector({
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-700 flex gap-3 flex-shrink-0">
+            <div className="p-4 sm:p-6 border-t border-gray-700 flex gap-2 sm:gap-3 flex-shrink-0">
               <button
                 onClick={() => {
                   setSelectedLotForModal(null);
                   setIsEditing(false);
                   setEditedLot(null);
                 }}
-                className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-3 text-base bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white font-semibold rounded-xl transition-colors touch-manipulation"
               >
                 Cancelar
               </button>
@@ -397,7 +400,7 @@ export default function CinemaStyleLotSelector({
                       setIsEditing(false);
                       setEditedLot(null);
                     }}
-                    className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
+                    className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
                   >
                     Salvar Alterações
                   </button>
@@ -419,12 +422,12 @@ export default function CinemaStyleLotSelector({
                               }
                             }}
                             disabled={isDeleting}
-                            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
+                            className="px-4 sm:px-6 py-3 text-base bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 touch-manipulation min-w-[100px] sm:min-w-0"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            {isDeleting ? 'Excluindo...' : 'Excluir'}
+                            <span className="hidden sm:inline">{isDeleting ? 'Excluindo...' : 'Excluir'}</span>
                           </button>
                         )}
                         <button
@@ -437,7 +440,7 @@ export default function CinemaStyleLotSelector({
                             };
                             setEditedLot(lotWithCalculatedPrice);
                           }}
-                          className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
+                          className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
                         >
                           Editar Lote
                         </button>
@@ -448,7 +451,7 @@ export default function CinemaStyleLotSelector({
               ) : (
                 <button
                   onClick={handleAddLot}
-                  className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
+                  className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={selectedLotForModal.status !== LotStatus.AVAILABLE}
                 >
                   {selectedLotIds.includes(selectedLotForModal.id) ? 'Remover da Seleção' : 'Adicionar à Seleção'}
@@ -460,8 +463,8 @@ export default function CinemaStyleLotSelector({
       )}
 
       {allowMultipleSelection && selectedLots.length > 0 && (
-        <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-4">
-          <h4 className="text-white font-bold mb-2">
+        <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-3 sm:p-4">
+          <h4 className="text-white font-bold mb-2 text-base sm:text-lg">
             Seleção Atual ({selectedLots.length} {selectedLots.length === 1 ? 'lote' : 'lotes'})
           </h4>
           <div className="space-y-2">
@@ -475,7 +478,7 @@ export default function CinemaStyleLotSelector({
               <span>Área Total:</span>
               <span className="font-medium">{totalSize}m²</span>
             </div>
-            <div className="flex justify-between text-white text-lg font-bold pt-2 border-t border-white/20">
+            <div className="flex justify-between text-white text-base sm:text-lg font-bold pt-2 border-t border-white/20">
               <span>Total:</span>
               <span>R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
@@ -483,24 +486,24 @@ export default function CinemaStyleLotSelector({
         </div>
       )}
 
-      <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
-        <h3 className="text-white font-semibold mb-3">Legenda:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="bg-gray-800 rounded-xl p-3 sm:p-4 shadow-lg">
+        <h3 className="text-white font-semibold mb-3 text-base sm:text-lg">Legenda:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-500 rounded"></div>
-            <span className="text-white/80 text-sm">Disponível</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded flex-shrink-0"></div>
+            <span className="text-white/80 text-xs sm:text-sm">Disponível</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-yellow-500 rounded"></div>
-            <span className="text-white/80 text-sm">Reservado</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-500 rounded flex-shrink-0"></div>
+            <span className="text-white/80 text-xs sm:text-sm">Reservado</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-red-500 rounded"></div>
-            <span className="text-white/80 text-sm">Vendido</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded flex-shrink-0"></div>
+            <span className="text-white/80 text-xs sm:text-sm">Vendido</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-500 rounded"></div>
-            <span className="text-white/80 text-sm">Bloqueado</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded flex-shrink-0"></div>
+            <span className="text-white/80 text-xs sm:text-sm">Bloqueado</span>
           </div>
         </div>
       </div>
