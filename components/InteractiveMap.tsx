@@ -201,7 +201,7 @@ export default function InteractiveMap({
             </div>
             <ul className="space-y-0.5 ml-6">
               <li>🖱️ <strong>Botão direito:</strong> Arrastar mapa</li>
-              <li>🔍 <strong>Scroll:</strong> Zoom centralizado</li>
+              <li>🔍 <strong>Scroll:</strong> Zoom</li>
             </ul>
           </div>
 
