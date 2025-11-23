@@ -55,7 +55,7 @@ export default function AdminMapsLotsPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Mapas e Lotes</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Loteamentos</h1>
         <p className="text-white/70">Visualize e gerencie os lotes disponíveis para compra</p>
       </div>
 

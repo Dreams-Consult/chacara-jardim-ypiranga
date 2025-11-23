@@ -273,7 +273,7 @@ export default function MapManagement() {
   return (
     <div className="min-h-screen bg-[var(--background)] p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Gerenciamento de Mapas</h1>
+        <h1 className="text-3xl font-bold text-white">Gerenciar Loteamentos</h1>
         <button
           onClick={() => setIsCreating(true)}
           className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"

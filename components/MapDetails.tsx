@@ -541,7 +541,7 @@ export default function MapDetails() {
             onClick={() => router.push('/admin/map-management')}
             className="px-4 py-2 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors"
           >
-            Voltar para Mapas
+            Voltar para Gerência de Loteamentos
           </button>
         </div>
       </div>
@@ -556,7 +556,7 @@ export default function MapDetails() {
           onClick={() => router.push('/admin/map-management')}
           className="text-[var(--accent)] hover:text-[var(--accent-light)] font-medium hover:underline mb-4 transition-colors cursor-pointer"
         >
-          ← Voltar para Mapas
+          ← Voltar para Gerência de Loteamentos
         </button>
         <div className="flex justify-between items-center">
           <div>

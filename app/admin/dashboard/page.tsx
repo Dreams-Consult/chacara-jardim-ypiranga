@@ -156,7 +156,7 @@ export default function DashboardPage() {
     <div className="p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-white/70">Visão geral de todos os mapas e lotes</p>
+        <p className="text-white/70">Visão geral dos loteamentos</p>
       </div>
 
       {/* Estatísticas Principais */}
@@ -169,7 +169,7 @@ export default function DashboardPage() {
               </svg>
             </div>
           </div>
-          <p className="text-white/90 text-sm font-medium mb-1">Total de Mapas</p>
+          <p className="text-white/90 text-sm font-medium mb-1">Total de Loteamentos</p>
           <p className="text-white text-4xl font-bold">{maps.length}</p>
         </div>
 

@@ -167,7 +167,7 @@ export default function BlockManagement() {
           onClick={() => router.push('/admin/map-management')}
           className="text-[var(--accent)] hover:text-[var(--accent-light)] font-medium hover:underline mb-4 transition-colors cursor-pointer"
         >
-          ← Voltar para Mapas
+          ← Voltar para Gerência de Loteamentos
         </button>
         <div className="flex justify-between items-center">
           <div>
