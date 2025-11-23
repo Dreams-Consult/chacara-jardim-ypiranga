@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
       sellerEmail,
       sellerPhone,
       sellerCPF,
+      paymentMethod,
     } = body;
 
     if (!lotIds || !Array.isArray(lotIds) || lotIds.length === 0) {
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
           customerPhone.replace(/\D/g, ''),
           customerCPF.replace(/\D/g, ''),
           message || null,
-          'cash', // payment_method padrão
+          paymentMethod || 'cash',
           sellerName || 'Não informado',
           sellerEmail || 'nao-informado@exemplo.com',
           sellerPhone ? sellerPhone.replace(/\D/g, '') : '00000000000',

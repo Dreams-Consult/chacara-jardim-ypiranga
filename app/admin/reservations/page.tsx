@@ -385,7 +385,13 @@ export default function ReservationsPage() {
                             {reservation.payment_method === 'cash' && '💵 À Vista'}
                             {reservation.payment_method === 'financing' && '🏦 Financiamento'}
                             {reservation.payment_method === 'installments' && '💳 Parcelamento'}
+                            {reservation.payment_method === 'carne' && '📄 Carnê'}
+                            {reservation.payment_method === 'pix' && '💰 Pix'}
+                            {reservation.payment_method === 'cartao' && '💳 Cartão'}
+                            {reservation.payment_method === 'dinheiro' && '💵 Dinheiro'}
+                            {reservation.payment_method === 'outro' && '📝 Outro'}
                             {!reservation.payment_method && 'Não informado'}
+                            {reservation.payment_method && !['cash', 'financing', 'installments', 'carne', 'pix', 'cartao', 'dinheiro', 'outro'].includes(reservation.payment_method) && `📝 ${reservation.payment_method}`}
                           </p>
                         </div>
                         <div>
@@ -660,9 +666,14 @@ export default function ReservationsPage() {
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] cursor-pointer"
                     >
                       <option value="">Selecione...</option>
+                      <option value="pix">💰 Pix</option>
+                      <option value="cartao">💳 Cartão</option>
+                      <option value="dinheiro">💵 Dinheiro</option>
+                      <option value="carne">📄 Carnê</option>
                       <option value="cash">💵 À Vista</option>
                       <option value="financing">🏦 Financiamento</option>
                       <option value="installments">💳 Parcelamento</option>
+                      <option value="outro">📝 Outro</option>
                     </select>
                   </div>
                   <div className="md:col-span-2">
