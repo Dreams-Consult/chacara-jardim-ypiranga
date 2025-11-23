@@ -85,11 +85,11 @@ export default function ReservationsPage() {
     loadData();
   }, [loadData]);
 
-  // Polling automático a cada 3 segundos
+  // Polling automático a cada 10 segundos
   useRealtimeUpdates(() => {
     console.log('🔄 Auto-refresh de reservas');
     loadData();
-  }, 3000);
+  }, 10000);
 
   const handleApprove = async (reservationId: number) => {
     if (!confirm('Tem certeza que deseja aprovar esta reserva?\n\nIsso marcará o lote como VENDIDO.')) {
@@ -367,12 +367,6 @@ export default function ReservationsPage() {
                           <p className="text-white/50 text-xs font-medium mb-1">CPF/CNPJ</p>
                           <p className="text-white font-mono text-sm">{reservation.customer_cpf || 'Não informado'}</p>
                         </div>
-                        {reservation.customer_address && (
-                          <div className="sm:col-span-2">
-                            <p className="text-white/50 text-xs font-medium mb-1">Endereço</p>
-                            <p className="text-white text-sm">{reservation.customer_address}</p>
-                          </div>
-                        )}
                       </div>
                     </div>
 

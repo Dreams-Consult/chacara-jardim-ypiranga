@@ -35,7 +35,7 @@ export default function BlockManagement() {
       loadBlocks(mapId);
       loadLotCounts();
     }
-  }, 3000);
+  }, 10000);
 
   const loadMapData = async () => {
     try {

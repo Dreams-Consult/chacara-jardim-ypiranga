@@ -4,7 +4,7 @@ import { useEffect } from 'react';
  * Hook para receber atualizações em tempo real via polling
  * Verifica mudanças no servidor a cada X segundos
  */
-export function useRealtimeUpdates(onUpdate: () => void, intervalMs: number = 5000) {
+export function useRealtimeUpdates(onUpdate: () => void, intervalMs: number = 10000) {
   useEffect(() => {
     const interval = setInterval(() => {
       onUpdate();

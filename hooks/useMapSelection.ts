@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Map, Lot, LotStatus, Block } from '@/types';
+import { useRealtimeUpdates } from './useRealtimeUpdates';
 
 const API_URL = '/api';
 
@@ -90,6 +91,14 @@ export const useMapSelection = () => {
 
     fetchMaps();
   }, []);
+
+  // Atualização automática dos lotes a cada 10 segundos
+  useRealtimeUpdates(() => {
+    if (selectedMapIdRef.current && selectedBlock) {
+      console.log('🔄 [Auto-refresh] Atualizando lotes...');
+      loadLotsForBlock(selectedMapIdRef.current, selectedBlock.id);
+    }
+  }, 10000);
 
   // Função para carregar quadras de um mapa específico
   const loadBlocksForMap = async (mapId: string) => {

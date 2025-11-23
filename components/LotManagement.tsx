@@ -101,7 +101,7 @@ export default function LotManagement() {
 
   useRealtimeUpdates(() => {
     loadData();
-  }, 3000);
+  }, 10000);
 
   const reloadLots = async () => {
     try {

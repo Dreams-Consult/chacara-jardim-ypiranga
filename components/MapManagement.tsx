@@ -121,10 +121,10 @@ export default function MapManagement() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapsWithReservedLots, setMapsWithReservedLots] = useState<Record<string, { hasReserved: boolean; count: number }>>({});
 
-  // Atualiza a lista de mapas a cada 3 segundos para todos os clientes
+  // Atualiza a lista de mapas a cada 10 segundos para todos os clientes
   useRealtimeUpdates(() => {
     loadMaps();
-  }, 3000);
+  }, 10000);
 
   // Verificar lotes reservados/vendidos para cada mapa
   useEffect(() => {
