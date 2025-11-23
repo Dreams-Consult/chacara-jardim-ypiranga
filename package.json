@@ -1,6 +1,5 @@
 {
-  "homepage": "https://Dreams-Consult.github.io/chacara-jardim-ypiranga",
-  "name": "chacara-jardim-ypiranga",
+  "name": "vale-dos-carajas",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "next build && gh-pages -d out -t"
+    "deploy": "next build && gh-pages -d out -t",
+    "hostgator:deploy": "npm run build && pm2 restart vale-dos-carajas || pm2 start npm --name vale-dos-carajas -- start"
   },
   "dependencies": {
     "axios": "^1.13.2",
