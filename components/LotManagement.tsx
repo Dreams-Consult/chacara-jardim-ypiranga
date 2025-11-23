@@ -189,65 +189,6 @@ export default function LotManagement() {
     }
   };
 
-  const handleSaveLot = async () => {
-    if (!editingLot) {
-      alert('Nenhum lote em edição');
-      return;
-    }
-
-    if (!editingLot.lotNumber || editingLot.lotNumber.trim() === '') {
-      alert('❌ Número do lote é obrigatório');
-      return;
-    }
-
-    const existingLot = lots.find(l => l.id === editingLot.id);
-    const lotNumberChanged = !existingLot || existingLot.lotNumber !== editingLot.lotNumber;
-
-    if (lotNumberChanged) {
-      const isNumberAvailable = await validateLotNumber(editingLot.lotNumber);
-      if (!isNumberAvailable) {
-        alert(`❌ O número do lote "${editingLot.lotNumber}" já está em uso. Escolha outro número.`);
-        return;
-      }
-    }
-
-    if (!editingLot.size || editingLot.size <= 0) {
-      alert('❌ Informe o tamanho do lote (m²)');
-      return;
-    }
-
-    if (!editingLot.pricePerM2 || editingLot.pricePerM2 <= 0) {
-      alert('❌ Informe o preço por m² do lote');
-      return;
-    }
-
-    if (!editingLot.price || editingLot.price <= 0) {
-      alert('❌ O preço total do lote deve ser maior que zero');
-      return;
-    }
-
-    const lot: Lot = {
-      ...editingLot,
-      mapId,
-      updatedAt: new Date(),
-    };
-
-    console.log('💾 Salvando lote:', lot);
-
-    try {
-      if (lot.id && lot.id !== '') {
-        await updateLotToAPI(lot);
-      } else {
-        await saveLotToAPI(lot);
-      }
-      setIsCreating(false);
-      setEditingLot(null);
-    } catch (err) {
-      console.error('Erro ao salvar:', err);
-      alert('Erro ao salvar lote. Tente novamente.');
-    }
-  };
-
   const handleDelete = async (id: string) => {
     const lotToDelete = lots.find(lot => lot.id === id);
 
