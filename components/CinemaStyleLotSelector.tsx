@@ -180,7 +180,7 @@ export default function CinemaStyleLotSelector({
                       type="text"
                       value={editedLot.lotNumber}
                       onChange={(e) => setEditedLot({ ...editedLot, lotNumber: e.target.value })}
-                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholder="Ex: 01, A1, etc"
                     />
                   </div>
@@ -191,7 +191,7 @@ export default function CinemaStyleLotSelector({
                       <select
                         value={editedLot.blockId || ''}
                         onChange={(e) => setEditedLot({ ...editedLot, blockId: e.target.value || undefined })}
-                        className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base cursor-pointer focus:ring-2 focus:ring-blue-500 touch-manipulation"
+                        className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base cursor-pointer focus:ring-2 focus:ring-blue-500 touch-manipulation"
                       >
                         <option value="">Sem quadra</option>
                         {blocks.map((block) => (
@@ -208,7 +208,7 @@ export default function CinemaStyleLotSelector({
                     <select
                       value={editedLot.status}
                       onChange={(e) => setEditedLot({ ...editedLot, status: e.target.value as LotStatus })}
-                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base cursor-pointer touch-manipulation"
+                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base cursor-pointer touch-manipulation"
                     >
                       <option value={LotStatus.AVAILABLE}>Disponível</option>
                       <option value={LotStatus.BLOCKED}>Bloqueado</option>
@@ -235,7 +235,7 @@ export default function CinemaStyleLotSelector({
                           price: calculatedPrice
                         });
                       }}
-                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholder="300.00"
                     />
                   </div>
@@ -270,7 +270,7 @@ export default function CinemaStyleLotSelector({
                             setPricePerM2Input(value.toFixed(2));
                           }
                         }}
-                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                         placeholder="150.00"
                       />
                     </div>
@@ -295,7 +295,7 @@ export default function CinemaStyleLotSelector({
                     <textarea
                       value={editedLot.description || ''}
                       onChange={(e) => setEditedLot({ ...editedLot, description: e.target.value })}
-                      className="w-full px-4 py-3 sm:py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation resize-none"
+                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation resize-none"
                       rows={3}
                       placeholder="Informações adicionais sobre o lote"
                     />

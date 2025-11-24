@@ -44,7 +44,6 @@ export function useLotOperations(mapId: string) {
     id: '', // ID será gerado pelo backend (autoincrement)
     mapId,
     lotNumber: '',
-    area: { points: [] },
     status: LotStatus.AVAILABLE,
     price: 0,
     size: 0,

@@ -12,12 +12,12 @@ const dbConfig = {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   let connection;
   
   try {
-    const userId = params.id;
+    const { id: userId } = await params;
     const { searchParams } = new URL(request.url);
 
     const name = searchParams.get('name');

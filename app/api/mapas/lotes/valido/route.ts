@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       [idLote]
     );
 
-    const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : { isAvailable: false };
+    const result = Array.isArray(rows) && rows.length > 0 ? rows[0] as any : { isAvailable: false };
 
     return NextResponse.json({ valid: result.isAvailable === 1 || result.isAvailable === true }, { status: 200 });
   } catch (error) {
