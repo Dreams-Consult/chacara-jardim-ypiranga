@@ -1,4 +1,4 @@
-# 🏡 Plataforma de Gerenciamento de Lotes - Chácara Jardim Ipiranga
+# 🏡 Plataforma de Gerenciamento de Lotes - Imobiliária Vale dos Carajás
 
 ## ✅ Sistema Implementado com Sucesso!
 
@@ -6,6 +6,38 @@
 - ✅ Servidor rodando em **http://localhost:3000**
 - ✅ Todos os componentes implementados
 - ✅ Sistema funcional e pronto para uso
+
+## ⚙️ Configuração Inicial
+
+### Variáveis de Ambiente
+
+O sistema utiliza variáveis de ambiente para configurações sensíveis como credenciais do banco de dados.
+
+1. **Copie o arquivo de exemplo**:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. **Configure suas credenciais** no arquivo `.env.local`:
+   ```
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=seu_usuario
+   DB_PASSWORD=sua_senha
+   DB_NAME=vale_dos_carajas
+   NEXT_PUBLIC_API_URL=/api
+   ```
+
+3. **Nunca commite o arquivo `.env.local`** - ele está no `.gitignore` para sua segurança.
+
+### Instalação
+
+```bash
+npm install
+npm run dev
+```
+
+O servidor estará disponível em http://localhost:3000
 
 ## 📋 Funcionalidades Implementadas
 

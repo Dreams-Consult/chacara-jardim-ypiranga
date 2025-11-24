@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
-
-const dbConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'maia',
-  password: 'ForTheHorde!',
-  database: 'vale_dos_carajas',
-};
+import { dbConfig } from '@/lib/db';
 
 export async function PUT(request: NextRequest) {
   let connection;

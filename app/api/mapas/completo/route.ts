@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server';
 import mysql, { Connection } from 'mysql2/promise';
+import { dbConfig } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-
-const dbConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'maia',
-  password: 'ForTheHorde!',
-  database: 'vale_dos_carajas',
-};
 
 export async function GET() {
   let connection: Connection | undefined;

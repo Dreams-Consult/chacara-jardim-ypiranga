@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { dbConfig } from '@/lib/db';
 
 // Forçar rota dinâmica
 export const dynamic = 'force-dynamic';
-
-// Configuração do banco de dados
-const dbConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'maia',
-  password: 'ForTheHorde!',
-  database: 'vale_dos_carajas',
-};
 
 /**
  * GET /api/mapas/lotes?mapId=123&blockId=456

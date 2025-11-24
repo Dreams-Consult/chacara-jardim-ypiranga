@@ -5,16 +5,17 @@ const isProd = process.env.NODE_ENV === 'production';
 const nextConfig: NextConfig = {
   // Remover 'output: export' para permitir API Routes dinâmicas
   // output: 'export', // Desabilitado - incompatível com API Routes
-  basePath: isProd ? '/chacara-jardim-ypiranga' : '',
+  basePath: isProd ? '' : '',
   images: {
     unoptimized: true,
   },
   trailingSlash: true,
   
-  // Aumentar limite de body para suportar PDFs grandes
+  // Configurações experimentais
   experimental: {
     serverActions: {
-      bodySizeLimit: '50mb',
+      bodySizeLimit: '100mb',
+      allowedOrigins: ['*'],
     },
   },
 };

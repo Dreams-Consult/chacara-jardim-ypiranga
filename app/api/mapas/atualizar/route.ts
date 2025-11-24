@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import { RowDataPacket } from 'mysql2';
+import { dbConfig } from '@/lib/db';
 
 // Forçar rota dinâmica
 export const dynamic = 'force-dynamic';
-
-const dbConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'maia',
-  password: 'ForTheHorde!',
-  database: 'vale_dos_carajas',
-};
 
 export async function PATCH(request: NextRequest) {
   let connection;

@@ -7,7 +7,7 @@ export default function NotFound() {
   const router = useRouter();
 
   useEffect(() => {
-    const path = window.location.pathname.replace('/chacara-jardim-ypiranga', '');
+    const path = window.location.pathname.replace('/', '');
     if (path && path !== '/') {
       router.replace(path);
     }

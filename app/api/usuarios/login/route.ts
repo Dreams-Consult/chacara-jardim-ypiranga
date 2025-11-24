@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import crypto from 'crypto';
+import { dbConfig } from '@/lib/db';
 
 // Forçar rota dinâmica
 export const dynamic = 'force-dynamic';
-
-// Configuração do banco de dados
-const dbConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'maia',
-  password: 'ForTheHorde!',
-  database: 'vale_dos_carajas',
-};
 
 /**
  * GET /api/usuarios/login?cpf=12345678900&password=senha123
