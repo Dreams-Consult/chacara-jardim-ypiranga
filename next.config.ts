@@ -5,7 +5,6 @@ const isProd = process.env.NODE_ENV === 'production';
 const nextConfig: NextConfig = {
   // Remover 'output: export' para permitir API Routes dinâmicas
   // output: 'export', // Desabilitado - incompatível com API Routes
-  basePath: isProd ? '' : '',
   images: {
     unoptimized: true,
   },
