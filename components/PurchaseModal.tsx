@@ -188,6 +188,12 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
       return;
     }
 
+    // Validar se o pagamento inicial foi informado
+    if (!formData.firstPayment || formData.firstPayment <= 0) {
+      setPriceError('Por favor, informe o valor da entrada');
+      return;
+    }
+
     // Se tudo estiver ok, chama o handleSubmit original
     handleSubmit(e);
   };
@@ -477,11 +483,12 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$)</label>
+              <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$) *</label>
               <input
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
+                required
                 value={formData.firstPayment || ''}
                 onChange={e => setFormData({ ...formData, firstPayment: parseFloat(e.target.value) || 0 })}
                 className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"

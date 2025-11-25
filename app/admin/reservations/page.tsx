@@ -150,6 +150,7 @@ export default function ReservationsPage() {
         customer_phone: editingReservation.customer_phone,
         customer_cpf: editingReservation.customer_cpf,
         payment_method: editingReservation.payment_method,
+        first_payment: editingReservation.first_payment,
         message: editingReservation.message,
         seller_name: editingReservation.seller_name,
         seller_email: editingReservation.seller_email,
@@ -684,6 +685,18 @@ export default function ReservationsPage() {
                       <option value="installments">💳 Parcelamento</option>
                       <option value="outro">📝 Outro</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editingReservation.first_payment || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, first_payment: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                      placeholder="0.00"
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-white/80 text-sm font-semibold mb-2">Mensagem do Cliente</label>
