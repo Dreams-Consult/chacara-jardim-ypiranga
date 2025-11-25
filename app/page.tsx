@@ -12,7 +12,7 @@ export default function HomePage() {
     if (isAuthenticated) {
       router.replace('/admin/dashboard');
     } else {
-      router.replace('/loteamentos');
+      router.replace('/login');
     }
   }, [router, isAuthenticated]);
 
