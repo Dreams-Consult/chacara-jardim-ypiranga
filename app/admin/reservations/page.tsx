@@ -18,6 +18,7 @@ interface Reservation {
   customer_phone: string;
   customer_cpf: string | null;
   payment_method: string | null;
+  first_payment: number | null;
   message: string | null;
   seller_name: string;
   seller_email: string;
@@ -416,6 +417,14 @@ export default function ReservationsPage() {
                                 </span>
                               ))}
                             </div>
+                          </div>
+                        )}
+                        {reservation.first_payment && (
+                          <div>
+                            <p className="text-white/50 text-xs font-medium mb-1">Entrada</p>
+                            <p className="text-green-400 text-sm font-bold">
+                              R$ {reservation.first_payment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
                           </div>
                         )}
                         {reservation.message && (

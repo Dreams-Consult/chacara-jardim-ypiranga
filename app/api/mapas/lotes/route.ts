@@ -29,16 +29,23 @@ export async function GET(request: NextRequest) {
     // Conectar ao banco de dados
     connection = await mysql.createConnection(dbConfig);
 
-    // Construir query com ou sem filtro de blockId
-    let query = 'SELECT * FROM lots WHERE map_id = ?';
+    // Construir query com JOIN na tabela blocks para trazer o blockName
+    let query = `
+      SELECT 
+        l.*,
+        b.name as block_name
+      FROM lots l
+      LEFT JOIN blocks b ON l.block_id = b.id
+      WHERE l.map_id = ?
+    `;
     const params: any[] = [mapId];
 
     if (blockId) {
-      query += ' AND block_id = ?';
+      query += ' AND l.block_id = ?';
       params.push(blockId);
     }
 
-    query += ' ORDER BY lot_number ASC';
+    query += ' ORDER BY l.lot_number ASC';
 
     // Executar query
     const [rows] = await connection.execute(query, params);

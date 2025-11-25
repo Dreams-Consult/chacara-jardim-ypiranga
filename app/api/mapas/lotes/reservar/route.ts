@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       lotIds,
+      lotDetails,
+      firstPayment,
       customerName,
       customerEmail,
       customerPhone,
@@ -91,8 +93,8 @@ export async function POST(request: NextRequest) {
         `INSERT INTO purchase_requests (
           seller_id, customer_name, customer_email, customer_phone,
           customer_cpf, message, payment_method, seller_name, seller_email, 
-          seller_phone, seller_cpf, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+          seller_phone, seller_cpf, first_payment, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
         [
           sellerId || null,
           customerName,
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest) {
           sellerEmail || 'nao-informado@exemplo.com',
           sellerPhone ? sellerPhone.replace(/\D/g, '') : '00000000000',
           sellerCPF ? sellerCPF.replace(/\D/g, '') : '00000000000',
+          firstPayment || null,
         ]
       );
 
@@ -118,13 +121,18 @@ export async function POST(request: NextRequest) {
 
       const purchaseRequestId = (purchaseResult as any).insertId;
 
-      // 2. Criar registros em purchase_request_lots para cada lote
-      for (const lot of lotsArray) {
+      // 2. Criar registros em purchase_request_lots para cada lote com map_id, block_id e price
+      for (const lotDetail of lotDetails) {
         await connection.execute(
           `INSERT INTO purchase_request_lots (
-            purchase_request_id, lot_id
-          ) VALUES (?, ?)`,
-          [purchaseRequestId, lot.id]
+            purchase_request_id, lot_id, map_id, block_id
+          ) VALUES (?, ?, ?, ?)`,
+          [
+            purchaseRequestId,
+            lotDetail.lotId,
+            lotDetail.mapId,
+            lotDetail.blockId,
+          ]
         );
       }
 

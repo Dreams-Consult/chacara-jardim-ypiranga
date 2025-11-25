@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { Lot } from '@/types';
 
@@ -16,73 +16,25 @@ interface FormData {
   sellerCPF: string;
   paymentMethod: string;
   otherPayment: string;
+  firstPayment: number;
 }
 
-export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
-  // Carregar dados do vendedor logado do localStorage
-  const getSellerData = () => {
-    if (typeof window === 'undefined') return null;
-
-    const currentUser = localStorage.getItem('currentUser');
-    const userData = localStorage.getItem('userData');
-
-    if (currentUser) {
-      try {
-        return JSON.parse(currentUser);
-      } catch (error) {
-        console.error('[usePurchaseForm] Erro ao parsear currentUser:', error);
-      }
-    }
-
-    if (userData) {
-      try {
-        return JSON.parse(userData);
-      } catch (error) {
-        console.error('[usePurchaseForm] Erro ao parsear userData:', error);
-      }
-    }
-
-    return null;
-  };
-
-  const sellerData = getSellerData();
-
+export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: Record<string, number | null>) {
   const [formData, setFormData] = useState<FormData>({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
     customerCPF: '',
     message: '',
-    sellerName: sellerData?.name || '',
-    sellerEmail: sellerData?.email || '',
-    sellerPhone: sellerData?.phone || '',
-    sellerCPF: sellerData?.cpf || '',
+    sellerName: '',
+    sellerEmail: '',
+    sellerPhone: '',
+    sellerCPF: '',
     paymentMethod: '',
     otherPayment: '',
+    firstPayment: 0,
   });
 
-  // Atualizar dados do vendedor quando o componente montar
-  useEffect(() => {
-    const seller = getSellerData();
-    if (seller) {
-      console.log('[usePurchaseForm] ✅ Dados do vendedor carregados automaticamente:', {
-        name: seller.name,
-        email: seller.email,
-        cpf: seller.cpf,
-      });
-
-      // React 19: usar Promise.resolve().then() para setState assíncrono
-      Promise.resolve().then(() => {
-        setFormData(prev => ({
-          ...prev,
-          sellerName: seller.name || prev.sellerName,
-          sellerEmail: seller.email || prev.sellerEmail,
-          sellerPhone: seller.phone || prev.sellerPhone,
-          sellerCPF: seller.cpf || prev.sellerCPF,
-        }));
-      });
-    }
-  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,17 +107,25 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
 
       console.log(`[usePurchaseForm] ✅ Todos os ${lots.length} lote(s) estão disponíveis, prosseguindo com a reserva...`);
 
-      // Criar UMA ÚNICA reserva com MÚLTIPLOS lotes
-      const sellerInfo = getSellerData();
+      // Preparar detalhes dos lotes com map_id, block_id e preço
+      const lotDetails = lots.map(lot => ({
+        lotId: lot.id,
+        mapId: lot.mapId,
+        blockId: lot.blockId || null,
+        price: lotPrices?.[lot.id] || lot.price,
+      }));
 
+      // Criar UMA ÚNICA reserva com MÚLTIPLOS lotes
       const requestData = {
         lotIds: lots.map(lot => lot.id),
+        lotDetails,
+        firstPayment: formData.firstPayment,
         customerName: formData.customerName,
         customerEmail: formData.customerEmail,
         customerPhone: formData.customerPhone,
         customerCPF: formData.customerCPF,
         message: formData.message || null,
-        sellerId: sellerInfo?.id || null,
+        sellerId: null,
         sellerName: formData.sellerName,
         sellerEmail: formData.sellerEmail,
         sellerPhone: formData.sellerPhone,
@@ -173,7 +133,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
         paymentMethod: formData.otherPayment || formData.paymentMethod,
       };
 
-      console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s) e ID do vendedor:`, sellerInfo?.id);
+      console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s)`);
 
       await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {

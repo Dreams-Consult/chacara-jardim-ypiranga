@@ -82,15 +82,16 @@ const paymentOptions = [
 ];
 
 export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
-  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess);
-  const [cpfError, setCpfError] = React.useState<string>('');
-  const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
-  const [lotPrices, setLotPrices] = React.useState<Record<string, number>>(
+  const [lotPrices, setLotPrices] = React.useState<Record<string, number | null>>(
     lots.reduce((acc, lot) => ({ ...acc, [lot.id]: lot.price }), {})
   );
+  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices);
+  const [cpfError, setCpfError] = React.useState<string>('');
+  const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
+  const [priceError, setPriceError] = React.useState<string>('');
 
-  // Calcular preço total com base nos valores editáveis
-  const totalPrice = Object.values(lotPrices).reduce((sum, price) => sum + price, 0);
+  // Calcular preço total com base nos valores editáveis (ignora valores nulos)
+  const totalPrice = Object.values(lotPrices).reduce((sum: number, price) => sum + (price || 0), 0);
   const totalArea = lots.reduce((sum, lot) => sum + lot.size, 0);
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,18 +159,38 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
     }
   };
 
-  const handleLotPriceChange = (lotId: string, newPrice: number) => {
+  const handleLotPriceChange = (lotId: string, value: string) => {
+    const newPrice = value === '' ? null : parseFloat(value);
     setLotPrices(prev => ({ ...prev, [lotId]: newPrice }));
+    setPriceError(''); // Limpa erro ao editar
   };
 
   // Função auxiliar para atualizar paymentMethod e limpar otherPayment se necessário
   const handlePaymentMethodChange = (value: string) => {
-  if (value !== 'outro') {
-    setFormData({ ...formData, paymentMethod: value, otherPayment: '' });
-  } else {
-    setFormData({ ...formData, paymentMethod: value });
+    if (value !== 'outro') {
+      setFormData({ ...formData, paymentMethod: value, otherPayment: '' });
+    } else {
+      setFormData({ ...formData, paymentMethod: value });
+    }
   }
-}
+
+  // Função para validar e enviar o formulário
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPriceError('');
+
+    // Validar se todos os lotes têm preço definido
+    const lotsWithoutPrice = lots.filter(lot => !lotPrices[lot.id] || lotPrices[lot.id] === 0);
+    
+    if (lotsWithoutPrice.length > 0) {
+      const lotNumbers = lotsWithoutPrice.map(lot => lot.lotNumber).join(', ');
+      setPriceError(`Por favor, defina o valor para os lotes: ${lotNumbers}`);
+      return;
+    }
+
+    // Se tudo estiver ok, chama o handleSubmit original
+    handleSubmit(e);
+  };
 
   return (
     <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
@@ -204,14 +225,21 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
         <div className="p-6">
           {/* Informações dos lotes selecionados */}
           <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-2xl p-5 mb-6">
-            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">
+            <h3 className="text-base font-bold text-gray-900 mb-3">
               {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
             </h3>
             <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
               {lots.map((lot) => (
                 <div key={lot.id} className="bg-white/80 rounded-lg p-3 border border-[var(--border)]">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
+                      {lot.blockName && (
+                        <span className="text-xs text-[var(--surface)]/70 bg-[var(--primary)]/10 px-2 py-0.5 rounded">
+                          Quadra: {lot.blockName}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-sm text-[var(--surface)]">{lot.size}m²</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -220,10 +248,12 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                       type="number"
                       step="0.01"
                       min="0"
-                      value={lotPrices[lot.id]}
-                      onChange={(e) => handleLotPriceChange(lot.id, parseFloat(e.target.value) || 0)}
-                      className="flex-1 px-2 py-1 text-sm border border-[var(--border)] rounded text-[var(--surface)] bg-white"
+                      value={lotPrices[lot.id] ?? ''}
+                      onChange={(e) => handleLotPriceChange(lot.id, e.target.value)}
+                      className="flex-1 px-2 py-1 text-sm border border-[var(--border)] rounded text-[var(--surface)] bg-gray-100 cursor-not-allowed"
                       placeholder="0.00"
+                      disabled
+                      readOnly
                     />
                   </div>
                 </div>
@@ -241,6 +271,15 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
           </div>
 
+          {priceError && (
+            <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-xl p-4 mb-4 flex items-start gap-3">
+              <svg className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-[var(--danger)] text-sm font-medium">{priceError}</p>
+            </div>
+          )}
+
           {error && (
             <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-xl p-4 mb-4 flex items-start gap-3">
               <svg className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,10 +289,10 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleFormSubmit} className="space-y-5">
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
-              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Dados do Cliente
@@ -261,7 +300,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Nome Completo *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Nome Completo *</label>
                   <input
                     type="text"
                     required
@@ -273,7 +312,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Email *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Email *</label>
                   <input
                     type="email"
                     required
@@ -285,7 +324,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Telefone *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone *</label>
                   <input
                     type="tel"
                     required
@@ -298,7 +337,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">CPF *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">CPF *</label>
                   <input
                     type="text"
                     required
@@ -318,8 +357,8 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6">
-              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 Dados do Vendedor
@@ -327,7 +366,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Nome do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Nome do Vendedor *</label>
                   <input
                     type="text"
                     required
@@ -339,7 +378,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Email do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Email do Vendedor *</label>
                   <input
                     type="email"
                     required
@@ -351,7 +390,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Telefone do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone do Vendedor *</label>
                   <input
                     type="tel"
                     required
@@ -364,7 +403,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">CPF do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">CPF do Vendedor *</label>
                   <input
                     type="text"
                     required
@@ -384,7 +423,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Mensagem</label>
+              <label className="block text-base font-bold text-gray-900 mb-2">Mensagem</label>
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -395,7 +434,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Forma de Pagamento *</label>
+              <label className="block text-base font-bold text-gray-900 mb-2">Forma de Pagamento *</label>
               <div className="flex gap-3">
                 {paymentOptions.map(option => (
                   <button
@@ -421,7 +460,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
               {formData.paymentMethod === 'outro' && (
                 <div className="mt-3">
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                  <label className="block text-base font-bold text-gray-900 mb-2">
                     Especifique a forma de pagamento *
                   </label>
                   <input
@@ -435,6 +474,19 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                   />
                 </div>
               )}
+            </div>
+
+            <div>
+              <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.firstPayment || ''}
+                onChange={e => setFormData({ ...formData, firstPayment: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                placeholder="0.00"
+              />
             </div>
 
             <div className="flex gap-3 pt-4">
