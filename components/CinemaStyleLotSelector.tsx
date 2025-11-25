@@ -226,13 +226,9 @@ export default function CinemaStyleLotSelector({
                       onChange={(e) => {
                         const value = e.target.value;
                         const newSize = value === '' ? 0 : parseFloat(value);
-                        const pricePerM2 = editedLot.pricePerM2 || 0;
-                        // Calcula com precisão: multiplica primeiro, depois arredonda
-                        const calculatedPrice = Math.round(newSize * pricePerM2 * 100) / 100;
                         setEditedLot({
                           ...editedLot,
-                          size: newSize,
-                          price: calculatedPrice
+                          size: newSize
                         });
                       }}
                       className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
@@ -241,7 +237,7 @@ export default function CinemaStyleLotSelector({
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Preço por m² (R$) *</label>
+                    <label className="block text-gray-400 text-sm mb-2">Preço por m² (R$)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
                       <input
@@ -254,13 +250,9 @@ export default function CinemaStyleLotSelector({
                           setPricePerM2Input(value);
                           const newPricePerM2 = value === '' ? 0 : parseFloat(value);
                           if (!isNaN(newPricePerM2)) {
-                            const size = editedLot.size || 0;
-                            // Calcula com precisão: multiplica primeiro, depois arredonda
-                            const calculatedPrice = Math.round(size * newPricePerM2 * 100) / 100;
                             setEditedLot({
                               ...editedLot,
-                              pricePerM2: newPricePerM2,
-                              price: calculatedPrice
+                              pricePerM2: newPricePerM2
                             });
                           }
                         }}
@@ -274,20 +266,31 @@ export default function CinemaStyleLotSelector({
                         placeholder="150.00"
                       />
                     </div>
+                    <p className="text-xs text-gray-400 mt-1">💡 Apenas para referência</p>
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Preço Total (R$)</label>
+                    <label className="block text-gray-400 text-sm mb-2">Preço Total (R$) *</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
                       <input
-                        type="text"
-                        value={editedLot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        readOnly
-                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-base cursor-not-allowed"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editedLot.price || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const newPrice = value === '' ? 0 : parseFloat(value);
+                          setEditedLot({
+                            ...editedLot,
+                            price: newPrice
+                          });
+                        }}
+                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                        placeholder="0.00"
                       />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Calculado automaticamente: Área × Preço/m²</p>
+                    <p className="text-xs text-gray-400 mt-1">💡 Preencha manualmente o valor do lote</p>
                   </div>
 
                   <div>

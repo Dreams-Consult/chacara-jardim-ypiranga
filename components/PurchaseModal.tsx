@@ -84,9 +84,13 @@ const paymentOptions = [
 export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
   const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess);
   const [cpfError, setCpfError] = React.useState<string>('');
+  const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
+  const [lotPrices, setLotPrices] = React.useState<Record<string, number>>(
+    lots.reduce((acc, lot) => ({ ...acc, [lot.id]: lot.price }), {})
+  );
 
-  // Calcular preço total de todos os lotes
-  const totalPrice = lots.reduce((sum, lot) => sum + lot.price, 0);
+  // Calcular preço total com base nos valores editáveis
+  const totalPrice = Object.values(lotPrices).reduce((sum, price) => sum + price, 0);
   const totalArea = lots.reduce((sum, lot) => sum + lot.size, 0);
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +124,42 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
     }
 
     setFormData({ ...formData, customerPhone: formatted });
+  };
+
+  const handleSellerPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numbers = e.target.value.replace(/\D/g, '');
+    let formatted = numbers;
+
+    if (numbers.length <= 2) {
+      formatted = numbers;
+    } else if (numbers.length <= 6) {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else if (numbers.length <= 10) {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    } else {
+      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+
+    setFormData({ ...formData, sellerPhone: formatted });
+  };
+
+  const handleSellerCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setFormData({ ...formData, sellerCPF: formatted });
+
+    if (formatted.length === 14) {
+      if (!validateCPF(formatted)) {
+        setSellerCpfError('CPF inválido');
+      } else {
+        setSellerCpfError('');
+      }
+    } else {
+      setSellerCpfError('');
+    }
+  };
+
+  const handleLotPriceChange = (lotId: string, newPrice: number) => {
+    setLotPrices(prev => ({ ...prev, [lotId]: newPrice }));
   };
 
   // Função auxiliar para atualizar paymentMethod e limpar otherPayment se necessário
@@ -169,9 +209,23 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </h3>
             <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
               {lots.map((lot) => (
-                <div key={lot.id} className="bg-white/80 rounded-lg p-2 border border-[var(--border)] flex justify-between items-center">
-                  <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
-                  <span className="text-sm text-[var(--surface)]">{lot.size}m² - R$ {lot.price.toLocaleString('pt-BR')}</span>
+                <div key={lot.id} className="bg-white/80 rounded-lg p-3 border border-[var(--border)]">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
+                    <span className="text-sm text-[var(--surface)]">{lot.size}m²</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--surface)]">Valor:</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={lotPrices[lot.id]}
+                      onChange={(e) => handleLotPriceChange(lot.id, parseFloat(e.target.value) || 0)}
+                      className="flex-1 px-2 py-1 text-sm border border-[var(--border)] rounded text-[var(--surface)] bg-white"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -182,7 +236,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               </div>
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
                 <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR')}</p>
+                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
@@ -197,59 +251,136 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Nome Completo *</label>
-              <input
-                type="text"
-                required
-                value={formData.customerName}
-                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="Seu nome completo"
-              />
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Dados do Cliente
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Nome Completo *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="Nome do cliente"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.customerEmail}
+                    onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="email@cliente.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Telefone *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.customerPhone}
+                    onChange={handlePhoneChange}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">CPF *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.customerCPF}
+                    onChange={handleCPFChange}
+                    className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
+                      cpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
+                    }`}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {cpfError && (
+                    <p className="text-red-600 text-sm mt-1">❌ {cpfError}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Email *</label>
-              <input
-                type="email"
-                required
-                value={formData.customerEmail}
-                onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="seu@email.com"
-              />
-            </div>
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Dados do Vendedor
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Nome do Vendedor *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.sellerName || ''}
+                    onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="Nome do vendedor"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Telefone *</label>
-              <input
-                type="tel"
-                required
-                value={formData.customerPhone}
-                onChange={handlePhoneChange}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="(00) 00000-0000"
-                maxLength={15}
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Email do Vendedor *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.sellerEmail || ''}
+                    onChange={(e) => setFormData({ ...formData, sellerEmail: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="email@vendedor.com"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">CPF *</label>
-              <input
-                type="text"
-                required
-                value={formData.customerCPF}
-                onChange={handleCPFChange}
-                className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
-                  cpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
-                }`}
-                placeholder="000.000.000-00"
-                maxLength={14}
-              />
-              {cpfError && (
-                <p className="text-red-600 text-sm mt-1">❌ {cpfError}</p>
-              )}
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Telefone do Vendedor *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.sellerPhone || ''}
+                    onChange={handleSellerPhoneChange}
+                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">CPF do Vendedor *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.sellerCPF || ''}
+                    onChange={handleSellerCPFChange}
+                    className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
+                      sellerCpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
+                    }`}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {sellerCpfError && (
+                    <p className="text-red-600 text-sm mt-1">❌ {sellerCpfError}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>
@@ -309,7 +440,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                disabled={isSubmitting || cpfError !== ''}
+                disabled={isSubmitting || cpfError !== '' || sellerCpfError !== ''}
                 className="flex-1 px-5 py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] cursor-pointer"
               >
                 {isSubmitting ? (
@@ -320,7 +451,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                     </svg>
                     Enviando...
                   </span>
-                ) : 'Enviar Interesse'}
+                ) : 'Criar Reserva'}
               </button>
               <button
                 type="button"
