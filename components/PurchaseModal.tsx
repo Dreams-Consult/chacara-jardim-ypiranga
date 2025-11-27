@@ -513,16 +513,18 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               )}
             </div>
 
-            <div>
-              <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
-              <input
-                type="text"
-                value={firstPaymentDisplay}
-                onChange={handleFirstPaymentChange}
-                className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                placeholder="0,00"
-              />
-            </div>
+            {formData.paymentMethod && formData.paymentMethod !== 'pix' && formData.paymentMethod !== 'dinheiro' && (
+              <div>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
+                <input
+                  type="text"
+                  value={firstPaymentDisplay}
+                  onChange={handleFirstPaymentChange}
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                  placeholder="0,00"
+                />
+              </div>
+            )}
 
             {formData.paymentMethod === 'carne' && (
               <div>
