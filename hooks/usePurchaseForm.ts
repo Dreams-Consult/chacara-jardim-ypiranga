@@ -147,8 +147,11 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
       if (formData.sellerPhone) requestData.sellerPhone = formData.sellerPhone;
       if (formData.sellerCPF) requestData.sellerCPF = formData.sellerCPF;
       if (formData.message) requestData.message = formData.message;
-      if (formData.firstPayment && formData.firstPayment > 0) requestData.firstPayment = formData.firstPayment;
-      if (formData.installments && formData.installments > 0) requestData.installments = formData.installments;
+      
+      // Sempre enviar firstPayment e installments (mesmo que sejam 0 ou null)
+      requestData.firstPayment = formData.firstPayment || null;
+      requestData.installments = formData.installments || null;
+      
       if (formData.paymentMethod || formData.otherPayment) {
         requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;
       }

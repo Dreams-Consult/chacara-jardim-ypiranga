@@ -450,16 +450,14 @@ export default function ReservationsPage() {
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">Forma de Pagamento</p>
                           <p className="text-white text-sm capitalize">
-                            {reservation.payment_method === 'cash' && '💵 À Vista'}
-                            {reservation.payment_method === 'financing' && '🏦 Financiamento'}
-                            {reservation.payment_method === 'installments' && '💳 Parcelamento'}
-                            {reservation.payment_method === 'carne' && '📄 Carnê'}
                             {reservation.payment_method === 'pix' && '💰 Pix'}
                             {reservation.payment_method === 'cartao' && '💳 Cartão'}
                             {reservation.payment_method === 'dinheiro' && '💵 Dinheiro'}
+                            {reservation.payment_method === 'carne' && '📄 Carnê'}
+                            {reservation.payment_method === 'financing' && '🏦 Financiamento'}
                             {reservation.payment_method === 'outro' && '📝 Outro'}
                             {!reservation.payment_method && 'Não informado'}
-                            {reservation.payment_method && !['cash', 'financing', 'installments', 'carne', 'pix', 'cartao', 'dinheiro', 'outro'].includes(reservation.payment_method) && `📝 ${reservation.payment_method}`}
+                            {reservation.payment_method && !['pix', 'cartao', 'dinheiro', 'carne', 'financing', 'outro'].includes(reservation.payment_method) && `📝 ${reservation.payment_method}`}
                           </p>
                         </div>
                         <div>
@@ -746,7 +744,21 @@ export default function ReservationsPage() {
                     <label className="block text-white/80 text-sm font-semibold mb-2">Forma de Pagamento</label>
                     <select
                       value={editingReservation.payment_method || ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, payment_method: e.target.value })}
+                      onChange={(e) => {
+                        const newPaymentMethod = e.target.value;
+                        // Limpar entrada e parcelas se for pagamento à vista (pix ou dinheiro)
+                        if (newPaymentMethod === 'pix' || newPaymentMethod === 'dinheiro') {
+                          setEditingReservation({ 
+                            ...editingReservation, 
+                            payment_method: newPaymentMethod,
+                            first_payment: null,
+                            installments: null
+                          });
+                          setFirstPaymentDisplay('');
+                        } else {
+                          setEditingReservation({ ...editingReservation, payment_method: newPaymentMethod });
+                        }
+                      }}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] cursor-pointer"
                     >
                       <option value="">Selecione...</option>
@@ -754,23 +766,23 @@ export default function ReservationsPage() {
                       <option value="cartao">💳 Cartão</option>
                       <option value="dinheiro">💵 Dinheiro</option>
                       <option value="carne">📄 Carnê</option>
-                      <option value="cash">💵 À Vista</option>
                       <option value="financing">🏦 Financiamento</option>
-                      <option value="installments">💳 Parcelamento</option>
                       <option value="outro">📝 Outro</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
-                    <input
-                      type="text"
-                      value={firstPaymentDisplay}
-                      onChange={handleFirstPaymentChange}
-                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                      placeholder="0,00"
-                    />
-                  </div>
-                  {editingReservation.payment_method === 'carne' && (
+                  {editingReservation.payment_method && editingReservation.payment_method !== 'pix' && editingReservation.payment_method !== 'dinheiro' && (
+                    <div>
+                      <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
+                      <input
+                        type="text"
+                        value={firstPaymentDisplay}
+                        onChange={handleFirstPaymentChange}
+                        className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                        placeholder="0,00"
+                      />
+                    </div>
+                  )}
+                  {(editingReservation.payment_method === 'carne' || editingReservation.payment_method === 'cartao' || editingReservation.payment_method === 'financing') && (
                     <div>
                       <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
                       <input
