@@ -308,9 +308,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
           )}
 
           <form onSubmit={handleFormSubmit} className="space-y-5">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Dados do Cliente
@@ -318,47 +318,47 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Nome Completo *</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">Nome Completo *</label>
                   <input
                     type="text"
                     required
                     value={formData.customerName}
                     onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="Nome do cliente"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Email</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">Email</label>
                   <input
                     type="email"
                     value={formData.customerEmail}
                     onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="email@cliente.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">Telefone</label>
                   <input
                     type="tel"
                     value={formData.customerPhone}
                     onChange={handlePhoneChange}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="(00) 00000-0000"
                     maxLength={15}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">CPF</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">CPF</label>
                   <input
                     type="text"
                     value={formData.customerCPF}
                     onChange={handleCPFChange}
-                    className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
+                    className={`w-full px-4 py-2.5 bg-[var(--surface)] border-2 rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] font-mono ${
                       cpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
                     }`}
                     placeholder="000.000.000-00"
@@ -371,9 +371,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 Dados do Vendedor
@@ -381,47 +381,47 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Nome do Vendedor *</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">Nome do Vendedor *</label>
                   <input
                     type="text"
                     required
                     value={formData.sellerName || ''}
                     onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="Nome do vendedor"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Email do Vendedor</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">Email do Vendedor</label>
                   <input
                     type="email"
                     value={formData.sellerEmail || ''}
                     onChange={(e) => setFormData({ ...formData, sellerEmail: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="email@vendedor.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone do Vendedor</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">Telefone do Vendedor</label>
                   <input
                     type="tel"
                     value={formData.sellerPhone || ''}
                     onChange={handleSellerPhoneChange}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="(00) 00000-0000"
                     maxLength={15}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">CPF do Vendedor</label>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">CPF do Vendedor</label>
                   <input
                     type="text"
                     value={formData.sellerCPF || ''}
                     onChange={handleSellerCPFChange}
-                    className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
+                    className={`w-full px-4 py-2.5 bg-[var(--surface)] border-2 rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] font-mono ${
                       sellerCpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
                     }`}
                     placeholder="000.000.000-00"
@@ -435,18 +435,18 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-2">Mensagem</label>
+              <label className="block text-white/80 text-sm font-semibold mb-2">Mensagem</label>
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                 rows={4}
                 placeholder="Deixe uma mensagem ou dúvida"
               />
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-2">Forma de Pagamento</label>
+              <label className="block text-white/80 text-sm font-semibold mb-2">Forma de Pagamento</label>
               <div className="flex gap-3">
                 {paymentOptions.map(option => (
                   <button
@@ -469,7 +469,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
               {formData.paymentMethod === 'outro' && (
                 <div className="mt-3">
-                  <label className="block text-base font-bold text-gray-900 mb-2">
+                  <label className="block text-white/80 text-sm font-semibold mb-2">
                     Especifique a forma de pagamento
                   </label>
                   <input
@@ -477,7 +477,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                     type="text"
                     value={formData.otherPayment || ''}
                     onChange={e => setFormData({ ...formData, otherPayment: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     placeholder="Descreva a forma de pagamento"
                   />
                 </div>
@@ -485,12 +485,12 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$)</label>
+              <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
               <input
                 type="text"
                 value={firstPaymentDisplay}
                 onChange={handleFirstPaymentChange}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                 placeholder="0,00"
               />
             </div>
