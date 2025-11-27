@@ -250,17 +250,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-[var(--surface)]">Valor:</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={lotPrices[lot.id] ?? ''}
-                      onChange={(e) => handleLotPriceChange(lot.id, e.target.value)}
-                      className="flex-1 px-2 py-1 text-sm border border-[var(--border)] rounded text-[var(--surface)] bg-gray-100 cursor-not-allowed"
-                      placeholder="0.00"
-                      disabled
-                      readOnly
-                    />
+                    <div className="flex-1 px-2 py-1 text-sm border border-[var(--border)] rounded text-[var(--surface)] bg-gray-100 font-semibold">
+                      R$ {(lotPrices[lot.id] ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
                   </div>
                 </div>
               ))}
