@@ -214,12 +214,6 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
       return;
     }
 
-    // Validar se o pagamento inicial foi informado
-    if (!formData.firstPayment || formData.firstPayment <= 0) {
-      setPriceError('Por favor, informe o valor da entrada');
-      return;
-    }
-
     // Se tudo estiver ok, chama o handleSubmit original
     handleSubmit(e);
   };
@@ -336,10 +330,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Email *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Email</label>
                   <input
                     type="email"
-                    required
                     value={formData.customerEmail}
                     onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
                     className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
@@ -348,10 +341,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone</label>
                   <input
                     type="tel"
-                    required
                     value={formData.customerPhone}
                     onChange={handlePhoneChange}
                     className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
@@ -361,10 +353,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">CPF *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">CPF</label>
                   <input
                     type="text"
-                    required
                     value={formData.customerCPF}
                     onChange={handleCPFChange}
                     className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
@@ -402,10 +393,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Email do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Email do Vendedor</label>
                   <input
                     type="email"
-                    required
                     value={formData.sellerEmail || ''}
                     onChange={(e) => setFormData({ ...formData, sellerEmail: e.target.value })}
                     className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
@@ -414,10 +404,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">Telefone do Vendedor</label>
                   <input
                     type="tel"
-                    required
                     value={formData.sellerPhone || ''}
                     onChange={handleSellerPhoneChange}
                     className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
@@ -427,10 +416,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
 
                 <div>
-                  <label className="block text-base font-bold text-gray-900 mb-2">CPF do Vendedor *</label>
+                  <label className="block text-base font-bold text-gray-900 mb-2">CPF do Vendedor</label>
                   <input
                     type="text"
-                    required
                     value={formData.sellerCPF || ''}
                     onChange={handleSellerCPFChange}
                     className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
@@ -458,7 +446,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-2">Forma de Pagamento *</label>
+              <label className="block text-base font-bold text-gray-900 mb-2">Forma de Pagamento</label>
               <div className="flex gap-3">
                 {paymentOptions.map(option => (
                   <button
@@ -477,20 +465,16 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 ))}
               </div>
 
-              <input type="hidden" name="paymentMethod" value={formData.paymentMethod || ''} required />
-              {!formData.paymentMethod && (
-                <p className="text-red-600 text-sm mt-1">❌ Selecione uma forma de pagamento</p>
-              )}
+              <input type="hidden" name="paymentMethod" value={formData.paymentMethod || ''} />
 
               {formData.paymentMethod === 'outro' && (
                 <div className="mt-3">
                   <label className="block text-base font-bold text-gray-900 mb-2">
-                    Especifique a forma de pagamento *
+                    Especifique a forma de pagamento
                   </label>
                   <input
                     maxLength={30}
                     type="text"
-                    required
                     value={formData.otherPayment || ''}
                     onChange={e => setFormData({ ...formData, otherPayment: e.target.value })}
                     className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
@@ -501,10 +485,9 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$) *</label>
+              <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$)</label>
               <input
                 type="text"
-                required
                 value={firstPaymentDisplay}
                 onChange={handleFirstPaymentChange}
                 className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"

@@ -377,7 +377,7 @@ export default function ReservationsPage() {
                       )}
                     </div>
                     <h3 className="text-white font-bold text-lg truncate">{reservation.customer_name}</h3>
-                    <p className="text-white/60 text-sm truncate">{reservation.customer_email}</p>
+                    <p className="text-white/60 text-sm truncate">{reservation.customer_email || 'Não Informado'}</p>
                   </div>
 
                   {/* Botão de expandir/recolher */}
@@ -418,11 +418,11 @@ export default function ReservationsPage() {
                         </div>
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">Email</p>
-                          <p className="text-white text-sm">{reservation.customer_email}</p>
+                          <p className="text-white text-sm">{reservation.customer_email || 'Não Informado'}</p>
                         </div>
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
-                          <p className="text-white text-sm">{reservation.customer_phone}</p>
+                          <p className="text-white text-sm">{reservation.customer_phone || 'Não Informado'}</p>
                         </div>
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">CPF/CNPJ</p>
@@ -511,15 +511,15 @@ export default function ReservationsPage() {
                         </div>
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">Email</p>
-                          <p className="text-white text-sm">{reservation.seller_email}</p>
+                          <p className="text-white text-sm">{reservation.seller_email || 'Não Informado'}</p>
                         </div>
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
-                          <p className="text-white text-sm">{reservation.seller_phone}</p>
+                          <p className="text-white text-sm">{reservation.seller_phone || 'Não Informado'}</p>
                         </div>
                         <div>
                           <p className="text-white/50 text-xs font-medium mb-1">CPF</p>
-                          <p className="text-white font-mono text-sm">{reservation.seller_cpf}</p>
+                          <p className="text-white font-mono text-sm">{reservation.seller_cpf || 'Não Informado'}</p>
                         </div>
                       </div>
                     </div>
@@ -637,7 +637,7 @@ export default function ReservationsPage() {
                     <label className="block text-white/80 text-sm font-semibold mb-2">Email *</label>
                     <input
                       type="email"
-                      value={editingReservation.customer_email}
+                      value={editingReservation.customer_email || ''}
                       onChange={(e) => setEditingReservation({ ...editingReservation, customer_email: e.target.value })}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       placeholder="email@exemplo.com"
@@ -647,7 +647,7 @@ export default function ReservationsPage() {
                     <label className="block text-white/80 text-sm font-semibold mb-2">Telefone *</label>
                     <input
                       type="tel"
-                      value={editingReservation.customer_phone}
+                      value={editingReservation.customer_phone || ''}
                       onChange={(e) => setEditingReservation({ ...editingReservation, customer_phone: e.target.value })}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       placeholder="(11) 98765-4321"

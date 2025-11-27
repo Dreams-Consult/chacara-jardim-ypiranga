@@ -29,9 +29,16 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (!customer_name || !customer_email || !customer_phone) {
+    if (!customer_name) {
       return NextResponse.json(
-        { error: 'Nome, email e telefone são obrigatórios' },
+        { error: 'Nome do cliente é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    if (!seller_name) {
+      return NextResponse.json(
+        { error: 'Nome do vendedor é obrigatório' },
         { status: 400 }
       );
     }

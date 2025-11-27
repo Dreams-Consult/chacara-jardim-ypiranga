@@ -33,9 +33,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!customerName || !customerEmail || !customerPhone || !customerCPF) {
+    if (!customerName) {
       return NextResponse.json(
-        { error: 'Dados do cliente incompletos' },
+        { error: 'Nome do cliente é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    if (!sellerName) {
+      return NextResponse.json(
+        { error: 'Nome do vendedor é obrigatório' },
         { status: 400 }
       );
     }
@@ -98,15 +105,15 @@ export async function POST(request: NextRequest) {
         [
           sellerId || null,
           customerName,
-          customerEmail,
-          customerPhone.replace(/\D/g, ''),
-          customerCPF.replace(/\D/g, ''),
+          customerEmail || null,
+          customerPhone ? customerPhone.replace(/\D/g, '') : null,
+          customerCPF ? customerCPF.replace(/\D/g, '') : null,
           message || null,
-          paymentMethod || 'cash',
-          sellerName || 'Não informado',
-          sellerEmail || 'nao-informado@exemplo.com',
-          sellerPhone ? sellerPhone.replace(/\D/g, '') : '00000000000',
-          sellerCPF ? sellerCPF.replace(/\D/g, '') : '00000000000',
+          paymentMethod || null,
+          sellerName,
+          sellerEmail || null,
+          sellerPhone ? sellerPhone.replace(/\D/g, '') : null,
+          sellerCPF ? sellerCPF.replace(/\D/g, '') : null,
           firstPayment || null,
         ]
       );

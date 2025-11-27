@@ -72,16 +72,30 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
     setIsSubmitting(true);
     setError(null);
 
-    // Validar CPF do cliente (obrigatório)
-    if (!formData.customerCPF || !validateCPF(formData.customerCPF)) {
-      setError('CPF do cliente é obrigatório e deve ser válido.');
+    // Validar nome do cliente (obrigatório)
+    if (!formData.customerName || formData.customerName.trim() === '') {
+      setError('Nome do cliente é obrigatório.');
       setIsSubmitting(false);
       return;
     }
 
-    // Validar CPF do vendedor (obrigatório)
-    if (!formData.sellerCPF || !validateCPF(formData.sellerCPF)) {
-      setError('CPF do vendedor é obrigatório e deve ser válido.');
+    // Validar nome do vendedor (obrigatório)
+    if (!formData.sellerName || formData.sellerName.trim() === '') {
+      setError('Nome do vendedor é obrigatório.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar CPF do cliente se fornecido
+    if (formData.customerCPF && !validateCPF(formData.customerCPF)) {
+      setError('CPF do cliente inválido.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar CPF do vendedor se fornecido
+    if (formData.sellerCPF && !validateCPF(formData.sellerCPF)) {
+      setError('CPF do vendedor inválido.');
       setIsSubmitting(false);
       return;
     }
@@ -115,23 +129,26 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
         price: lotPrices?.[lot.id] || lot.price,
       }));
 
-      // Criar UMA ÚNICA reserva com MÚLTIPLOS lotes
-      const requestData = {
+      // Criar objeto de requisição apenas com campos obrigatórios e preenchidos
+      const requestData: any = {
         lotIds: lots.map(lot => lot.id),
         lotDetails,
-        firstPayment: formData.firstPayment,
         customerName: formData.customerName,
-        customerEmail: formData.customerEmail,
-        customerPhone: formData.customerPhone,
-        customerCPF: formData.customerCPF,
-        message: formData.message || null,
-        sellerId: null,
         sellerName: formData.sellerName,
-        sellerEmail: formData.sellerEmail,
-        sellerPhone: formData.sellerPhone,
-        sellerCPF: formData.sellerCPF,
-        paymentMethod: formData.otherPayment || formData.paymentMethod,
       };
+
+      // Adicionar campos opcionais apenas se preenchidos
+      if (formData.customerEmail) requestData.customerEmail = formData.customerEmail;
+      if (formData.customerPhone) requestData.customerPhone = formData.customerPhone;
+      if (formData.customerCPF) requestData.customerCPF = formData.customerCPF;
+      if (formData.sellerEmail) requestData.sellerEmail = formData.sellerEmail;
+      if (formData.sellerPhone) requestData.sellerPhone = formData.sellerPhone;
+      if (formData.sellerCPF) requestData.sellerCPF = formData.sellerCPF;
+      if (formData.message) requestData.message = formData.message;
+      if (formData.firstPayment && formData.firstPayment > 0) requestData.firstPayment = formData.firstPayment;
+      if (formData.paymentMethod || formData.otherPayment) {
+        requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;
+      }
 
       console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s)`);
 
