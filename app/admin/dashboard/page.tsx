@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [maps, setMaps] = useState<Map[]>([]);
   const [allLots, setAllLots] = useState<Lot[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [totalFirstPayments, setTotalFirstPayments] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,10 +97,11 @@ export default function DashboardPage() {
       // Carregar total de pagamentos de entrada das reservas
       try {
         const reservationsResponse = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
-        const reservations = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
+        const reservationsData = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
+        setReservations(reservationsData);
         
         // Somar apenas first_payment de reservas concluídas (completed)
-        const totalPayments = reservations.reduce((sum: number, reservation: any) => {
+        const totalPayments = reservationsData.reduce((sum: number, reservation: any) => {
           if (reservation.status === 'completed') {
             const firstPayment = parseFloat(reservation.first_payment) || 0;
             return sum + firstPayment;
@@ -111,6 +113,7 @@ export default function DashboardPage() {
       } catch (error) {
         console.error('Erro ao carregar total de pagamentos de entrada:', error);
         setTotalFirstPayments(0);
+        setReservations([]);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
@@ -150,12 +153,30 @@ export default function DashboardPage() {
   const availableValue = allLots
     .filter((lot) => lot.status === LotStatus.AVAILABLE)
     .reduce((sum, lot) => sum + lot.price, 0);
-  const reservedValue = allLots
-    .filter((lot) => lot.status === LotStatus.RESERVED)
-    .reduce((sum, lot) => sum + lot.price, 0);
-  const soldValue = allLots
-    .filter((lot) => lot.status === LotStatus.SOLD)
-    .reduce((sum, lot) => sum + lot.price, 0);
+  
+  // Calcular valor reservado usando agreed_price das reservas
+  const reservedValue = reservations
+    .filter((res: any) => res.status === 'pending')
+    .reduce((sum: number, res: any) => {
+      if (res.lots && Array.isArray(res.lots)) {
+        return sum + res.lots.reduce((lotSum: number, lot: any) => {
+          return lotSum + (parseFloat(lot.agreed_price) || parseFloat(lot.price) || 0);
+        }, 0);
+      }
+      return sum;
+    }, 0);
+  
+  // Calcular valor vendido usando agreed_price das reservas
+  const soldValue = reservations
+    .filter((res: any) => res.status === 'completed')
+    .reduce((sum: number, res: any) => {
+      if (res.lots && Array.isArray(res.lots)) {
+        return sum + res.lots.reduce((lotSum: number, lot: any) => {
+          return lotSum + (parseFloat(lot.agreed_price) || parseFloat(lot.price) || 0);
+        }, 0);
+      }
+      return sum;
+    }, 0);
 
   if (isLoading) {
     return (

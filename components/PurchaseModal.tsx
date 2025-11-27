@@ -85,6 +85,12 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
   const [lotPrices, setLotPrices] = React.useState<Record<string, number | null>>(
     lots.reduce((acc, lot) => ({ ...acc, [lot.id]: lot.price }), {})
   );
+  const [lotPricesDisplay, setLotPricesDisplay] = React.useState<Record<string, string>>(
+    lots.reduce((acc, lot) => ({ 
+      ...acc, 
+      [lot.id]: lot.price ? lot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''
+    }), {})
+  );
   const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices);
   const [cpfError, setCpfError] = React.useState<string>('');
   const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
@@ -161,8 +167,27 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
   };
 
   const handleLotPriceChange = (lotId: string, value: string) => {
-    const newPrice = value === '' ? null : parseFloat(value);
-    setLotPrices(prev => ({ ...prev, [lotId]: newPrice }));
+    // Remove tudo exceto dígitos
+    const numbers = value.replace(/\D/g, '');
+    
+    if (numbers === '') {
+      setLotPricesDisplay(prev => ({ ...prev, [lotId]: '' }));
+      setLotPrices(prev => ({ ...prev, [lotId]: null }));
+      setPriceError(''); // Limpa erro ao editar
+      return;
+    }
+
+    // Converte para número com centavos
+    const numericValue = parseFloat(numbers) / 100;
+    
+    // Formata como moeda brasileira
+    const formatted = numericValue.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    setLotPricesDisplay(prev => ({ ...prev, [lotId]: formatted }));
+    setLotPrices(prev => ({ ...prev, [lotId]: numericValue }));
     setPriceError(''); // Limpa erro ao editar
   };
 
@@ -269,10 +294,14 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                     <span className="text-sm text-[var(--surface)]">{lot.size}m²</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[var(--surface)]">Valor:</span>
-                    <div className="flex-1 px-2 py-1 text-sm border border-[var(--border)] rounded text-[var(--surface)] bg-gray-100 font-semibold">
-                      R$ {(lotPrices[lot.id] ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
+                    <span className="text-xs text-[var(--surface)] font-medium">Valor: R$</span>
+                    <input
+                      type="text"
+                      value={lotPricesDisplay[lot.id] ?? ''}
+                      onChange={(e) => handleLotPriceChange(lot.id, e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-sm border-2 border-[var(--primary)]/50 rounded text-[var(--surface)] bg-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none"
+                      placeholder="0,00"
+                    />
                   </div>
                 </div>
               ))}
@@ -492,6 +521,18 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 onChange={handleFirstPaymentChange}
                 className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                 placeholder="0,00"
+              />
+            </div>
+
+            <div>
+              <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
+              <input
+                type="number"
+                min="0"
+                value={formData.installments || ''}
+                onChange={(e) => setFormData({ ...formData, installments: parseInt(e.target.value) || 0 })}
+                className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                placeholder="Ex: 12 (deixe em branco para à vista)"
               />
             </div>
 

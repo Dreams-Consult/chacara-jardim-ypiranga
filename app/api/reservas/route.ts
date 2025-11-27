@@ -16,11 +16,11 @@ export async function GET(request: NextRequest) {
       'SELECT * FROM purchase_requests ORDER BY created_at DESC'
     );
 
-    // Para cada reserva, buscar os lotes associados
+    // Para cada reserva, buscar os lotes associados com agreed_price
     const reservationsWithLots = await Promise.all(
       (reservations as any[]).map(async (reservation) => {
         const [lots] = await connection!.execute(
-          `SELECT l.*, prl.purchase_request_id 
+          `SELECT l.*, prl.purchase_request_id, prl.agreed_price 
            FROM purchase_request_lots prl
            INNER JOIN lots l ON prl.lot_id = l.id
            WHERE prl.purchase_request_id = ?`,

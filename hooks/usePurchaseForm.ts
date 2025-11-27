@@ -17,6 +17,7 @@ interface FormData {
   paymentMethod: string;
   otherPayment: string;
   firstPayment: number;
+  installments: number;
 }
 
 export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: Record<string, number | null>) {
@@ -33,6 +34,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
     paymentMethod: '',
     otherPayment: '',
     firstPayment: 0,
+    installments: 0,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,6 +148,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
       if (formData.sellerCPF) requestData.sellerCPF = formData.sellerCPF;
       if (formData.message) requestData.message = formData.message;
       if (formData.firstPayment && formData.firstPayment > 0) requestData.firstPayment = formData.firstPayment;
+      if (formData.installments && formData.installments > 0) requestData.installments = formData.installments;
       if (formData.paymentMethod || formData.otherPayment) {
         requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;
       }
