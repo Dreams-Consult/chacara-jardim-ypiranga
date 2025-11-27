@@ -272,7 +272,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               </div>
               <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
                 <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>

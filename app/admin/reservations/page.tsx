@@ -29,6 +29,22 @@ interface Reservation {
   lots?: any[];
 }
 
+// Funções auxiliares para formatação de moeda
+const formatCurrency = (value: number | string): string => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(numValue)) return '';
+  
+  return numValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+const parseCurrency = (value: string): number => {
+  const cleaned = value.replace(/\./g, '').replace(',', '.');
+  return parseFloat(cleaned) || 0;
+};
+
 export default function ReservationsPage() {
   const { user } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -36,6 +52,7 @@ export default function ReservationsPage() {
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [firstPaymentDisplay, setFirstPaymentDisplay] = useState<string>('');
 
   const loadData = useCallback(async () => {
     try {
@@ -136,7 +153,49 @@ export default function ReservationsPage() {
 
   const handleEdit = (reservation: Reservation) => {
     setEditingReservation({ ...reservation });
+    setFirstPaymentDisplay(formatCurrency(reservation.first_payment || 0));
     setIsEditModalOpen(true);
+  };
+
+  const handleFirstPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Remove tudo exceto dígitos
+    value = value.replace(/\D/g, '');
+    
+    // Converte para número e formata
+    if (value === '') {
+      setFirstPaymentDisplay('');
+      if (editingReservation) {
+        setEditingReservation({
+          ...editingReservation,
+          first_payment: 0
+        });
+      }
+      return;
+    }
+    
+    // Adiciona zeros à esquerda se necessário para ter pelo menos 3 dígitos
+    value = value.padStart(3, '0');
+    
+    // Separa os centavos dos reais
+    const cents = value.slice(-2);
+    const reais = value.slice(0, -2);
+    
+    // Formata com separador de milhar
+    const formattedReais = parseInt(reais).toLocaleString('pt-BR');
+    const formattedValue = `${formattedReais},${cents}`;
+    
+    setFirstPaymentDisplay(formattedValue);
+    
+    if (editingReservation) {
+      // Converte para número decimal
+      const numericValue = parseFloat(`${reais}.${cents}`);
+      setEditingReservation({
+        ...editingReservation,
+        first_payment: numericValue
+      });
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -410,21 +469,21 @@ export default function ReservationsPage() {
                         </div>
                         {reservation.lots && reservation.lots.length > 0 && (
                           <div className="sm:col-span-2">
-                            <p className="text-white/50 text-xs font-medium mb-1">Lotes Reservados</p>
-                            <div className="flex flex-wrap gap-2">
-                              {reservation.lots.map((lot: any) => (
-                                <span key={lot.id} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30">
-                                  Lote {lot.lot_number} - R$ {lot.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </span>
-                              ))}
-                            </div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Lotes Reservados</p>
+                          <div className="flex flex-wrap gap-2">
+                            {reservation.lots.map((lot: any) => (
+                            <span key={lot.id} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30">
+                              Lote {lot.lot_number} - R$ {Number(lot.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            ))}
+                          </div>
                           </div>
                         )}
-                        {reservation.first_payment && (
+                        {reservation.first_payment && reservation.first_payment > 0 && (
                           <div>
                             <p className="text-white/50 text-xs font-medium mb-1">Entrada</p>
                             <p className="text-green-400 text-sm font-bold">
-                              R$ {reservation.first_payment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {Number(reservation.first_payment).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                           </div>
                         )}
@@ -689,13 +748,11 @@ export default function ReservationsPage() {
                   <div>
                     <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={editingReservation.first_payment || ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, first_payment: parseFloat(e.target.value) || 0 })}
+                      type="text"
+                      value={firstPaymentDisplay}
+                      onChange={handleFirstPaymentChange}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                      placeholder="0.00"
+                      placeholder="0,00"
                     />
                   </div>
                   <div className="md:col-span-2">
