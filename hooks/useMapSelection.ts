@@ -120,7 +120,7 @@ export const useMapSelection = () => {
         if (blocksData.length > 0) {
           const firstBlock = blocksData[0];
           setSelectedBlock(firstBlock);
-          await loadLotsForBlock(mapId, firstBlock.id);
+          await loadLotsForBlock(mapId, firstBlock.id, blocksData);
         }
       } else {
         console.log('📭 [Página Pública] Nenhuma quadra encontrada para o mapa', mapId);
@@ -139,7 +139,7 @@ export const useMapSelection = () => {
   };
 
   // Função para carregar lotes de uma quadra específica
-  const loadLotsForBlock = async (mapId: string, blockId: string) => {
+  const loadLotsForBlock = async (mapId: string, blockId: string, blocksData?: Block[]) => {
     setIsLoadingLots(true);
     try {
       console.log(`📦 [Página Pública] Buscando lotes do mapa ${mapId}, quadra ${blockId}...`);
@@ -162,9 +162,12 @@ export const useMapSelection = () => {
       const responseData = response.data[0];
       
       if (responseData && Array.isArray(responseData.lots) && responseData.lots.length > 0) {
-        // Buscar nome da quadra
-        const selectedBlockData = blocks.find(b => b.id === blockId);
+        // Buscar nome da quadra usando blocksData se fornecido, senão usa blocks do estado
+        const blocksToSearch = blocksData || blocks;
+        const selectedBlockData = blocksToSearch.find(b => b.id.toString() === blockId.toString());
         const blockName = selectedBlockData?.name || null;
+        console.log(`[useMapSelection] Buscando quadra ${blockId} em:`, blocksToSearch);
+        console.log(`[useMapSelection] Quadra encontrada:`, selectedBlockData);
         
         const lotsData = responseData.lots.map((lot: any) => ({
           id: lot.id?.toString() || '',
@@ -273,13 +276,17 @@ export const useMapSelection = () => {
       setSelectedBlock(block || null);
 
       if (block && selectedMap) {
-        await loadLotsForBlock(selectedMap.id, blockId);
+        await loadLotsForBlock(selectedMap.id, blockId, blocks);
       } else {
         setLots([]);
       }
     },
     [blocks, selectedMap]
   );
+
+  selectedLots.map(lot => {
+    console.log("OPAAAAAAAAAAAAAA: " + lot.blockName)
+  })
 
   return {
     maps,
