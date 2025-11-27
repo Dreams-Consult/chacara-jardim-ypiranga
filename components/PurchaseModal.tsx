@@ -526,9 +526,10 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
             {formData.paymentMethod && formData.paymentMethod !== 'pix' && formData.paymentMethod !== 'dinheiro' && (
               <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$) *</label>
                 <input
                   type="text"
+                  required
                   value={firstPaymentDisplay}
                   onChange={handleFirstPaymentChange}
                   className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
@@ -539,10 +540,11 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
             {(formData.paymentMethod === 'carne' || formData.paymentMethod === 'cartao' || formData.paymentMethod === 'financing') && (
               <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas *</label>
                 <input
                   type="number"
                   min="1"
+                  required
                   value={formData.installments || ''}
                   onChange={(e) => setFormData({ ...formData, installments: parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"

@@ -772,9 +772,10 @@ export default function ReservationsPage() {
                   </div>
                   {editingReservation.payment_method && editingReservation.payment_method !== 'pix' && editingReservation.payment_method !== 'dinheiro' && (
                     <div>
-                      <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$)</label>
+                      <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$) *</label>
                       <input
                         type="text"
+                        required
                         value={firstPaymentDisplay}
                         onChange={handleFirstPaymentChange}
                         className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
@@ -784,10 +785,11 @@ export default function ReservationsPage() {
                   )}
                   {(editingReservation.payment_method === 'carne' || editingReservation.payment_method === 'cartao' || editingReservation.payment_method === 'financing') && (
                     <div>
-                      <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
+                      <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas *</label>
                       <input
                         type="number"
                         min="1"
+                        required
                         value={editingReservation.installments || ''}
                         onChange={(e) => setEditingReservation({ ...editingReservation, installments: parseInt(e.target.value) || 0 })}
                         className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
