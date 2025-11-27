@@ -26,6 +26,7 @@ interface Reservation {
   seller_cpf: string;
   status: 'pending' | 'completed' | 'cancelled';
   created_at: string;
+  updated_at?: string;
   lots?: any[];
 }
 
@@ -84,11 +85,14 @@ export default function ReservationsPage() {
         filteredReservations = allReservations;
       }
 
-      // Ordenar reservas da mais recente para a mais antiga
+      // Ordenar reservas: pendentes primeiro, depois por ID decrescente
       filteredReservations.sort((a, b) => {
-        const dateA = new Date(a.created_at).getTime();
-        const dateB = new Date(b.created_at).getTime();
-        return dateB - dateA; // Ordem decrescente (mais recente primeiro)
+        // Priorizar status pendente
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        
+        // Se ambos têm o mesmo status, ordenar por ID decrescente (mais recente primeiro)
+        return b.id - a.id;
       });
 
       setReservations(filteredReservations);
@@ -214,7 +218,8 @@ export default function ReservationsPage() {
         seller_name: editingReservation.seller_name,
         seller_email: editingReservation.seller_email,
         seller_phone: editingReservation.seller_phone,
-        seller_cpf: editingReservation.seller_cpf
+        seller_cpf: editingReservation.seller_cpf,
+        created_at: editingReservation.created_at
       }, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
@@ -753,6 +758,15 @@ export default function ReservationsPage() {
                       onChange={handleFirstPaymentChange}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       placeholder="0,00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Data da Reserva</label>
+                    <input
+                      type="datetime-local"
+                      value={editingReservation.created_at ? new Date(editingReservation.created_at).toISOString().slice(0, 16) : ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, created_at: new Date(e.target.value).toISOString() })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     />
                   </div>
                   <div className="md:col-span-2">

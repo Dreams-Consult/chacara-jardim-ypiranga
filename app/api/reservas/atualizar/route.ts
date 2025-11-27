@@ -19,7 +19,8 @@ export async function PUT(request: NextRequest) {
       seller_name,
       seller_email,
       seller_phone,
-      seller_cpf
+      seller_cpf,
+      created_at
     } = body;
 
     if (!id) {
@@ -45,6 +46,13 @@ export async function PUT(request: NextRequest) {
 
     connection = await mysql.createConnection(dbConfig);
 
+    // Converter created_at para formato MySQL se fornecido
+    let mysqlCreatedAt = null;
+    if (created_at) {
+      const date = new Date(created_at);
+      mysqlCreatedAt = date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+
     // Atualizar reserva
     await connection.execute(
       `UPDATE purchase_requests SET
@@ -58,20 +66,22 @@ export async function PUT(request: NextRequest) {
         seller_name = ?,
         seller_email = ?,
         seller_phone = ?,
-        seller_cpf = ?
+        seller_cpf = ?,
+        created_at = ?
       WHERE id = ?`,
       [
         customer_name,
-        customer_email,
-        customer_phone,
+        customer_email || null,
+        customer_phone || null,
         customer_cpf || null,
         payment_method || null,
         first_payment || null,
         message || null,
-        seller_name || 'Não informado',
-        seller_email || 'nao-informado@exemplo.com',
-        seller_phone || '00000000000',
-        seller_cpf || '00000000000',
+        seller_name,
+        seller_email || null,
+        seller_phone || null,
+        seller_cpf || null,
+        mysqlCreatedAt,
         id
       ]
     );
