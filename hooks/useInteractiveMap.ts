@@ -227,7 +227,7 @@ export function useInteractiveMap({
       setDrawingPoints([...drawingPoints, { x, y }]);
     }
     // Removido: cliques em áreas do mapa quando não está em modo de edição
-    // As seleções devem ser feitas pelo componente CinemaStyleLotSelector
+    // As seleções devem ser feitas pelo componente LotSelector
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -256,7 +256,7 @@ export function useInteractiveMap({
     if (isEditMode) return;
 
     // Removido: hover nas áreas do mapa quando não está em modo de edição
-    // O hover agora é feito pelo componente CinemaStyleLotSelector
+    // O hover agora é feito pelo componente LotSelector
     if (canvas) {
       canvas.style.cursor = 'default';
     }

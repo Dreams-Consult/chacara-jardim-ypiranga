@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { Map, Lot, LotStatus, Block } from '@/types';
 import InteractiveMap from '@/components/InteractiveMap';
-import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
+import LotSelector from '@/components/LotSelector';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { useBlockOperations } from '@/hooks/useBlockOperations';
 
@@ -427,7 +427,7 @@ export default function LotManagement() {
                     </p>
                   </div>
                 )}
-                <CinemaStyleLotSelector
+                <LotSelector
                   lots={filteredLots}
                   blocks={blocks}
                   onLotEdit={handleEditLot}

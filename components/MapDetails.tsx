@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Map, Block, Lot, LotStatus } from '@/types';
 import { useBlockOperations } from '@/hooks/useBlockOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
-import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
+import LotSelector from '@/components/LotSelector';
 
 const API_URL = '/api';
 
@@ -1105,7 +1105,7 @@ function BlockCard({
             <p className="text-gray-600 text-sm">Carregando lotes...</p>
           </div>
         ) : blockLots && blockLots.length > 0 ? (
-          <CinemaStyleLotSelector
+          <LotSelector
             lots={blockLots}
             blocks={allBlocks}
             onLotEdit={handleEditLot}

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import InteractiveMap from '@/components/InteractiveMap';
-import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
+import LotSelector from '@/components/LotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
 import { useMapSelection } from '@/hooks/useMapSelection';
 import { LotStatus } from '@/types';
@@ -206,7 +206,7 @@ export default function AdminMapsLotsPage() {
                   <p className="text-white/70">Carregando lotes da quadra...</p>
                 </div>
               ) : lots.length > 0 ? (
-                <CinemaStyleLotSelector
+                <LotSelector
                   lots={lots}
                   onMultipleSelect={(lots) => {
                     // Recebe um array com um único lote para fazer toggle

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Lot, LotStatus, Block } from '@/types';
 
-interface CinemaStyleLotSelectorProps {
+interface LotSelectorProps {
   lots: Lot[];
   blocks?: Block[];
   onLotSelect?: (lot: Lot) => void;
@@ -15,7 +15,7 @@ interface CinemaStyleLotSelectorProps {
   lotsPerRow?: number;
 }
 
-export default function CinemaStyleLotSelector({
+export default function LotSelector({
   lots,
   blocks = [],
   onLotSelect,
@@ -25,7 +25,7 @@ export default function CinemaStyleLotSelector({
   selectedLotIds = [],
   allowMultipleSelection = false,
   lotsPerRow = 10,
-}: CinemaStyleLotSelectorProps) {
+}: LotSelectorProps) {
   const [selectedLotForModal, setSelectedLotForModal] = useState<Lot | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedLot, setEditedLot] = useState<Lot | null>(null);

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { Map, Lot, Block } from '@/types';
 import InteractiveMap from '@/components/InteractiveMap';
-import CinemaStyleLotSelector from '@/components/CinemaStyleLotSelector';
+import LotSelector from '@/components/LotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
 
 const API_URL = '/api';
@@ -298,7 +298,7 @@ export default function MapViewPage() {
             {/* Seletor de Lotes Estilo Cinema */}
             {lots.length > 0 ? (
               <div className="mb-8">
-                <CinemaStyleLotSelector
+                <LotSelector
                   lots={lots}
                   onMultipleSelect={handleMultipleSelect}
                   selectedLotIds={selectedLots.map(l => l.id)}
