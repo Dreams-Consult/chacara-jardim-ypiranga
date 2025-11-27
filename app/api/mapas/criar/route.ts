@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, description, imageUrl, width = 800, height = 600 } = body;
 
-    if (!name || !imageUrl) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Nome e imagem são obrigatórios' },
+        { error: 'Nome é obrigatório' },
         { status: 400 }
       );
     }
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     await connection.execute(
       `INSERT INTO maps (id, name, description, image_url, image_type, width, height, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [mapId, name, description || '', imageUrl, imageType, width, height]
+      [mapId, name, description || '', imageUrl || '', imageType, width, height]
     );
 
     const newMap = {
@@ -43,15 +43,13 @@ export async function POST(request: NextRequest) {
       id: mapId,
       name,
       description: description || '',
-      imageUrl,
+      imageUrl: imageUrl || '',
       width,
       height,
     };
 
-    console.log('[API /mapas/criar] Mapa criado:', newMap.mapId);
     return NextResponse.json(newMap, { status: 201 });
   } catch (error) {
-    console.error('[API /mapas/criar] Erro:', error);
     return NextResponse.json(
       { error: 'Erro ao criar mapa' },
       { status: 500 }

@@ -121,17 +121,15 @@ export async function POST(request: NextRequest) {
 
       const purchaseRequestId = (purchaseResult as any).insertId;
 
-      // 2. Criar registros em purchase_request_lots para cada lote com map_id, block_id e price
+      // 2. Criar registros em purchase_request_lots para cada lote
       for (const lotDetail of lotDetails) {
         await connection.execute(
           `INSERT INTO purchase_request_lots (
-            purchase_request_id, lot_id, map_id, block_id
-          ) VALUES (?, ?, ?, ?)`,
+            purchase_request_id, lot_id
+          ) VALUES (?, ?)`,
           [
             purchaseRequestId,
-            lotDetail.lotId,
-            lotDetail.mapId,
-            lotDetail.blockId,
+            lotDetail.lotId
           ]
         );
       }
@@ -145,7 +143,6 @@ export async function POST(request: NextRequest) {
       // Commit da transação
       await connection.commit();
 
-      console.log('[API /mapas/lotes/reservar] Reserva criada:', purchaseRequestId, 'com', lotIds.length, 'lotes');
       return NextResponse.json(
         {
           message: `Reserva criada com sucesso para ${lotIds.length} lote(s)`,
@@ -160,7 +157,6 @@ export async function POST(request: NextRequest) {
       throw error;
     }
   } catch (error) {
-    console.error('[API /mapas/lotes/reservar] Erro:', error);
     return NextResponse.json(
       { error: 'Erro ao criar reserva' },
       { status: 500 }

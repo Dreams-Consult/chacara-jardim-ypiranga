@@ -171,11 +171,6 @@ export default function MapManagement() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedFile) {
-      alert('Por favor, selecione um arquivo');
-      return;
-    }
-
     if (!editingMap?.name?.trim()) {
       alert('Por favor, preencha o nome do mapa');
       return;
@@ -183,13 +178,36 @@ export default function MapManagement() {
 
     setIsSubmitting(true);
     try {
-      await processFileUpload(selectedFile, editingMap);
+      if (selectedFile) {
+        // Criar com imagem
+        await processFileUpload(selectedFile, editingMap);
+      } else {
+        // Criar sem imagem
+        const url = '/api/mapas/criar';
+        const payload = {
+          name: editingMap.name,
+          description: editingMap.description || '',
+          imageUrl: '',
+          imageType: 'image/png',
+          width: 800,
+          height: 600
+        };
+
+        await axios.post(url, payload, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        });
+
+        await loadMaps();
+      }
+      
       setIsCreating(false);
       setEditingMap(null);
       setSelectedFile(null);
       setFilePreview('');
+      alert('✅ Mapa criado com sucesso!');
     } catch (error) {
-      console.error('Erro ao processar arquivo:', error);
+      alert('❌ Erro ao criar mapa. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -339,7 +357,7 @@ export default function MapManagement() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
-                  Upload de Imagem ou PDF
+                  Upload de Imagem ou PDF (Opcional)
                 </label>
                 <input
                   type="file"
@@ -349,8 +367,8 @@ export default function MapManagement() {
                   className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20 disabled:opacity-50"
                 />
                 {!filePreview && (
-                  <p className="text-xs text-[var(--warning-dark)] mt-2 bg-[var(--warning)]/10 p-3 rounded-xl border-2 border-[var(--warning)]/30 font-medium">
-                    ⚠️ <span className="font-bold">Tamanho máximo: 50MB para PDFs, 10MB para imagens.</span> As imagens serão automaticamente comprimidas.
+                  <p className="text-xs text-blue-600 mt-2 bg-blue-50 p-3 rounded-xl border-2 border-blue-200 font-medium">
+                    💡 <span className="font-bold">Você pode criar o mapa sem imagem e adicionar a imagem depois.</span> Tamanho máximo: 50MB para PDFs, 10MB para imagens.
                   </p>
                 )}
               </div>
@@ -404,7 +422,7 @@ export default function MapManagement() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !selectedFile || !editingMap?.name?.trim()}
+                disabled={isSubmitting || !editingMap?.name?.trim()}
                 className="flex-1 px-4 py-3 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary)]/90 transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
