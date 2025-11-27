@@ -524,17 +524,19 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               />
             </div>
 
-            <div>
-              <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
-              <input
-                type="number"
-                min="0"
-                value={formData.installments || ''}
-                onChange={(e) => setFormData({ ...formData, installments: parseInt(e.target.value) || 0 })}
-                className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                placeholder="Ex: 12 (deixe em branco para à vista)"
-              />
-            </div>
+            {formData.paymentMethod === 'carne' && (
+              <div>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.installments || ''}
+                  onChange={(e) => setFormData({ ...formData, installments: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                  placeholder="Ex: 12"
+                />
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <button

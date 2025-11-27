@@ -19,6 +19,7 @@ interface Reservation {
   customer_cpf: string | null;
   payment_method: string | null;
   first_payment: number | null;
+  installments: number | null;
   message: string | null;
   seller_name: string;
   seller_email: string;
@@ -214,6 +215,7 @@ export default function ReservationsPage() {
         customer_cpf: editingReservation.customer_cpf,
         payment_method: editingReservation.payment_method,
         first_payment: editingReservation.first_payment,
+        installments: editingReservation.installments,
         message: editingReservation.message,
         seller_name: editingReservation.seller_name,
         seller_email: editingReservation.seller_email,
@@ -492,6 +494,14 @@ export default function ReservationsPage() {
                             </p>
                           </div>
                         )}
+                        {reservation.installments && reservation.installments > 0 && (
+                          <div>
+                            <p className="text-white/50 text-xs font-medium mb-1">Número de Parcelas</p>
+                            <p className="text-blue-400 text-sm font-bold">
+                              {reservation.installments}x
+                            </p>
+                          </div>
+                        )}
                         {reservation.message && (
                           <div className="sm:col-span-2">
                             <p className="text-white/50 text-xs font-medium mb-1">Mensagem do Cliente</p>
@@ -760,6 +770,19 @@ export default function ReservationsPage() {
                       placeholder="0,00"
                     />
                   </div>
+                  {editingReservation.payment_method === 'carne' && (
+                    <div>
+                      <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editingReservation.installments || ''}
+                        onChange={(e) => setEditingReservation({ ...editingReservation, installments: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                        placeholder="Ex: 12"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-white/80 text-sm font-semibold mb-2">Data da Reserva</label>
                     <input
