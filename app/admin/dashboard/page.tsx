@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [maps, setMaps] = useState<Map[]>([]);
   const [allLots, setAllLots] = useState<Lot[]>([]);
+  const [totalFirstPayments, setTotalFirstPayments] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboardData = async () => {
@@ -91,6 +92,23 @@ export default function DashboardPage() {
       const lotsArrays = await Promise.all(allLotsPromises);
       const flatLots = lotsArrays.flat();
       setAllLots(flatLots);
+
+      // Carregar total de pagamentos de entrada das reservas
+      try {
+        const reservationsResponse = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
+        const reservations = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
+        
+        // Somar todos os first_payment
+        const totalPayments = reservations.reduce((sum: number, reservation: any) => {
+          const firstPayment = parseFloat(reservation.first_payment) || 0;
+          return sum + firstPayment;
+        }, 0);
+        
+        setTotalFirstPayments(totalPayments);
+      } catch (error) {
+        console.error('Erro ao carregar total de pagamentos de entrada:', error);
+        setTotalFirstPayments(0);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -335,6 +353,11 @@ export default function DashboardPage() {
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Já Vendido</p>
               <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR')}</p>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+              <p className="text-white/70 text-sm font-medium mb-1">Total de Entradas Recebidas</p>
+              <p className="text-white text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
         </div>
