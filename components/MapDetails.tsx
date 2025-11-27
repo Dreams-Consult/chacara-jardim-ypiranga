@@ -331,11 +331,6 @@ export default function MapDetails() {
         return;
       }
 
-      if (!lot.pricePerM2 || lot.pricePerM2 <= 0) {
-        alert('❌ Informe o preço por m² do lote');
-        return;
-      }
-
       if (!lot.price || lot.price <= 0) {
         alert('❌ O preço total do lote deve ser maior que zero');
         return;
@@ -822,13 +817,13 @@ interface LotFormProps {
 function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
   const [lotNumber, setLotNumber] = useState('');
   const [size, setSize] = useState<number>(0);
-  const [pricePerM2, setPricePerM2] = useState<number>(0);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<LotStatus>(LotStatus.AVAILABLE);
 
-  const totalPrice = size * pricePerM2;
-
   const handleSubmit = () => {
+    const pricePerM2 = size > 0 ? totalPrice / size : 0;
+    
     const lot: Lot = {
       id: '',
       mapId: '',
@@ -884,23 +879,15 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
 
       <div>
         <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
-          Preço por m² (R$) *
+          Preço Total (R$) *
         </label>
         <input
           type="number"
-          step="0.01"
-          value={pricePerM2 || ''}
-          onChange={(e) => setPricePerM2(parseFloat(e.target.value) || 0)}
+          value={totalPrice || ''}
+          onChange={(e) => setTotalPrice(parseFloat(e.target.value) || 0)}
           className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
-          placeholder="150"
+          placeholder="45000"
         />
-      </div>
-
-      <div className="bg-gray-100 rounded-lg p-2 sm:p-3">
-        <p className="text-xs sm:text-sm text-gray-600">Preço Total</p>
-        <p className="text-xl sm:text-2xl font-bold text-gray-900">
-          R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-        </p>
       </div>
 
       <div>
