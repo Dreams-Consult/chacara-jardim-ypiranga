@@ -818,6 +818,7 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
   const [lotNumber, setLotNumber] = useState('');
   const [size, setSize] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [priceDisplay, setPriceDisplay] = useState<string>('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<LotStatus>(LotStatus.AVAILABLE);
 
@@ -882,12 +883,41 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
           Preço Total (R$) *
         </label>
         <input
-          type="number"
-          value={totalPrice || ''}
-          onChange={(e) => setTotalPrice(parseFloat(e.target.value) || 0)}
+          type="text"
+          value={priceDisplay}
+          onChange={(e) => {
+            let value = e.target.value;
+            
+            // Remove tudo exceto dígitos
+            value = value.replace(/\D/g, '');
+            
+            if (value === '') {
+              setPriceDisplay('');
+              setTotalPrice(0);
+              return;
+            }
+            
+            // Adiciona zeros à esquerda se necessário
+            value = value.padStart(3, '0');
+            
+            // Separa centavos dos reais
+            const cents = value.slice(-2);
+            const reais = value.slice(0, -2);
+            
+            // Formata com separador de milhar
+            const formattedReais = parseInt(reais).toLocaleString('pt-BR');
+            const formattedValue = `${formattedReais},${cents}`;
+            
+            setPriceDisplay(formattedValue);
+            
+            // Converte para número decimal
+            const numericValue = parseFloat(`${reais}.${cents}`);
+            setTotalPrice(numericValue);
+          }}
           className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
-          placeholder="45000"
+          placeholder="0,00"
         />
+        <p className="text-[10px] sm:text-xs text-gray-500 mt-1">💡 Preencha manualmente o valor do lote</p>
       </div>
 
       <div>
