@@ -149,8 +149,8 @@ export default function CinemaStyleLotSelector({
 
       {/* Modal de detalhes do lote */}
       {selectedLotForModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl max-w-lg w-full shadow-2xl border-t sm:border border-gray-700 sm:my-8 max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-gray-900 rounded-2xl max-w-lg w-full shadow-2xl border border-gray-700 my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col">
             <div className="p-4 sm:p-6 border-b border-gray-700 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl sm:text-2xl font-bold text-white">
