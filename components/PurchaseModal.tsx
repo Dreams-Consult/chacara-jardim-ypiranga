@@ -89,6 +89,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
   const [cpfError, setCpfError] = React.useState<string>('');
   const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
   const [priceError, setPriceError] = React.useState<string>('');
+  const [firstPaymentDisplay, setFirstPaymentDisplay] = React.useState<string>('');
 
   // Calcular preço total com base nos valores editáveis (ignora valores nulos)
   const totalPrice = Object.values(lotPrices).reduce((sum: number, price) => sum + (price || 0), 0);
@@ -173,6 +174,31 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
       setFormData({ ...formData, paymentMethod: value });
     }
   }
+
+  // Função para formatar entrada como moeda brasileira
+  const handleFirstPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    // Remove tudo exceto dígitos
+    const numbers = inputValue.replace(/\D/g, '');
+    
+    if (numbers === '') {
+      setFirstPaymentDisplay('');
+      setFormData({ ...formData, firstPayment: 0 });
+      return;
+    }
+
+    // Converte para número com centavos
+    const numericValue = parseFloat(numbers) / 100;
+    
+    // Formata como moeda brasileira
+    const formatted = numericValue.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    setFirstPaymentDisplay(formatted);
+    setFormData({ ...formData, firstPayment: numericValue });
+  };
 
   // Função para validar e enviar o formulário
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -477,14 +503,12 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             <div>
               <label className="block text-base font-bold text-gray-900 mb-2">Entrada (R$) *</label>
               <input
-                type="number"
-                step="0.01"
-                min="0.01"
+                type="text"
                 required
-                value={formData.firstPayment || ''}
-                onChange={e => setFormData({ ...formData, firstPayment: parseFloat(e.target.value) || 0 })}
+                value={firstPaymentDisplay}
+                onChange={handleFirstPaymentChange}
                 className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="0.00"
+                placeholder="0,00"
               />
             </div>
 
