@@ -1,0 +1,134 @@
+import {
+  createMockLot,
+  createMockBlock,
+  createMockMap,
+  createMockUser,
+  createMockPurchaseRequest,
+  createAxiosResponse,
+  createAxiosError,
+} from '../helpers/factories'
+import { LotStatus } from '@/types'
+
+describe('Test Factories', () => {
+  describe('createMockLot', () => {
+    it('should create a default lot', () => {
+      const lot = createMockLot()
+
+      expect(lot).toHaveProperty('id')
+      expect(lot).toHaveProperty('lotNumber')
+      expect(lot).toHaveProperty('mapId')
+      expect(lot).toHaveProperty('size')
+      expect(lot).toHaveProperty('price')
+      expect(lot.status).toBe(LotStatus.AVAILABLE)
+    })
+
+    it('should allow overriding properties', () => {
+      const lot = createMockLot({ lotNumber: '10', price: 200000 })
+
+      expect(lot.lotNumber).toBe('10')
+      expect(lot.price).toBe(200000)
+    })
+  })
+
+  describe('createMockBlock', () => {
+    it('should create a default block', () => {
+      const block = createMockBlock()
+
+      expect(block).toHaveProperty('id')
+      expect(block).toHaveProperty('mapId')
+      expect(block).toHaveProperty('name')
+      expect(block.name).toBe('Quadra A')
+    })
+
+    it('should allow overriding properties', () => {
+      const block = createMockBlock({ name: 'Quadra B' })
+
+      expect(block.name).toBe('Quadra B')
+    })
+  })
+
+  describe('createMockMap', () => {
+    it('should create a default map', () => {
+      const map = createMockMap()
+
+      expect(map).toHaveProperty('id')
+      expect(map).toHaveProperty('name')
+      expect(map).toHaveProperty('imageUrl')
+      expect(map.imageType).toBe('image')
+    })
+
+    it('should allow overriding properties', () => {
+      const map = createMockMap({ name: 'Custom Map', imageType: 'pdf' })
+
+      expect(map.name).toBe('Custom Map')
+      expect(map.imageType).toBe('pdf')
+    })
+  })
+
+  describe('createMockUser', () => {
+    it('should create a default user', () => {
+      const user = createMockUser()
+
+      expect(user).toHaveProperty('id')
+      expect(user).toHaveProperty('name')
+      expect(user).toHaveProperty('email')
+      expect(user).toHaveProperty('cpf')
+      expect(user.role).toBe('admin')
+    })
+
+    it('should allow overriding properties', () => {
+      const user = createMockUser({ name: 'Custom User', role: 'vendedor' })
+
+      expect(user.name).toBe('Custom User')
+      expect(user.role).toBe('vendedor')
+    })
+  })
+
+  describe('createMockPurchaseRequest', () => {
+    it('should create a default purchase request', () => {
+      const pr = createMockPurchaseRequest()
+
+      expect(pr).toHaveProperty('id')
+      expect(pr).toHaveProperty('lotId')
+      expect(pr).toHaveProperty('customerName')
+      expect(pr.status).toBe('pending')
+    })
+
+    it('should allow overriding properties', () => {
+      const pr = createMockPurchaseRequest({
+        customerName: 'Maria Santos',
+        status: 'completed',
+      })
+
+      expect(pr.customerName).toBe('Maria Santos')
+      expect(pr.status).toBe('completed')
+    })
+  })
+
+  describe('createAxiosResponse', () => {
+    it('should create axios response with data', () => {
+      const data = { message: 'Success' }
+      const response = createAxiosResponse(data)
+
+      expect(response.data).toEqual(data)
+      expect(response.status).toBe(200)
+      expect(response.statusText).toBe('OK')
+    })
+  })
+
+  describe('createAxiosError', () => {
+    it('should create axios error with message', () => {
+      const error = createAxiosError('Test error')
+
+      expect(error.message).toBe('Test error')
+      expect(error.response?.status).toBe(400)
+      expect(error.isAxiosError).toBe(true)
+    })
+
+    it('should allow custom status code', () => {
+      const error = createAxiosError('Not found', 404)
+
+      expect(error.response?.status).toBe(404)
+    })
+  })
+})
