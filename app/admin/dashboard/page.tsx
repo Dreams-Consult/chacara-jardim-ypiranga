@@ -98,10 +98,13 @@ export default function DashboardPage() {
         const reservationsResponse = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
         const reservations = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
         
-        // Somar todos os first_payment
+        // Somar apenas first_payment de reservas concluídas (completed)
         const totalPayments = reservations.reduce((sum: number, reservation: any) => {
-          const firstPayment = parseFloat(reservation.first_payment) || 0;
-          return sum + firstPayment;
+          if (reservation.status === 'completed') {
+            const firstPayment = parseFloat(reservation.first_payment) || 0;
+            return sum + firstPayment;
+          }
+          return sum;
         }, 0);
         
         setTotalFirstPayments(totalPayments);
@@ -342,22 +345,22 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[var(--primary)]/20 to-[var(--primary-light)]/20 border border-[var(--primary)]/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Total dos Lotes</p>
-              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Disponível para Venda</p>
-              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Já Vendido</p>
-              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Total de Entradas Recebidas</p>
-              <p className="text-white text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-white text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </div>
