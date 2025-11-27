@@ -31,6 +31,7 @@ export default function CinemaStyleLotSelector({
   const [editedLot, setEditedLot] = useState<Lot | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [pricePerM2Input, setPricePerM2Input] = useState<string>('');
+  const [priceDisplay, setPriceDisplay] = useState<string>('');
 
   const sortedLots = [...lots].sort((a, b) => {
     const numA = parseInt(a.lotNumber) || 0;
@@ -56,6 +57,7 @@ export default function CinemaStyleLotSelector({
 
     setEditedLot(lotWithCalculatedPrice);
     setPricePerM2Input(lotWithCalculatedPrice.pricePerM2.toFixed(2));
+    setPriceDisplay(lotWithCalculatedPrice.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     // Permite editar lotes disponíveis e bloqueados
     setIsEditing(!!onLotEdit && (lot.status === LotStatus.AVAILABLE || lot.status === LotStatus.BLOCKED));
   };
@@ -237,57 +239,49 @@ export default function CinemaStyleLotSelector({
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Preço por m² (R$)</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={pricePerM2Input}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setPricePerM2Input(value);
-                          const newPricePerM2 = value === '' ? 0 : parseFloat(value);
-                          if (!isNaN(newPricePerM2)) {
-                            setEditedLot({
-                              ...editedLot,
-                              pricePerM2: newPricePerM2
-                            });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const value = parseFloat(e.target.value);
-                          if (!isNaN(value)) {
-                            setPricePerM2Input(value.toFixed(2));
-                          }
-                        }}
-                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
-                        placeholder="150.00"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">💡 Apenas para referência</p>
-                  </div>
-
-                  <div>
                     <label className="block text-gray-400 text-sm mb-2">Preço Total (R$) *</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
                       <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={editedLot.price || ''}
+                        type="text"
+                        value={priceDisplay}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          const newPrice = value === '' ? 0 : parseFloat(value);
+                          let value = e.target.value;
+                          
+                          // Remove tudo exceto dígitos
+                          value = value.replace(/\D/g, '');
+                          
+                          if (value === '') {
+                            setPriceDisplay('');
+                            setEditedLot({
+                              ...editedLot,
+                              price: 0
+                            });
+                            return;
+                          }
+                          
+                          // Adiciona zeros à esquerda se necessário
+                          value = value.padStart(3, '0');
+                          
+                          // Separa centavos dos reais
+                          const cents = value.slice(-2);
+                          const reais = value.slice(0, -2);
+                          
+                          // Formata com separador de milhar
+                          const formattedReais = parseInt(reais).toLocaleString('pt-BR');
+                          const formattedValue = `${formattedReais},${cents}`;
+                          
+                          setPriceDisplay(formattedValue);
+                          
+                          // Converte para número decimal
+                          const numericValue = parseFloat(`${reais}.${cents}`);
                           setEditedLot({
                             ...editedLot,
-                            price: newPrice
+                            price: numericValue
                           });
                         }}
                         className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
-                        placeholder="0.00"
+                        placeholder="0,00"
                       />
                     </div>
                     <p className="text-xs text-gray-400 mt-1">💡 Preencha manualmente o valor do lote</p>
@@ -347,11 +341,11 @@ export default function CinemaStyleLotSelector({
                   <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
                     <p className="text-gray-400 text-xs sm:text-sm mb-1">Valor Total</p>
                     <p className="font-bold text-xl sm:text-2xl text-white">
-                      R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     {selectedLotForModal.pricePerM2 && (
                       <p className="text-gray-400 text-xs sm:text-sm mt-1">
-                        R$ {selectedLotForModal.pricePerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/m²
+                        R$ {selectedLotForModal.pricePerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/m²
                       </p>
                     )}
                   </div>
@@ -442,6 +436,7 @@ export default function CinemaStyleLotSelector({
                               pricePerM2: selectedLotForModal.pricePerM2 || (selectedLotForModal.size > 0 ? selectedLotForModal.price / selectedLotForModal.size : 0)
                             };
                             setEditedLot(lotWithCalculatedPrice);
+                            setPriceDisplay(lotWithCalculatedPrice.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
                           }}
                           className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
                         >
@@ -483,7 +478,7 @@ export default function CinemaStyleLotSelector({
             </div>
             <div className="flex justify-between text-white text-base sm:text-lg font-bold pt-2 border-t border-white/20">
               <span>Total:</span>
-              <span>R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              <span>R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
