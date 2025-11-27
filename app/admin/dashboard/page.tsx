@@ -342,17 +342,17 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[var(--primary)]/20 to-[var(--primary-light)]/20 border border-[var(--primary)]/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Total dos Lotes</p>
-              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR')}</p>
+              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Disponível para Venda</p>
-              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR')}</p>
+              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Já Vendido</p>
-              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR')}</p>
+              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
