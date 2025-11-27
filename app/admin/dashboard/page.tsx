@@ -150,6 +150,9 @@ export default function DashboardPage() {
   const availableValue = allLots
     .filter((lot) => lot.status === LotStatus.AVAILABLE)
     .reduce((sum, lot) => sum + lot.price, 0);
+  const reservedValue = allLots
+    .filter((lot) => lot.status === LotStatus.RESERVED)
+    .reduce((sum, lot) => sum + lot.price, 0);
   const soldValue = allLots
     .filter((lot) => lot.status === LotStatus.SOLD)
     .reduce((sum, lot) => sum + lot.price, 0);
@@ -351,6 +354,11 @@ export default function DashboardPage() {
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Disponível para Venda</p>
               <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+              <p className="text-white/70 text-sm font-medium mb-1">Valor dos Lotes Reservados</p>
+              <p className="text-white text-2xl font-bold">R$ {reservedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
