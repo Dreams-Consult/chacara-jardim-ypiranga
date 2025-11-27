@@ -79,13 +79,18 @@ export default function MapViewPage() {
           console.log('[MapViewPage] Resposta de lotes:', lotsResponse.data);
           const lotsData = lotsResponse.data[0];
           if (lotsData && lotsData.lots && Array.isArray(lotsData.lots)) {
-            const lotsWithMapId = lotsData.lots.map((lot: any) => ({
-              ...lot,
-              mapId: lotsData.mapId || mapId,
-              blockId: lot.blockId?.toString() || null, // Garantir que é string
-              createdAt: lot.createdAt ? new Date(lot.createdAt) : new Date(),
-              updatedAt: lot.updatedAt ? new Date(lot.updatedAt) : new Date(),
-            }));
+            const lotsWithMapId = lotsData.lots.map((lot: any) => {
+              const blockId = lot.blockId?.toString() || null;
+              const block = blocksData.find((b: Block) => b.id === blockId);
+              return {
+                ...lot,
+                mapId: lotsData.mapId || mapId,
+                blockId: blockId,
+                blockName: block?.name || null, // Adicionar nome da quadra
+                createdAt: lot.createdAt ? new Date(lot.createdAt) : new Date(),
+                updatedAt: lot.updatedAt ? new Date(lot.updatedAt) : new Date(),
+              };
+            });
             console.log('[MapViewPage] Lotes carregados:', lotsWithMapId.length, 'lotes');
             console.log('[MapViewPage] Lotes completos:', lotsWithMapId);
             setAllLots(lotsWithMapId);

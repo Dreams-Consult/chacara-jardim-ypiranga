@@ -162,10 +162,15 @@ export const useMapSelection = () => {
       const responseData = response.data[0];
       
       if (responseData && Array.isArray(responseData.lots) && responseData.lots.length > 0) {
+        // Buscar nome da quadra
+        const selectedBlockData = blocks.find(b => b.id === blockId);
+        const blockName = selectedBlockData?.name || null;
+        
         const lotsData = responseData.lots.map((lot: any) => ({
           id: lot.id?.toString() || '',
           mapId: lot.mapId?.toString() || mapId,
           blockId: lot.blockId?.toString() || blockId,
+          blockName: blockName, // Adicionar nome da quadra
           lotNumber: lot.lotNumber || '',
           status: lot.status as LotStatus || LotStatus.AVAILABLE,
           price: parseFloat(lot.price) || 0,
