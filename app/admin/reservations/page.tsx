@@ -12,6 +12,7 @@ interface Reservation {
   id: number;
   lot_id: number;
   seller_id: number | null;
+  user_id?: number | null;
   map_id: string;
   customer_name: string;
   customer_email: string;
@@ -72,25 +73,21 @@ export default function ReservationsPage() {
 
       console.log('[Reservations] 📦 Total de reservas recebidas:', allReservations.length);
 
-      // DEV e ADMIN veem todas as reservas, outros perfis filtram por CPF
+      // DEV e ADMIN veem todas as reservas, outros perfis filtram por user_id
       let filteredReservations: Reservation[];
 
       if (user?.role === UserRole.DEV || user?.role === UserRole.ADMIN) {
         // DEV e ADMIN veem tudo
         filteredReservations = allReservations;
         console.log('[Reservations] ✅ Usuário DEV/ADMIN - exibindo todas as reservas:', allReservations.length);
-      } else if (user?.cpf) {
-        // Outros perfis filtram por CPF do vendedor
-        filteredReservations = allReservations.filter((reservation) => {
-          // Remove formatação do CPF para comparação
-          if (!reservation.seller_cpf) return false;
-          const userCpf = user.cpf.replace(/\D/g, '');
-          const sellerCpf = reservation.seller_cpf.replace(/\D/g, '');
-          return sellerCpf === userCpf;
+      } else if (user?.id) {
+        // Outros perfis filtram por user_id (vendedor que criou a reserva)
+        filteredReservations = allReservations.filter((reservation: any) => {
+          return reservation.user_id === user.id;
         });
-        console.log('[Reservations] ✅ Reservas filtradas por CPF:', filteredReservations.length, '(CPF:', user.cpf, ')');
+        console.log('[Reservations] ✅ Reservas filtradas por user_id:', filteredReservations.length, '(ID:', user.id, ')');
       } else {
-        filteredReservations = allReservations;
+        filteredReservations = [];
       }
 
       // Ordenar reservas: pendentes primeiro, depois por ID decrescente
@@ -143,6 +140,12 @@ export default function ReservationsPage() {
   }, 10000);
 
   const handleApprove = async (reservationId: number) => {
+    // Verificar permissão antes de prosseguir
+    if (user?.role !== UserRole.ADMIN && user?.role !== UserRole.DEV) {
+      alert('⚠️ Você não tem permissão para aprovar reservas.');
+      return;
+    }
+
     if (!confirm('Tem certeza que deseja aprovar esta reserva?\n\nIsso marcará o lote como VENDIDO.')) {
       return;
     }
@@ -151,7 +154,8 @@ export default function ReservationsPage() {
       await axios.put(`${API_URL}/reserva/confirmacao`, {
         reservationId: reservationId.toString(),
         status: 'completed',
-        lotStatus: 'sold'
+        lotStatus: 'sold',
+        userRole: user?.role
       }, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
@@ -166,6 +170,12 @@ export default function ReservationsPage() {
   };
 
   const handleReject = async (reservationId: number) => {
+    // Verificar permissão antes de prosseguir
+    if (user?.role !== UserRole.ADMIN && user?.role !== UserRole.DEV) {
+      alert('⚠️ Você não tem permissão para rejeitar reservas.');
+      return;
+    }
+
     if (!confirm('Tem certeza que deseja rejeitar esta reserva?')) {
       return;
     }
@@ -174,7 +184,8 @@ export default function ReservationsPage() {
       await axios.put(`${API_URL}/reserva/confirmacao`, {
         reservationId: reservationId.toString(),
         status: 'cancelled',
-        lotStatus: 'available'
+        lotStatus: 'available',
+        userRole: user?.role
       });
       console.log('[Reservations] ✅ Reserva rejeitada com sucesso');
       loadData(); // Recarregar dados
@@ -648,7 +659,7 @@ export default function ReservationsPage() {
                         Editar Dados
                       </button>
 
-                      {reservation.status === 'pending' && (
+                      {reservation.status === 'pending' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
                         <>
                           <button
                             onClick={() => handleApprove(reservation.id)}

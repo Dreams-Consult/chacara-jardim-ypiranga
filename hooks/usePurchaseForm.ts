@@ -21,7 +21,7 @@ interface FormData {
   contract: string;
 }
 
-export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: Record<string, number | null>) {
+export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: Record<string, number | null>, userId?: string) {
   const [formData, setFormData] = useState<FormData>({
     customerName: '',
     customerEmail: '',
@@ -150,6 +150,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
       if (formData.sellerCPF) requestData.sellerCPF = formData.sellerCPF;
       if (formData.message) requestData.message = formData.message;
       if (formData.contract) requestData.contract = formData.contract;
+      if (userId) requestData.userId = userId;
       
       // Sempre enviar firstPayment e installments (mesmo que sejam 0 ou null)
       requestData.firstPayment = formData.firstPayment || null;

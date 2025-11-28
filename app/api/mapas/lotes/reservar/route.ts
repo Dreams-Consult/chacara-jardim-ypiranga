@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       customerCPF,
       message,
       sellerId,
+      userId,
       sellerName,
       sellerEmail,
       sellerPhone,
@@ -103,12 +104,12 @@ export async function POST(request: NextRequest) {
       try {
         [purchaseResult] = await connection.execute(
           `INSERT INTO purchase_requests (
-            seller_id, customer_name, customer_email, customer_phone,
+            user_id, customer_name, customer_email, customer_phone,
             customer_cpf, message, payment_method, seller_name, seller_email, 
             seller_phone, seller_cpf, first_payment, installments, contract, status, created_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
           [
-            sellerId || null,
+            userId || null,
             customerName,
             customerEmail || null,
             customerPhone ? customerPhone.replace(/\D/g, '') : null,
@@ -130,12 +131,12 @@ export async function POST(request: NextRequest) {
           console.log('[API /mapas/lotes/reservar] ⚠️ Coluna installments não existe, usando formato antigo');
           [purchaseResult] = await connection.execute(
             `INSERT INTO purchase_requests (
-              seller_id, customer_name, customer_email, customer_phone,
+              user_id, customer_name, customer_email, customer_phone,
               customer_cpf, message, payment_method, seller_name, seller_email, 
               seller_phone, seller_cpf, first_payment, status, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
             [
-              sellerId || null,
+              userId || null,
               customerName,
               customerEmail || null,
               customerPhone ? customerPhone.replace(/\D/g, '') : null,

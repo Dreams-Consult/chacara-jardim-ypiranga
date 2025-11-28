@@ -3,6 +3,7 @@
 import React from 'react';
 import { Lot } from '@/types';
 import { usePurchaseForm } from '@/hooks/usePurchaseForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PurchaseModalProps {
   lots: Lot[]; // Mudado de lot: Lot para lots: Lot[]
@@ -87,6 +88,7 @@ const paymentOptions = [
 ];
 
 export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
+  const { user } = useAuth();
   const [lotPrices, setLotPrices] = React.useState<Record<string, number | null>>(
     lots.reduce((acc, lot) => ({ ...acc, [lot.id]: lot.price }), {})
   );
@@ -96,7 +98,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
       [lot.id]: lot.price ? lot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''
     }), {})
   );
-  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices);
+  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices, user?.id);
   const [cpfError, setCpfError] = React.useState<string>('');
   const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
   const [priceError, setPriceError] = React.useState<string>('');

@@ -9,12 +9,20 @@ export async function PUT(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { reservationId, status, lotStatus } = body;
+    const { reservationId, status, lotStatus, userRole } = body;
 
     if (!reservationId || !status || !lotStatus) {
       return NextResponse.json(
         { error: 'reservationId, status e lotStatus são obrigatórios' },
         { status: 400 }
+      );
+    }
+
+    // Verificar permissão: apenas admin ou dev podem confirmar/cancelar reservas
+    if (userRole !== 'admin' && userRole !== 'dev') {
+      return NextResponse.json(
+        { error: 'Você não tem permissão para confirmar ou cancelar reservas' },
+        { status: 403 }
       );
     }
 
