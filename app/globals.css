@@ -96,10 +96,10 @@ input, textarea, select {
   font-weight: 600;
 }
 
-input::placeholder, textarea::placeholder {
+/* input::placeholder, textarea::placeholder {
   color: rgba(28, 28, 28, 0.5);
   font-weight: 500;
-}
+} */
 
 /* Scrollbar customizada vibrante */
 ::-webkit-scrollbar {

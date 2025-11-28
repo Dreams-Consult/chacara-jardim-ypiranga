@@ -286,21 +286,21 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
         <div className="p-4 sm:p-6">
           {/* Número do Contrato */}
-          <div className="mb-4">
+            <div className="mb-4">
             <label className="block text-white/80 text-sm font-semibold mb-2">Número do Contrato</label>
             <input
               type="text"
               value={formData.contract || ''}
               onChange={(e) => setFormData({ ...formData, contract: e.target.value })}
-              className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+              className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder:text-gray-400"
               placeholder="Ex: CONT-2025-001"
               maxLength={50}
             />
-          </div>
+            </div>
 
           {/* Informações dos lotes selecionados */}
           <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-2xl p-3 sm:p-5 mb-4 sm:mb-6">
-            <h3 className="text-base font-bold text-gray-900 mb-3">
+            <h3 className="text-base font-bold text-white/80 mb-3">
               {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
             </h3>
             <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
