@@ -692,7 +692,7 @@ export default function MapDetails() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6">
               <button
                 type="button"
                 onClick={() => {
@@ -832,7 +832,7 @@ export default function MapDetails() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6">
               <button
                 type="button"
                 onClick={() => {
@@ -1018,7 +1018,7 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6">
         <button
           type="button"
           onClick={onCancel}
