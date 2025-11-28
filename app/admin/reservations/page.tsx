@@ -56,6 +56,7 @@ export default function ReservationsPage() {
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [firstPaymentDisplay, setFirstPaymentDisplay] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
 
   const loadData = useCallback(async () => {
     try {
@@ -240,6 +241,11 @@ export default function ReservationsPage() {
     }
   };
 
+  // Filtrar reservas por status
+  const filteredReservations = statusFilter === 'all' 
+    ? reservations 
+    : reservations.filter(r => r.status === statusFilter);
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -283,7 +289,12 @@ export default function ReservationsPage() {
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+        <div 
+          onClick={() => setStatusFilter('all')}
+          className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+            statusFilter === 'all' ? 'ring-4 ring-yellow-300' : ''
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,7 +306,12 @@ export default function ReservationsPage() {
           <p className="text-white text-4xl font-bold">{reservations.length}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+        <div 
+          onClick={() => setStatusFilter('pending')}
+          className={`bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+            statusFilter === 'pending' ? 'ring-4 ring-blue-300' : ''
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,7 +325,12 @@ export default function ReservationsPage() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+        <div 
+          onClick={() => setStatusFilter('completed')}
+          className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+            statusFilter === 'completed' ? 'ring-4 ring-green-300' : ''
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,7 +344,12 @@ export default function ReservationsPage() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+        <div 
+          onClick={() => setStatusFilter('cancelled')}
+          className={`bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+            statusFilter === 'cancelled' ? 'ring-4 ring-red-300' : ''
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,26 +366,56 @@ export default function ReservationsPage() {
 
       {/* Lista de Reservas */}
       <div className="bg-[var(--card-bg)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-          </svg>
-          Reservas Realizadas
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Reservas Realizadas
+            {statusFilter !== 'all' && (
+              <span className="text-sm font-normal text-white/70">
+                ({statusFilter === 'pending' && 'Pendentes'}
+                {statusFilter === 'completed' && 'Concluídas'}
+                {statusFilter === 'cancelled' && 'Canceladas'})
+              </span>
+            )}
+          </h2>
+          {statusFilter !== 'all' && (
+            <button
+              onClick={() => setStatusFilter('all')}
+              className="px-4 py-2 bg-[var(--surface)] hover:bg-[var(--background)] text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Limpar Filtro
+            </button>
+          )}
+        </div>
 
-        {reservations.length === 0 ? (
+        {filteredReservations.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--surface)] rounded-full mb-4">
               <svg className="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-white/70 text-lg">Nenhuma reserva encontrada</p>
-            <p className="text-white/50 text-sm mt-2">As reservas aparecerão aqui quando forem criadas</p>
+            <p className="text-white/70 text-lg">
+              {statusFilter === 'all' ? 'Nenhuma reserva encontrada' : `Nenhuma reserva ${
+                statusFilter === 'pending' ? 'pendente' : 
+                statusFilter === 'completed' ? 'concluída' : 
+                'cancelada'
+              } encontrada`}
+            </p>
+            <p className="text-white/50 text-sm mt-2">
+              {statusFilter === 'all' 
+                ? 'As reservas aparecerão aqui quando forem criadas'
+                : 'Tente selecionar outro filtro ou limpar a busca'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {reservations.map((reservation) => (
+            {filteredReservations.map((reservation) => (
               <div
                 key={reservation.id}
                 className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] overflow-hidden hover:border-[var(--primary)]/30 transition-colors"
