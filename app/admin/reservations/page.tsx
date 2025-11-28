@@ -505,6 +505,34 @@ export default function ReservationsPage() {
                       </div>
                     </div>
 
+                    {/* Informações do Vendedor */}
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Dados do Vendedor
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[var(--card-bg)] p-3 rounded-lg">
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Nome</p>
+                          <p className="text-white text-sm">{reservation.seller_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Email</p>
+                          <p className="text-white text-sm">{reservation.seller_email || 'Não Informado'}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
+                          <p className="text-white text-sm">{reservation.seller_phone || 'Não Informado'}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/50 text-xs font-medium mb-1">CPF</p>
+                          <p className="text-white font-mono text-sm">{reservation.seller_cpf || 'Não Informado'}</p>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Informações da Venda */}
                     <div>
                       <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
@@ -581,34 +609,6 @@ export default function ReservationsPage() {
                             <p className="text-white text-sm bg-[var(--background)] p-2 rounded">{reservation.message}</p>
                           </div>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Informações do Vendedor */}
-                    <div>
-                      <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Dados do Vendedor
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[var(--card-bg)] p-3 rounded-lg">
-                        <div>
-                          <p className="text-white/50 text-xs font-medium mb-1">Nome</p>
-                          <p className="text-white text-sm">{reservation.seller_name}</p>
-                        </div>
-                        <div>
-                          <p className="text-white/50 text-xs font-medium mb-1">Email</p>
-                          <p className="text-white text-sm">{reservation.seller_email || 'Não Informado'}</p>
-                        </div>
-                        <div>
-                          <p className="text-white/50 text-xs font-medium mb-1">Telefone</p>
-                          <p className="text-white text-sm">{reservation.seller_phone || 'Não Informado'}</p>
-                        </div>
-                        <div>
-                          <p className="text-white/50 text-xs font-medium mb-1">CPF</p>
-                          <p className="text-white font-mono text-sm">{reservation.seller_cpf || 'Não Informado'}</p>
-                        </div>
                       </div>
                     </div>
 
