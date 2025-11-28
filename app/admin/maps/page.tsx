@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import InteractiveMap from '@/components/InteractiveMap';
 import LotSelector from '@/components/LotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
@@ -34,6 +35,30 @@ export default function AdminMapsLotsPage() {
     selectBlock,
     isLotSelected, // Helper para verificar se está selecionado
   } = useMapSelection();
+
+  const [reservations, setReservations] = useState<any[]>([]);
+
+  // Função para buscar reservas
+  const fetchReservations = async () => {
+    try {
+      const response = await axios.get('/api/reservas');
+      setReservations(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar reservas:', error);
+    }
+  };
+
+  // Buscar reservas para mostrar informações nos tooltips e modais
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  // Recarregar reservas quando os lotes mudarem (indica que houve uma alteração)
+  useEffect(() => {
+    if (lots.length > 0) {
+      fetchReservations();
+    }
+  }, [lots.length, reservedLotsCount, soldLotsCount]);
 
   if (isLoading) {
     return (
@@ -217,6 +242,7 @@ export default function AdminMapsLotsPage() {
                   selectedLotIds={selectedLots.map(l => l.id)}
                   allowMultipleSelection={true}
                   lotsPerRow={15}
+                  reservations={reservations}
                 />
               ) : selectedBlock ? (
                 <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-700">

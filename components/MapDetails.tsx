@@ -133,8 +133,24 @@ export default function MapDetails() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string>('');
+  const [reservations, setReservations] = useState<any[]>([]);
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
+
+  // Função para buscar reservas
+  const fetchReservations = async () => {
+    try {
+      const response = await axios.get('/api/reservas');
+      setReservations(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar reservas:', error);
+    }
+  };
+
+  // Buscar reservas para mostrar informações nos modais
+  useEffect(() => {
+    fetchReservations();
+  }, []);
 
   // Função para carregar lotes de uma quadra específica
   const loadLotsForBlock = useCallback(async (blockId: string) => {
@@ -244,6 +260,7 @@ export default function MapDetails() {
     if (mapId) {
       loadMapData();
       loadBlocks(mapId);
+      fetchReservations(); // Recarregar reservas também
     }
   }, 10000);
 
@@ -686,6 +703,7 @@ export default function MapDetails() {
               setIsAddingBlock={setIsAddingBlock}
               allBlocks={blocks}
               refreshTrigger={refreshTrigger}
+              reservations={reservations}
             />
           </div>
         </div>
@@ -1133,6 +1151,7 @@ interface BlockCardProps {
   setIsAddingBlock: (isAdding: boolean) => void;
   allBlocks: Block[];
   refreshTrigger: number;
+  reservations: any[];
 }
 
 function BlockCard({
@@ -1146,6 +1165,7 @@ function BlockCard({
   setIsAddingBlock,
   allBlocks,
   refreshTrigger,
+  reservations,
 }: BlockCardProps) {
   const [blockLots, setBlockLots] = useState<Lot[]>([]);
   const [isLoadingLots, setIsLoadingLots] = useState(true);
@@ -1208,6 +1228,7 @@ function BlockCard({
             selectedLotIds={[]}
             allowMultipleSelection={false}
             lotsPerRow={15}
+            reservations={reservations}
           />
         ) : (
           <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
