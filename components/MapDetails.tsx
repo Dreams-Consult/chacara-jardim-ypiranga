@@ -233,6 +233,13 @@ export default function MapDetails() {
     }
   }, [mapId, loadMapData, loadBlocks]);
 
+  // Selecionar automaticamente a primeira quadra quando as quadras forem carregadas
+  useEffect(() => {
+    if (blocks && blocks.length > 0 && !selectedBlockId) {
+      setSelectedBlockId(blocks[0].id);
+    }
+  }, [blocks, selectedBlockId]);
+
   useRealtimeUpdates(() => {
     if (mapId) {
       loadMapData();
