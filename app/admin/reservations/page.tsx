@@ -83,6 +83,7 @@ export default function ReservationsPage() {
         // Outros perfis filtram por CPF do vendedor
         filteredReservations = allReservations.filter((reservation) => {
           // Remove formatação do CPF para comparação
+          if (!reservation.seller_cpf) return false;
           const userCpf = user.cpf.replace(/\D/g, '');
           const sellerCpf = reservation.seller_cpf.replace(/\D/g, '');
           return sellerCpf === userCpf;

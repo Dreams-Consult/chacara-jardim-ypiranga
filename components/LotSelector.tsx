@@ -138,10 +138,14 @@ export default function LotSelector({
   };
 
   const isLotClickable = (lot: Lot): boolean => {
-    // Todos podem clicar em lotes para visualizar informações
-    // Apenas bloqueados não são clicáveis para usuários comuns
-    if (onLotEdit) return true; // Admin pode clicar em qualquer lote
-    return lot.status !== LotStatus.BLOCKED; // Cliente pode clicar em disponível, reservado e vendido
+    // Admin/Dev podem clicar em qualquer lote
+    if (onLotEdit || onToggleLotStatus) return true;
+    
+    // Usuários comuns não podem clicar em lotes bloqueados
+    if (lot.status === LotStatus.BLOCKED) return false;
+    
+    // Usuários comuns podem clicar em disponível, reservado e vendido
+    return true;
   };
 
   const handleMouseEnter = (lot: Lot, event: React.MouseEvent<HTMLDivElement>) => {
@@ -319,8 +323,8 @@ export default function LotSelector({
                   Lote {selectedLotForModal.lotNumber}
                 </h3>
                 <div className="flex items-center gap-2">
-                  {/* Botão de bloquear/desbloquear para contexto de seleção múltipla OU modo de edição */}
-                  {(onMultipleSelect || (onLotEdit && isEditing)) && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
+                  {/* Botão de bloquear/desbloquear para administradores ou para adicionar lotes em reserva */}
+                  {(onLotEdit || onMultipleSelect) && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
                     <button
                       onClick={handleToggleBlockStatus}
                       disabled={isTogglingBlock}
