@@ -426,7 +426,16 @@ export default function ReservationsPage() {
                 className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] overflow-hidden hover:border-[var(--primary)]/30 transition-colors"
               >
                 {/* Header do Card */}
-                <div className="p-4 flex items-start justify-between gap-4">
+                <div 
+                  onClick={() => {
+                    if (expandedReservation !== reservation.id) {
+                      setExpandedReservation(reservation.id);
+                    } else {
+                      setExpandedReservation(null);
+                    }
+                  }}
+                  className="p-4 flex items-start justify-between gap-4 cursor-pointer"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-white/50 font-mono text-xs">#{reservation.id}</span>
@@ -450,13 +459,8 @@ export default function ReservationsPage() {
                     <p className="text-white/60 text-sm truncate">{reservation.customer_email || 'Não Informado'}</p>
                   </div>
 
-                  {/* Botão de expandir/recolher */}
-                  <button
-                    onClick={() => setExpandedReservation(
-                      expandedReservation === reservation.id ? null : reservation.id
-                    )}
-                    className="flex-shrink-0 p-2 rounded-lg bg-[var(--card-bg)] hover:bg-[var(--background)] transition-colors"
-                  >
+                  {/* Ícone de expandir/recolher */}
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-[var(--card-bg)] hover:bg-[var(--background)] transition-colors">
                     <svg
                       className={`w-5 h-5 text-white transition-transform ${
                         expandedReservation === reservation.id ? 'rotate-180' : ''
@@ -467,7 +471,7 @@ export default function ReservationsPage() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </button>
+                  </div>
                 </div>
 
                 {/* Detalhes expandidos */}
