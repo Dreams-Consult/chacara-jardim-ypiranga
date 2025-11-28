@@ -411,6 +411,43 @@ export default function MapDetails() {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const handleToggleLotStatus = async (lotId: string, currentStatus: LotStatus) => {
+    try {
+      // Buscar o lote em todas as quadras
+      let lot: Lot | undefined;
+      for (const block of blocks) {
+        const lotsInBlock = await loadLotsForBlock(block.id);
+        lot = lotsInBlock.find((l: Lot) => l.id === lotId);
+        if (lot) break;
+      }
+
+      if (!lot) {
+        throw new Error('Lote não encontrado');
+      }
+
+      const newStatus = currentStatus === LotStatus.BLOCKED ? LotStatus.AVAILABLE : LotStatus.BLOCKED;
+
+      // Atualizar via API
+      await axios.patch(`${API_URL}/mapas/lotes/atualizar`, {
+        id: lot.id,
+        mapId: lot.mapId,
+        blockId: lot.blockId,
+        lotNumber: lot.lotNumber,
+        status: newStatus,
+        price: lot.price,
+        size: lot.size,
+        description: lot.description,
+        features: lot.features,
+      });
+
+      // Força refresh dos cards após alterar status
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error('Erro ao alterar status do lote:', error);
+      throw error;
+    }
+  };
+
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -698,6 +735,7 @@ export default function MapDetails() {
               loadLotsForBlock={loadLotsForBlock}
               handleAddLotToBlock={handleAddLotToBlock}
               handleEditLot={handleEditLot}
+              handleToggleLotStatus={handleToggleLotStatus}
               handleDeleteBlock={handleDeleteBlock}
               setEditingBlock={setEditingBlock}
               setIsAddingBlock={setIsAddingBlock}
@@ -1146,6 +1184,7 @@ interface BlockCardProps {
   loadLotsForBlock: (blockId: string) => Promise<Lot[]>;
   handleAddLotToBlock: (blockId: string) => void;
   handleEditLot: (lot: Lot) => Promise<void>;
+  handleToggleLotStatus: (lotId: string, currentStatus: LotStatus) => Promise<void>;
   handleDeleteBlock: (blockId: string) => Promise<void>;
   setEditingBlock: (block: Block) => void;
   setIsAddingBlock: (isAdding: boolean) => void;
@@ -1160,6 +1199,7 @@ function BlockCard({
   loadLotsForBlock,
   handleAddLotToBlock,
   handleEditLot,
+  handleToggleLotStatus,
   handleDeleteBlock,
   setEditingBlock,
   setIsAddingBlock,
@@ -1225,6 +1265,7 @@ function BlockCard({
             lots={blockLots}
             blocks={allBlocks}
             onLotEdit={handleEditLot}
+            onToggleLotStatus={handleToggleLotStatus}
             selectedLotIds={[]}
             allowMultipleSelection={false}
             lotsPerRow={15}

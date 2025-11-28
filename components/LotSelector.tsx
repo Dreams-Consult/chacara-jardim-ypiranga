@@ -83,7 +83,7 @@ export default function LotSelector({
 
   const handleToggleBlockStatus = async () => {
     if (!selectedLotForModal) return;
-    if (!onToggleLotStatus && !onLotEdit) return;
+    if (!onToggleLotStatus) return; // Só funciona se onToggleLotStatus estiver disponível
 
     const newStatus = selectedLotForModal.status === LotStatus.BLOCKED ? LotStatus.AVAILABLE : LotStatus.BLOCKED;
 
@@ -96,34 +96,19 @@ export default function LotSelector({
 
     setIsTogglingBlock(true);
     try {
-      if (onToggleLotStatus) {
-        // Usar função específica de toggle se disponível
-        await onToggleLotStatus(selectedLotForModal.id, selectedLotForModal.status);
-        // Atualizar o lote no modal
-        setSelectedLotForModal({
-          ...selectedLotForModal,
-          status: newStatus,
-        });
-        // Mostrar mensagem de sucesso
-        if (newStatus === LotStatus.BLOCKED) {
-          alert(`Lote ${selectedLotForModal.lotNumber} bloqueado com sucesso!`);
-        } else {
-          alert(`Lote ${selectedLotForModal.lotNumber} desbloqueado com sucesso!`);
-        }
-      } else if (onLotEdit) {
-        // Fallback para onLotEdit
-        const updatedLot = {
-          ...selectedLotForModal,
-          status: newStatus,
-        };
-        await onLotEdit(updatedLot);
-        setSelectedLotForModal(updatedLot);
-        // Mostrar mensagem de sucesso
-        if (newStatus === LotStatus.BLOCKED) {
-          alert(`Lote ${selectedLotForModal.lotNumber} bloqueado com sucesso!`);
-        } else {
-          alert(`Lote ${selectedLotForModal.lotNumber} desbloqueado com sucesso!`);
-        }
+      // Usar função específica de toggle
+      await onToggleLotStatus(selectedLotForModal.id, selectedLotForModal.status);
+      // Atualizar o lote no modal
+      setSelectedLotForModal({
+        ...selectedLotForModal,
+        status: newStatus,
+      });
+      
+      // Mostrar mensagem de sucesso
+      if (newStatus === LotStatus.BLOCKED) {
+        alert(`Lote ${selectedLotForModal.lotNumber} bloqueado com sucesso!`);
+      } else {
+        alert(`Lote ${selectedLotForModal.lotNumber} desbloqueado com sucesso!`);
       }
     } catch (error) {
       console.error('Erro ao alterar status do lote:', error);
@@ -334,8 +319,8 @@ export default function LotSelector({
                   Lote {selectedLotForModal.lotNumber}
                 </h3>
                 <div className="flex items-center gap-2">
-                  {/* Botão de bloquear/desbloquear apenas para contexto de seleção múltipla em lotes disponíveis ou bloqueados */}
-                  {onMultipleSelect && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
+                  {/* Botão de bloquear/desbloquear para contexto de seleção múltipla OU modo de edição */}
+                  {(onMultipleSelect || (onLotEdit && isEditing)) && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
                     <button
                       onClick={handleToggleBlockStatus}
                       disabled={isTogglingBlock}
@@ -410,19 +395,6 @@ export default function LotSelector({
                       </select>
                     </div>
                   )}
-
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">Status</label>
-                    <select
-                      value={editedLot.status}
-                      onChange={(e) => setEditedLot({ ...editedLot, status: e.target.value as LotStatus })}
-                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base cursor-pointer touch-manipulation"
-                    >
-                      <option value={LotStatus.AVAILABLE}>Disponível</option>
-                      <option value={LotStatus.BLOCKED}>Bloqueado</option>
-                    </select>
-                    <p className="text-xs text-gray-400 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
-                  </div>
 
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Área (m²) *</label>
