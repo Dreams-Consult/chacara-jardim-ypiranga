@@ -149,7 +149,9 @@ export default function DashboardPage() {
   const soldLots = allLots.filter((lot) => lot.status === LotStatus.SOLD).length;
   const blockedSlots = allLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
 
-  const totalValue = allLots.reduce((sum, lot) => sum + lot.price, 0);
+  const totalValue = allLots
+    .filter((lot) => lot.status === LotStatus.AVAILABLE)
+    .reduce((sum, lot) => sum + lot.price, 0);
   const availableValue = allLots
     .filter((lot) => lot.status === LotStatus.AVAILABLE)
     .reduce((sum, lot) => sum + lot.price, 0);
