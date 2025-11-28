@@ -8,6 +8,7 @@ import { useBlockOperations } from '@/hooks/useBlockOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { loadPdfJs } from '@/lib/pdfjs-wrapper';
 import LotSelector from '@/components/LotSelector';
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = '/api';
 
@@ -118,6 +119,7 @@ export default function MapDetails() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const mapId = searchParams.get('mapId') || '';
+  const { user } = useAuth();
 
   const [map, setMap] = useState<Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -742,6 +744,7 @@ export default function MapDetails() {
               allBlocks={blocks}
               refreshTrigger={refreshTrigger}
               reservations={reservations}
+              userRole={user?.role}
             />
           </div>
         </div>
@@ -1191,6 +1194,7 @@ interface BlockCardProps {
   allBlocks: Block[];
   refreshTrigger: number;
   reservations: any[];
+  userRole?: string;
 }
 
 function BlockCard({
@@ -1206,6 +1210,7 @@ function BlockCard({
   allBlocks,
   refreshTrigger,
   reservations,
+  userRole,
 }: BlockCardProps) {
   const [blockLots, setBlockLots] = useState<Lot[]>([]);
   const [isLoadingLots, setIsLoadingLots] = useState(true);
@@ -1270,6 +1275,7 @@ function BlockCard({
             allowMultipleSelection={false}
             lotsPerRow={15}
             reservations={reservations}
+            userRole={userRole}
           />
         ) : (
           <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">

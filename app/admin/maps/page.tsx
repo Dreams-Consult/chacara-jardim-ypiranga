@@ -7,8 +7,10 @@ import LotSelector from '@/components/LotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
 import { useMapSelection } from '@/hooks/useMapSelection';
 import { LotStatus } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminMapsLotsPage() {
+  const { user } = useAuth();
   const {
     maps,
     blocks,
@@ -272,11 +274,12 @@ export default function AdminMapsLotsPage() {
                       handleToggleLotSelection(lots[0]);
                     }
                   }}
-                  onToggleLotStatus={handleToggleLotStatus}
+                  onToggleLotStatus={user?.role === 'admin' || user?.role === 'dev' ? handleToggleLotStatus : undefined}
                   selectedLotIds={selectedLots.map(l => l.id)}
                   allowMultipleSelection={true}
                   lotsPerRow={15}
                   reservations={reservations}
+                  userRole={user?.role}
                 />
               ) : selectedBlock ? (
                 <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-700">

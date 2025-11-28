@@ -16,6 +16,7 @@ interface LotSelectorProps {
   allowMultipleSelection?: boolean;
   lotsPerRow?: number;
   reservations?: any[]; // Array de reservas para mostrar no tooltip
+  userRole?: string; // Role do usuário para verificar permissões
 }
 
 export default function LotSelector({
@@ -30,6 +31,7 @@ export default function LotSelector({
   allowMultipleSelection = false,
   lotsPerRow = 10,
   reservations = [],
+  userRole,
 }: LotSelectorProps) {
   const router = useRouter();
   const [selectedLotForModal, setSelectedLotForModal] = useState<Lot | null>(null);
@@ -323,8 +325,8 @@ export default function LotSelector({
                   Lote {selectedLotForModal.lotNumber}
                 </h3>
                 <div className="flex items-center gap-2">
-                  {/* Botão de bloquear/desbloquear para administradores ou para adicionar lotes em reserva */}
-                  {(onLotEdit || onMultipleSelect) && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
+                  {/* Botão de bloquear/desbloquear apenas para administradores e desenvolvedores */}
+                  {onToggleLotStatus && userRole !== 'seller' && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
                     <button
                       onClick={handleToggleBlockStatus}
                       disabled={isTogglingBlock}
