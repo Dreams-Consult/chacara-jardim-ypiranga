@@ -86,6 +86,7 @@ export interface User {
   creci?: string;
   role: UserRole;
   status: UserStatus;
+  active?: boolean;
   password?: string;
   createdAt: Date;
   updatedAt: Date;

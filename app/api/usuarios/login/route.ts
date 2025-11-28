@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Buscar usuário no banco
     const [rows] = await connection.execute(
-      `SELECT id, cpf, name, email, phone, first_login, creci, role, status, created_at, updated_at 
+      `SELECT id, cpf, name, email, phone, first_login, creci, role, status, active, created_at, updated_at 
        FROM users 
        WHERE cpf = ? AND password = ?`,
       [cleanCpf, hashedPassword]
@@ -66,6 +66,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Verificar se o usuário está ativo
+    if (user.active === 0 || user.active === false) {
+      console.log('[API /usuarios/login] ❌ Usuário desativado:', cleanCpf);
+      return NextResponse.json(
+        { error: 'Sua conta foi desativada. Entre em contato com o administrador.' },
+        { status: 403 }
+      );
+    }
+
     // Formatar resposta (mantendo snake_case para compatibilidade com AuthContext)
     const userData = {
       id: user.id.toString(),
@@ -76,6 +85,7 @@ export async function GET(request: NextRequest) {
       creci: user.creci || '',
       role: user.role,
       status: user.status,
+      active: user.active !== 0, // Converte TINYINT(1) para booleano
       first_login: Boolean(user.first_login), // Converte TINYINT(1) para booleano
       created_at: user.created_at,
       updated_at: user.updated_at,

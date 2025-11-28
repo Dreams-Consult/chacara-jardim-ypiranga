@@ -14,10 +14,16 @@ export async function GET(request: NextRequest) {
     connection = await mysql.createConnection(dbConfig);
 
     const [rows] = await connection.execute(
-      'SELECT id, cpf, name, email, phone, creci, role, status, created_at, updated_at FROM users ORDER BY created_at DESC'
+      'SELECT id, cpf, name, email, phone, creci, role, status, active, created_at, updated_at FROM users ORDER BY created_at DESC'
     );
 
-    return NextResponse.json(rows || [], { status: 200 });
+    // Converter active de TINYINT para boolean
+    const users = (rows as any[]).map((user: any) => ({
+      ...user,
+      active: user.active === 1 || user.active === true
+    }));
+
+    return NextResponse.json(users || [], { status: 200 });
   } catch (error) {
     console.error('[API /usuarios GET] Erro:', error);
     return NextResponse.json(
