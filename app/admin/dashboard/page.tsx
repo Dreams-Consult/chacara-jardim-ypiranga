@@ -149,9 +149,6 @@ export default function DashboardPage() {
   const soldLots = allLots.filter((lot) => lot.status === LotStatus.SOLD).length;
   const blockedSlots = allLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
 
-  const totalValue = allLots
-    .filter((lot) => lot.status === LotStatus.AVAILABLE)
-    .reduce((sum, lot) => sum + lot.price, 0);
   const availableValue = allLots
     .filter((lot) => lot.status === LotStatus.AVAILABLE)
     .reduce((sum, lot) => sum + lot.price, 0);
@@ -179,6 +176,9 @@ export default function DashboardPage() {
       }
       return sum;
     }, 0);
+
+  // Valor total = disponíveis (preço base) + reservados (agreed_price) + vendidos (agreed_price)
+  const totalValue = availableValue + reservedValue + soldValue;
 
   if (isLoading) {
     return (
