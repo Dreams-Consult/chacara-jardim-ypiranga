@@ -221,6 +221,32 @@ export default function UsersPage() {
     }
   };
 
+  const handleResetPassword = async (userId: string, userName: string) => {
+    if (!confirm(`Tem certeza que deseja resetar a senha de ${userName}?\n\nA senha será redefinida para: 123456\nO usuário precisará alterá-la no próximo login.`)) return;
+
+    try {
+      console.log('[UsersPage] Resetando senha do usuário:', userId);
+
+      await axios.post(`${API_URL}/usuarios/reset-password`, {
+        userId,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      });
+
+      console.log('[UsersPage] ✅ Senha resetada');
+      alert('Senha resetada com sucesso!\n\nNova senha: 123456\nO usuário deverá alterá-la no próximo login.');
+
+      // Recarregar lista de usuários
+      await loadUsers();
+    } catch (error) {
+      console.error('[UsersPage] ❌ Erro ao resetar senha:', error);
+      alert('Erro ao resetar senha do usuário');
+    }
+  };
+
   const handleChangeRole = async (userId: string, newRole: UserRole) => {
     try {
       console.log('[UsersPage] Alterando cargo do usuário:', userId, 'para:', newRole);
@@ -787,6 +813,18 @@ export default function UsersPage() {
                                 </svg>
                                 Alterar Cargo
                               </button>
+                              <button
+                                onClick={() => {
+                                  handleResetPassword(user.id, user.name);
+                                  setActionsMenuOpen(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                              >
+                                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                Resetar Senha
+                              </button>
                             </div>
                           )}
                         </div>
@@ -889,6 +927,18 @@ export default function UsersPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                           </svg>
                           Alterar Cargo
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleResetPassword(user.id, user.name);
+                            setActionsMenuOpen(null);
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                          Resetar Senha
                         </button>
                       </div>
                     )}
