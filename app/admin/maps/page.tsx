@@ -60,6 +60,39 @@ export default function AdminMapsLotsPage() {
     }
   }, [lots.length, reservedLotsCount, soldLotsCount]);
 
+  // Função para bloquear/desbloquear lote
+  const handleToggleLotStatus = async (lotId: string, currentStatus: LotStatus) => {
+    try {
+      const lot = lots.find(l => l.id === lotId);
+      if (!lot) {
+        throw new Error('Lote não encontrado');
+      }
+
+      const newStatus = currentStatus === LotStatus.BLOCKED ? LotStatus.AVAILABLE : LotStatus.BLOCKED;
+
+      // Atualizar via API
+      await axios.patch('/api/mapas/lotes/atualizar', {
+        id: lot.id,
+        mapId: lot.mapId,
+        blockId: lot.blockId,
+        lotNumber: lot.lotNumber,
+        status: newStatus,
+        price: lot.price,
+        size: lot.size,
+        description: lot.description,
+        features: lot.features,
+      });
+
+      // Recarregar lotes para refletir a mudança
+      if (selectedBlock) {
+        selectBlock(selectedBlock.id);
+      }
+    } catch (error) {
+      console.error('Erro ao alterar status do lote:', error);
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -239,6 +272,7 @@ export default function AdminMapsLotsPage() {
                       handleToggleLotSelection(lots[0]);
                     }
                   }}
+                  onToggleLotStatus={handleToggleLotStatus}
                   selectedLotIds={selectedLots.map(l => l.id)}
                   allowMultipleSelection={true}
                   lotsPerRow={15}
