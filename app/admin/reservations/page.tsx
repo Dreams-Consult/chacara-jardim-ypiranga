@@ -306,16 +306,16 @@ export default function ReservationsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div 
           onClick={() => setStatusFilter('all')}
-          className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
-            statusFilter === 'all' ? 'ring-4 ring-yellow-300' : ''
+          className={`bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+        statusFilter === 'all' ? 'ring-4 ring-blue-300' : ''
           }`}
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Total de Reservas</p>
           <p className="text-white text-4xl font-bold">{reservations.length}</p>
@@ -323,58 +323,58 @@ export default function ReservationsPage() {
 
         <div 
           onClick={() => setStatusFilter('pending')}
-          className={`bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
-            statusFilter === 'pending' ? 'ring-4 ring-blue-300' : ''
+          className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+        statusFilter === 'pending' ? 'ring-4 ring-yellow-300' : ''
           }`}
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Pendentes</p>
           <p className="text-white text-4xl font-bold">
-            {reservations.filter(r => r.status === 'pending').length}
+        {reservations.filter(r => r.status === 'pending').length}
           </p>
         </div>
 
         <div 
           onClick={() => setStatusFilter('completed')}
           className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
-            statusFilter === 'completed' ? 'ring-4 ring-green-300' : ''
+        statusFilter === 'completed' ? 'ring-4 ring-green-300' : ''
           }`}
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Concluídas</p>
           <p className="text-white text-4xl font-bold">
-            {reservations.filter(r => r.status === 'completed').length}
+        {reservations.filter(r => r.status === 'completed').length}
           </p>
         </div>
 
         <div 
           onClick={() => setStatusFilter('cancelled')}
           className={`bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
-            statusFilter === 'cancelled' ? 'ring-4 ring-red-300' : ''
+        statusFilter === 'cancelled' ? 'ring-4 ring-red-300' : ''
           }`}
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Canceladas</p>
           <p className="text-white text-4xl font-bold">
-            {reservations.filter(r => r.status === 'cancelled').length}
+        {reservations.filter(r => r.status === 'cancelled').length}
           </p>
         </div>
       </div>
