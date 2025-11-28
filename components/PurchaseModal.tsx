@@ -301,31 +301,31 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             </div>
 
           {/* Informações dos lotes selecionados */}
-          <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-2xl p-3 sm:p-5 mb-4 sm:mb-6">
+          <div className="bg-[var(--surface)] border-2 border-[var(--border)] rounded-2xl p-3 sm:p-5 mb-4 sm:mb-6">
             <h3 className="text-base font-bold text-white/80 mb-3">
               {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
             </h3>
             <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
               {lots.map((lot) => (
-                <div key={lot.id} className="bg-white/80 rounded-lg p-3 border border-[var(--border)]">
+                <div key={lot.id} className="bg-[var(--background)] rounded-lg p-3 border border-[var(--border)]">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
+                      <span className="text-sm font-medium text-white/70">Lote {lot.lotNumber}</span>
                       {lot.blockName && (
-                        <span className="text-xs text-[var(--surface)]/70 bg-[var(--primary)]/10 px-2 py-0.5 rounded">
+                        <span className="text-xs text-white/60 bg-[var(--primary)]/20 px-2 py-0.5 rounded">
                           Quadra: {lot.blockName}
                         </span>
                       )}
                     </div>
-                    <span className="text-sm text-[var(--surface)]">{lot.size}m²</span>
+                    <span className="text-sm text-white/70">{lot.size}m²</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[var(--surface)] font-medium">Valor: R$</span>
+                    <span className="text-xs text-white/50 font-medium">Valor: R$</span>
                     <input
                       type="text"
                       value={lotPricesDisplay[lot.id] ?? ''}
                       onChange={(e) => handleLotPriceChange(lot.id, e.target.value)}
-                      className="flex-1 px-2 py-1.5 text-sm border-2 border-[var(--primary)]/50 rounded text-[var(--surface)] bg-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none"
+                      className="flex-1 px-2 py-1.5 text-sm bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none text-right"
                       placeholder="0,00"
                     />
                   </div>
@@ -333,13 +333,13 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
               ))}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--surface)] mb-1">Área Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">{totalArea}m²</p>
+              <div className="bg-[var(--background)] rounded-xl p-3 border border-[var(--border)]">
+                <p className="text-xs font-medium text-white/50 mb-1">Área Total</p>
+                <p className="text-lg font-bold text-white">{totalArea}m²</p>
               </div>
-              <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <div className="bg-[var(--background)] rounded-xl p-3 border border-[var(--border)]">
+                <p className="text-xs font-medium text-white/50 mb-1">Preço Total</p>
+                <p className="text-lg font-bold text-white">R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
