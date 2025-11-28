@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Lot, LotArea, LotStatus } from '@/types';
 import { useInteractiveMap } from '@/hooks/useInteractiveMap';
+import { loadPdfJs } from '@/lib/pdfjs-wrapper';
 
 interface InteractiveMapProps {
   imageUrl: string;
@@ -40,9 +41,8 @@ export default function InteractiveMap({
       // Converter PDF para canvas usando pdf.js
       const loadPDF = async () => {
         try {
-          // Importar pdf.js dinamicamente
-          const pdfjsLib = await import('pdfjs-dist');
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          // Carregar pdf.js
+          const pdfjsLib = await loadPdfJs();
 
           // Carregar PDF
           const loadingTask = pdfjsLib.getDocument(imageUrl);

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { loadPdfJs } from '@/lib/pdfjs-wrapper';
 import axios from 'axios';
 
 // Componente para renderizar preview de PDF com zoom
@@ -16,8 +17,7 @@ function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
   useEffect(() => {
     const convertPDF = async () => {
       try {
-        const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        const pdfjsLib = await loadPdfJs();
 
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;

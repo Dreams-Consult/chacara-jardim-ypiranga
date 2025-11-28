@@ -13,8 +13,15 @@ const nextConfig: NextConfig = {
   // Configurações experimentais
   experimental: {
     serverActions: {
-      bodySizeLimit: '100mb',
+      bodySizeLimit: '500mb',
       allowedOrigins: ['*'],
+    },
+  },
+
+  // Configuração do Turbopack para resolver alias
+  turbopack: {
+    resolveAlias: {
+      canvas: './lib/canvas-mock.ts',
     },
   },
 };

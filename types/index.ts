@@ -60,6 +60,7 @@ export interface PurchaseRequest {
   customerPhone: string;
   customerCPF?: string;
   message?: string;
+  contract?: string;
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
   createdAt: Date;
 }

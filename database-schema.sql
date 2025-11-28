@@ -106,6 +106,7 @@ CREATE TABLE `purchase_requests` (
   `payment_method` ENUM('cash', 'financing', 'installments') DEFAULT 'cash',
   `status` ENUM('pending', 'approved', 'rejected', 'completed', 'cancelled') DEFAULT 'pending',
   `notes` TEXT,
+  `contract` TEXT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
