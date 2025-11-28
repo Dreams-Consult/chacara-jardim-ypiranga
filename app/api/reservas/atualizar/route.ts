@@ -22,7 +22,10 @@ export async function PUT(request: NextRequest) {
       seller_email,
       seller_phone,
       seller_cpf,
-      created_at
+      created_at,
+      status,
+      userRole,
+      lots
     } = body;
 
     if (!id) {
@@ -46,58 +49,88 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    connection = await mysql.createConnection(dbConfig);
-
-    // Converter created_at para formato MySQL se fornecido
-    let mysqlCreatedAt = null;
-    if (created_at) {
-      const date = new Date(created_at);
-      mysqlCreatedAt = date.toISOString().slice(0, 19).replace('T', ' ');
+    // Verificar permissão: vendedores não podem editar reservas concluídas ou canceladas
+    if (userRole !== 'admin' && userRole !== 'dev' && status !== 'pending') {
+      return NextResponse.json(
+        { error: 'Você não tem permissão para editar reservas já confirmadas ou canceladas' },
+        { status: 403 }
+      );
     }
 
-    // Atualizar reserva
-    await connection.execute(
-      `UPDATE purchase_requests SET
-        customer_name = ?,
-        customer_email = ?,
-        customer_phone = ?,
-        customer_cpf = ?,
-        payment_method = ?,
-        first_payment = ?,
-        installments = ?,
-        contract = ?,
-        message = ?,
-        seller_name = ?,
-        seller_email = ?,
-        seller_phone = ?,
-        seller_cpf = ?,
-        created_at = ?
-      WHERE id = ?`,
-      [
-        customer_name,
-        customer_email || null,
-        customer_phone || null,
-        customer_cpf || null,
-        payment_method || null,
-        first_payment || null,
-        installments || null,
-        contract || null,
-        message || null,
-        seller_name,
-        seller_email || null,
-        seller_phone || null,
-        seller_cpf || null,
-        mysqlCreatedAt,
-        id
-      ]
-    );
+    connection = await mysql.createConnection(dbConfig);
+    await connection.beginTransaction();
 
-    console.log('[API /reservas/atualizar] ✅ Reserva atualizada:', id);
-    
-    return NextResponse.json(
-      { message: 'Reserva atualizada com sucesso' },
-      { status: 200 }
-    );
+    try {
+      // Converter created_at para formato MySQL se fornecido
+      let mysqlCreatedAt = null;
+      if (created_at) {
+        const date = new Date(created_at);
+        mysqlCreatedAt = date.toISOString().slice(0, 19).replace('T', ' ');
+      }
+
+      // Atualizar reserva
+      await connection.execute(
+        `UPDATE purchase_requests SET
+          customer_name = ?,
+          customer_email = ?,
+          customer_phone = ?,
+          customer_cpf = ?,
+          payment_method = ?,
+          first_payment = ?,
+          installments = ?,
+          contract = ?,
+          message = ?,
+          seller_name = ?,
+          seller_email = ?,
+          seller_phone = ?,
+          seller_cpf = ?,
+          created_at = ?
+        WHERE id = ?`,
+        [
+          customer_name,
+          customer_email || null,
+          customer_phone || null,
+          customer_cpf || null,
+          payment_method || null,
+          first_payment || null,
+          installments || null,
+          contract || null,
+          message || null,
+          seller_name,
+          seller_email || null,
+          seller_phone || null,
+          seller_cpf || null,
+          mysqlCreatedAt,
+          id
+        ]
+      );
+
+      // Atualizar preços dos lotes se fornecidos
+      if (lots && Array.isArray(lots) && lots.length > 0) {
+        for (const lot of lots) {
+          if (lot.id && lot.agreed_price !== undefined) {
+            await connection.execute(
+              `UPDATE purchase_request_lots SET agreed_price = ? 
+               WHERE purchase_request_id = ? AND lot_id = ?`,
+              [lot.agreed_price, id, lot.id]
+            );
+          }
+        }
+        console.log(`[API /reservas/atualizar] ✅ Preços de ${lots.length} lote(s) atualizados`);
+      }
+
+      await connection.commit();
+
+      console.log('[API /reservas/atualizar] ✅ Reserva atualizada:', id);
+      
+      return NextResponse.json(
+        { message: 'Reserva atualizada com sucesso' },
+        { status: 200 }
+      );
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    }
   } catch (error) {
     console.error('[API /reservas/atualizar] ❌ Erro:', error);
     return NextResponse.json(

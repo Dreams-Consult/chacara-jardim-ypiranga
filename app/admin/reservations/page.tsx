@@ -57,6 +57,7 @@ export default function ReservationsPage() {
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [firstPaymentDisplay, setFirstPaymentDisplay] = useState<string>('');
+  const [lotPrices, setLotPrices] = useState<{ [lotId: number]: string }>({});
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
   
   // Paginação
@@ -196,8 +197,24 @@ export default function ReservationsPage() {
   };
 
   const handleEdit = (reservation: Reservation) => {
+    // Verificar permissão: vendedores não podem editar reservas concluídas ou canceladas
+    if (user?.role !== UserRole.ADMIN && user?.role !== UserRole.DEV && reservation.status !== 'pending') {
+      alert('⚠️ Você não tem permissão para editar reservas já confirmadas ou canceladas.');
+      return;
+    }
+
     setEditingReservation({ ...reservation });
     setFirstPaymentDisplay(formatCurrency(reservation.first_payment || 0));
+    
+    // Inicializar preços dos lotes
+    const prices: { [lotId: number]: string } = {};
+    if (reservation.lots && reservation.lots.length > 0) {
+      reservation.lots.forEach((lot: any) => {
+        prices[lot.id] = formatCurrency(lot.agreed_price || lot.price || 0);
+      });
+    }
+    setLotPrices(prices);
+    
     setIsEditModalOpen(true);
   };
 
@@ -242,10 +259,40 @@ export default function ReservationsPage() {
     }
   };
 
+  const handleLotPriceChange = (lotId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Remove tudo exceto dígitos
+    value = value.replace(/\D/g, '');
+    
+    // Converte para número e formata
+    if (value === '') {
+      setLotPrices({ ...lotPrices, [lotId]: '' });
+      return;
+    }
+    
+    // Adiciona zeros à esquerda se necessário para ter pelo menos 3 dígitos
+    value = value.padStart(3, '0');
+    
+    // Separa os centavos dos reais
+    const cents = value.slice(-2);
+    const reais = value.slice(0, -2);
+    
+    // Formata para exibição
+    const displayValue = `${parseInt(reais).toLocaleString('pt-BR')},${cents}`;
+    setLotPrices({ ...lotPrices, [lotId]: displayValue });
+  };
+
   const handleSaveEdit = async () => {
     if (!editingReservation) return;
 
     try {
+      // Preparar preços dos lotes
+      const lotsWithPrices = editingReservation.lots?.map((lot: any) => ({
+        id: lot.id,
+        agreed_price: lotPrices[lot.id] ? parseCurrency(lotPrices[lot.id]) : (lot.agreed_price || lot.price)
+      })) || [];
+
       await axios.put(`${API_URL}/reservas/atualizar`, {
         id: editingReservation.id,
         customer_name: editingReservation.customer_name,
@@ -261,7 +308,10 @@ export default function ReservationsPage() {
         seller_email: editingReservation.seller_email,
         seller_phone: editingReservation.seller_phone,
         seller_cpf: editingReservation.seller_cpf,
-        created_at: editingReservation.created_at
+        created_at: editingReservation.created_at,
+        status: editingReservation.status,
+        userRole: user?.role,
+        lots: lotsWithPrices
       }, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
@@ -648,16 +698,18 @@ export default function ReservationsPage() {
 
                     {/* Botões de ação */}
                     <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-[var(--border)]">
-                      {/* Botão de Editar */}
-                      <button
-                        onClick={() => handleEdit(reservation)}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Editar Dados
-                      </button>
+                      {/* Botão de Editar - Vendedores só podem editar reservas pendentes */}
+                      {(reservation.status === 'pending' || user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
+                        <button
+                          onClick={() => handleEdit(reservation)}
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Editar Dados
+                        </button>
+                      )}
 
                       {reservation.status === 'pending' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
                         <>
@@ -910,6 +962,38 @@ export default function ReservationsPage() {
                   </svg>
                   Informações da Venda
                 </h3>
+
+                {/* Lotes e Preços */}
+                {editingReservation.lots && editingReservation.lots.length > 0 && (
+                  <div className="mb-6 p-4 bg-[var(--surface)] rounded-lg border-2 border-[var(--border)]">
+                    <h4 className="text-white/80 text-sm font-semibold mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                      Lotes Reservados e Preços
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {editingReservation.lots.map((lot: any) => (
+                        <div key={lot.id} className="bg-[var(--background)] p-3 rounded-lg border border-[var(--border)]">
+                          <label className="block text-white/70 text-xs font-medium mb-2">
+                            Lote {lot.lot_number}{lot.block_name ? ` - Quadra ${lot.block_name}` : ''}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/50 text-sm">R$</span>
+                            <input
+                              type="text"
+                              value={lotPrices[lot.id] || ''}
+                              onChange={(e) => handleLotPriceChange(lot.id, e)}
+                              className="flex-1 px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-right font-semibold"
+                              placeholder="0,00"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-white/80 text-sm font-semibold mb-2">Forma de Pagamento</label>
