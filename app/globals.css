@@ -71,10 +71,10 @@ canvas {
   touch-action: none;
 }
 
-/* Transições suaves */
+/* Transições suaves
 * {
   transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
-}
+} */
 
 /* Botões com estilo vibrante */
 button {

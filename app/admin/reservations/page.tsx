@@ -305,8 +305,8 @@ export default function ReservationsPage() {
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div 
-          onClick={() => setStatusFilter('all')}
-          className={`bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+          onClick={() => setStatusFilter(statusFilter === 'all' ? 'all' : 'all')}
+          className={`bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'all' ? 'ring-4 ring-blue-300' : ''
           }`}
         >
@@ -322,8 +322,8 @@ export default function ReservationsPage() {
         </div>
 
         <div 
-          onClick={() => setStatusFilter('pending')}
-          className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+          onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
+          className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'pending' ? 'ring-4 ring-yellow-300' : ''
           }`}
         >
@@ -341,8 +341,8 @@ export default function ReservationsPage() {
         </div>
 
         <div 
-          onClick={() => setStatusFilter('completed')}
-          className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+          onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
+          className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'completed' ? 'ring-4 ring-green-300' : ''
           }`}
         >
@@ -360,8 +360,8 @@ export default function ReservationsPage() {
         </div>
 
         <div 
-          onClick={() => setStatusFilter('cancelled')}
-          className={`bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all hover:scale-105 ${
+          onClick={() => setStatusFilter(statusFilter === 'cancelled' ? 'all' : 'cancelled')}
+          className={`bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'cancelled' ? 'ring-4 ring-red-300' : ''
           }`}
         >
@@ -395,17 +395,6 @@ export default function ReservationsPage() {
               </span>
             )}
           </h2>
-          {statusFilter !== 'all' && (
-            <button
-              onClick={() => setStatusFilter('all')}
-              className="px-4 py-2 bg-[var(--surface)] hover:bg-[var(--background)] text-white text-sm rounded-lg transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Limpar Filtro
-            </button>
-          )}
         </div>
 
         {filteredReservations.length === 0 ? (
