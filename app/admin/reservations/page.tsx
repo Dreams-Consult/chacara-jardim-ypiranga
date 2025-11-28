@@ -57,6 +57,10 @@ export default function ReservationsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [firstPaymentDisplay, setFirstPaymentDisplay] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadData = useCallback(async () => {
     try {
@@ -246,6 +250,17 @@ export default function ReservationsPage() {
     ? reservations 
     : reservations.filter(r => r.status === statusFilter);
 
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedReservations = filteredReservations.slice(startIndex, endIndex);
+
+  // Reset para página 1 quando mudar o filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -414,8 +429,9 @@ export default function ReservationsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredReservations.map((reservation) => (
+          <>
+            <div className="space-y-4">
+              {paginatedReservations.map((reservation) => (
               <div
                 key={reservation.id}
                 className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] overflow-hidden hover:border-[var(--primary)]/30 transition-colors"
@@ -662,7 +678,69 @@ export default function ReservationsPage() {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+
+            {/* Paginação */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-6">
+                <div className="text-sm text-white/70">
+                  Mostrando {startIndex + 1} a {Math.min(endIndex, filteredReservations.length)} de {filteredReservations.length} reservas
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  
+                  <div className="flex gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                      // Mostrar apenas páginas próximas à atual
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-2 rounded-lg font-medium transition-colors ${
+                              currentPage === page
+                                ? 'bg-[var(--primary)] text-white'
+                                : 'bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-white'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return <span key={page} className="px-2 text-white/50">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
