@@ -635,54 +635,78 @@ export default function MapDetails() {
 
       {/* Modal de Adicionar/Editar Quadra */}
       {isAddingBlock && editingBlock && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
-            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              {editingBlock.id ? 'Editar Quadra' : 'Adicionar Quadra'}
-            </h2>
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
-                  Nome da Quadra *
-                </label>
-                <input
-                  type="text"
-                  value={editingBlock.name}
-                  onChange={(e) => setEditingBlock({ ...editingBlock, name: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
-                  placeholder="Ex: Quadra A, Quadra 1, Setor Norte"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
-                  Descrição
-                </label>
-                <textarea
-                  value={editingBlock.description || ''}
-                  onChange={(e) => setEditingBlock({ ...editingBlock, description: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
-                  placeholder="Descrição opcional da quadra"
-                  rows={3}
-                />
+        <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-4 sm:p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold">{editingBlock.id ? 'Editar Quadra' : 'Adicionar Quadra'}</h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsAddingBlock(false);
+                    setEditingBlock(null);
+                  }}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+                  type="button"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
-            <div className="flex gap-2 mt-6">
+            <div className="p-4 sm:p-6">
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">
+                    Nome da Quadra *
+                  </label>
+                  <input
+                    type="text"
+                    value={editingBlock.name}
+                    onChange={(e) => setEditingBlock({ ...editingBlock, name: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                    placeholder="Ex: Quadra A, Quadra 1, Setor Norte"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-white/80 text-sm font-semibold mb-2">
+                    Descrição
+                  </label>
+                  <textarea
+                    value={editingBlock.description || ''}
+                    onChange={(e) => setEditingBlock({ ...editingBlock, description: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                    placeholder="Descrição opcional da quadra"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
+                type="button"
                 onClick={() => {
                   setIsAddingBlock(false);
                   setEditingBlock(null);
                 }}
-                className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer"
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] cursor-pointer"
               >
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleSaveBlock}
-                className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] cursor-pointer"
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] cursor-pointer"
               >
                 {editingBlock.id ? 'Salvar' : 'Adicionar'}
               </button>
@@ -693,41 +717,85 @@ export default function MapDetails() {
 
       {/* Modal de Adicionar Lote */}
       {isAddingLot && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white p-4 sm:p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[95vh] overflow-y-auto">
-            <h2 className="text-xl sm:text-2xl font-bold text-[var(--foreground)] mb-4 sm:mb-6 flex items-center gap-2">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
-              Adicionar Lote
-            </h2>
-            <LotForm
-              blockId={selectedBlockForLot}
-              blockName={blocks.find(b => b.id === selectedBlockForLot)?.name || ''}
-              onSave={handleSaveLot}
-              onCancel={() => {
-                setIsAddingLot(false);
-                setSelectedBlockForLot('');
-              }}
-            />
+        <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-4 sm:p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold">Adicionar Lote</h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsAddingLot(false);
+                    setSelectedBlockForLot('');
+                  }}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+                  type="button"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-4 sm:p-6">
+              <LotForm
+                blockId={selectedBlockForLot}
+                blockName={blocks.find(b => b.id === selectedBlockForLot)?.name || ''}
+                onSave={handleSaveLot}
+                onCancel={() => {
+                  setIsAddingLot(false);
+                  setSelectedBlockForLot('');
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
 
       {/* Modal de Adicionar/Editar Imagem */}
       {isEditingImage && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl border-2 border-blue-500/30">
-            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {map.imageUrl ? 'Editar Imagem do Mapa' : 'Adicionar Imagem do Mapa'}
-            </h2>
+        <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-4 sm:p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold">{map.imageUrl ? 'Editar Imagem do Mapa' : 'Adicionar Imagem do Mapa'}</h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsEditingImage(false);
+                    setImageFile(null);
+                    setImagePreview('');
+                  }}
+                  disabled={isUploadingImage}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer disabled:opacity-50"
+                  type="button"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             
-            <div className="space-y-4">
+            <div className="p-4 sm:p-6 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                <label className="block text-white/80 text-sm font-semibold mb-2">
                   Selecionar Arquivo
                 </label>
                 <input
@@ -735,51 +803,53 @@ export default function MapDetails() {
                   accept="image/*,application/pdf"
                   onChange={handleImageSelect}
                   disabled={isUploadingImage}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white file:font-semibold hover:file:bg-blue-600 transition-colors disabled:opacity-50"
+                  className="w-full px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--primary)] file:text-white file:font-semibold hover:file:bg-[var(--primary-dark)] transition-colors disabled:opacity-50"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-white/50 mt-1">
                   Formatos aceitos: JPG, PNG, GIF, PDF. Tamanho máximo: 10MB (imagens) ou 50MB (PDF)
                 </p>
               </div>
 
               {imagePreview && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Preview:</p>
+                  <p className="text-sm font-semibold text-white/80 mb-2">Preview:</p>
                   {imagePreview === 'PDF' ? (
-                    <div className="w-full h-40 bg-gray-100 rounded-lg border-2 border-blue-500 flex flex-col items-center justify-center">
-                      <svg className="w-16 h-16 text-red-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-full h-40 bg-[var(--surface)] rounded-lg border-2 border-[var(--primary)] flex flex-col items-center justify-center">
+                      <svg className="w-16 h-16 text-red-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-gray-700 font-semibold">{imageFile?.name}</p>
-                      <p className="text-gray-500 text-sm">Arquivo PDF selecionado</p>
+                      <p className="text-white font-semibold">{imageFile?.name}</p>
+                      <p className="text-white/60 text-sm">Arquivo PDF selecionado</p>
                     </div>
                   ) : (
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full max-h-64 object-contain bg-gray-100 rounded-lg border-2 border-blue-500"
+                      className="w-full max-h-64 object-contain bg-[var(--surface)] rounded-lg border-2 border-[var(--primary)]"
                     />
                   )}
                 </div>
               )}
             </div>
 
-            <div className="flex gap-2 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
+                type="button"
                 onClick={() => {
                   setIsEditingImage(false);
                   setImageFile(null);
                   setImagePreview('');
                 }}
                 disabled={isUploadingImage}
-                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50 cursor-pointer"
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleUploadImage}
                 disabled={!imageFile || isUploadingImage}
-                className="flex-1 px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isUploadingImage ? (
                   <>
@@ -844,42 +914,42 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
-        <p className="text-xs sm:text-sm text-blue-800">
+    <div className="space-y-5">
+      <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-xl p-3">
+        <p className="text-sm text-white/80">
           <strong>Quadra:</strong> {blockName || 'Não identificada'}
         </p>
       </div>
 
       <div>
-        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
+        <label className="block text-white/80 text-sm font-semibold mb-2">
           Número do Lote *
         </label>
         <input
           type="text"
           value={lotNumber}
           onChange={(e) => setLotNumber(e.target.value)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
           placeholder="Ex: 01, A1, etc"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
+        <label className="block text-white/80 text-sm font-semibold mb-2">
           Área (m²) *
         </label>
         <input
           type="number"
           value={size || ''}
           onChange={(e) => setSize(parseFloat(e.target.value) || 0)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
           placeholder="300"
         />
       </div>
 
       <div>
-        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
+        <label className="block text-white/80 text-sm font-semibold mb-2">
           Preço Total (R$) *
         </label>
         <input
@@ -914,52 +984,55 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
             const numericValue = parseFloat(`${reais}.${cents}`);
             setTotalPrice(numericValue);
           }}
-          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
           placeholder="0,00"
         />
-        <p className="text-[10px] sm:text-xs text-gray-500 mt-1">💡 Preencha manualmente o valor do lote</p>
+        <p className="text-xs text-white/50 mt-1">💡 Preencha manualmente o valor do lote</p>
       </div>
 
       <div>
-        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
+        <label className="block text-white/80 text-sm font-semibold mb-2">
           Status
         </label>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as LotStatus)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium cursor-pointer focus:ring-2 focus:ring-[var(--primary)] text-sm sm:text-base"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white cursor-pointer focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
         >
           <option value={LotStatus.AVAILABLE}>Disponível</option>
           <option value={LotStatus.BLOCKED}>Bloqueado</option>
         </select>
-        <p className="text-[10px] sm:text-xs text-gray-500 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
+        <p className="text-xs text-white/50 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
       </div>
 
       <div>
-        <label className="block text-xs sm:text-sm font-bold text-[var(--foreground)] mb-1.5 sm:mb-2">
+        <label className="block text-white/80 text-sm font-semibold mb-2">
           Descrição
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm sm:text-base"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
           placeholder="Informações adicionais sobre o lote"
           rows={3}
         />
       </div>
 
-      <div className="flex gap-2 pt-2 sm:pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
         <button
+          type="button"
           onClick={onCancel}
-          className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors cursor-pointer text-sm sm:text-base"
+          className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] cursor-pointer"
         >
           Cancelar
         </button>
         <button
+          type="button"
           onClick={handleSubmit}
-          className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] transition-all cursor-pointer text-sm sm:text-base"
+          disabled={!lotNumber || !size || !totalPrice}
+          className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed cursor-pointer"
         >
-          Adicionar
+          Adicionar Lote
         </button>
       </div>
     </div>
