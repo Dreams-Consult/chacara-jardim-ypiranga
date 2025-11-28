@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       sellerPhone,
       sellerCPF,
       paymentMethod,
+      contract,
     } = body;
 
     if (!lotIds || !Array.isArray(lotIds) || lotIds.length === 0) {
@@ -104,8 +105,8 @@ export async function POST(request: NextRequest) {
           `INSERT INTO purchase_requests (
             seller_id, customer_name, customer_email, customer_phone,
             customer_cpf, message, payment_method, seller_name, seller_email, 
-            seller_phone, seller_cpf, first_payment, installments, status, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+            seller_phone, seller_cpf, first_payment, installments, contract, status, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
           [
             sellerId || null,
             customerName,
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
             sellerCPF ? sellerCPF.replace(/\D/g, '') : null,
             firstPayment || null,
             installments || null,
+            contract || null,
           ]
         );
       } catch (colError: any) {

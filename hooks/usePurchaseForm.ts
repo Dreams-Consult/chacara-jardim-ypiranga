@@ -18,6 +18,7 @@ interface FormData {
   otherPayment: string;
   firstPayment: number;
   installments: number;
+  contract: string;
 }
 
 export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: Record<string, number | null>) {
@@ -35,6 +36,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
     otherPayment: '',
     firstPayment: 0,
     installments: 0,
+    contract: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,6 +149,7 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
       if (formData.sellerPhone) requestData.sellerPhone = formData.sellerPhone;
       if (formData.sellerCPF) requestData.sellerCPF = formData.sellerCPF;
       if (formData.message) requestData.message = formData.message;
+      if (formData.contract) requestData.contract = formData.contract;
       
       // Sempre enviar firstPayment e installments (mesmo que sejam 0 ou null)
       requestData.firstPayment = formData.firstPayment || null;

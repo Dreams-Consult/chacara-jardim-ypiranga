@@ -20,6 +20,7 @@ interface Reservation {
   payment_method: string | null;
   first_payment: number | null;
   installments: number | null;
+  contract: string | null;
   message: string | null;
   seller_name: string;
   seller_email: string;
@@ -216,6 +217,7 @@ export default function ReservationsPage() {
         payment_method: editingReservation.payment_method,
         first_payment: editingReservation.first_payment,
         installments: editingReservation.installments,
+        contract: editingReservation.contract,
         message: editingReservation.message,
         seller_name: editingReservation.seller_name,
         seller_email: editingReservation.seller_email,
@@ -497,6 +499,14 @@ export default function ReservationsPage() {
                             <p className="text-white/50 text-xs font-medium mb-1">Número de Parcelas</p>
                             <p className="text-blue-400 text-sm font-bold">
                               {reservation.installments}x
+                            </p>
+                          </div>
+                        )}
+                        {reservation.contract && (
+                          <div className="sm:col-span-2">
+                            <p className="text-white/50 text-xs font-medium mb-1">Número do Contrato</p>
+                            <p className="text-white text-sm font-mono bg-[var(--background)] px-3 py-2 rounded border border-[var(--border)]">
+                              {reservation.contract}
                             </p>
                           </div>
                         )}
@@ -797,6 +807,17 @@ export default function ReservationsPage() {
                       />
                     </div>
                   )}
+                  <div>
+                    <label className="block text-white/80 text-sm font-semibold mb-2">Número do Contrato</label>
+                    <input
+                      type="text"
+                      maxLength={50}
+                      value={editingReservation.contract || ''}
+                      onChange={(e) => setEditingReservation({ ...editingReservation, contract: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] font-mono"
+                      placeholder="Ex: CONT-2025-001"
+                    />
+                  </div>
                   <div>
                     <label className="block text-white/80 text-sm font-semibold mb-2">Data da Reserva</label>
                     <input
