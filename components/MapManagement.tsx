@@ -475,8 +475,8 @@ export default function MapManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {maps.map((map) => (
-          <div key={map.id} className="bg-white border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
-            <div className="h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative">
+          <div key={map.id} className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
+            <div className="h-64 bg-gradient-to-br from-[var(--surface)] to-[var(--background)] flex items-center justify-center overflow-hidden relative">
               {map.imageUrl && map.imageUrl.trim() !== '' ? (
                 map.imageUrl.startsWith('data:application/pdf') ? (
                   <div className="w-full h-full">
@@ -491,18 +491,18 @@ export default function MapManagement() {
                   />
                 )
               ) : (
-                <div className="text-gray-500 text-center p-4">
-                  <svg className="w-16 h-16 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-white/70 text-center p-4">
+                  <svg className="w-16 h-16 mx-auto mb-2 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-sm font-semibold">Sem imagem</p>
+                  <p className="text-sm font-semibold text-white">Sem imagem</p>
                 </div>
               )}
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg text-[var(--surface)] mb-2">{map.name}</h3>
+              <h3 className="font-bold text-lg text-white mb-2">{map.name}</h3>
               {map.description && (
-                <p className="text-sm text-[var(--surface)] font-medium mb-3">{map.description}</p>
+                <p className="text-sm text-white/70 font-medium mb-3">{map.description}</p>
               )}
               {mapsWithReservedLots[map.id]?.hasReserved && (
                 <div className="mb-3 bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
@@ -520,10 +520,10 @@ export default function MapManagement() {
                 </div>
               )}
               <div className="space-y-1 mb-4">
-                <p className="text-xs text-[var(--surface)]/80 font-semibold">
+                <p className="text-xs text-white/70 font-semibold">
                   <span className="font-bold">Dimensões:</span> {map.width} x {map.height}px
                 </p>
-                <p className="text-xs text-[var(--foreground)]/60 font-mono bg-[var(--surface)] px-2 py-1 rounded">
+                <p className="text-xs text-white/60 font-mono bg-[var(--surface)] px-2 py-1 rounded">
                   ID: {map.id}
                 </p>
               </div>
