@@ -113,27 +113,6 @@ export default function ReservationsPage() {
     loadData();
   }, [loadData]);
 
-  // Verificar se há uma reserva para expandir automaticamente
-  useEffect(() => {
-    const reservationIdToExpand = sessionStorage.getItem('expandReservationId');
-    if (reservationIdToExpand && reservations.length > 0) {
-      const reservationId = parseInt(reservationIdToExpand);
-      const reservation = reservations.find(r => r.id === reservationId);
-      if (reservation) {
-        setExpandedReservation(reservationId);
-        // Scroll suave até a reserva
-        setTimeout(() => {
-          const element = document.getElementById(`reservation-${reservationId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 300);
-      }
-      // Limpar o sessionStorage
-      sessionStorage.removeItem('expandReservationId');
-    }
-  }, [reservations]);
-
   // Polling automático a cada 10 segundos
   useRealtimeUpdates(() => {
     console.log('🔄 Auto-refresh de reservas');
@@ -343,6 +322,37 @@ export default function ReservationsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter]);
+
+  // Verificar se há uma reserva para expandir automaticamente
+  useEffect(() => {
+    const reservationIdToExpand = sessionStorage.getItem('expandReservationId');
+    if (reservationIdToExpand && filteredReservations.length > 0) {
+      const reservationId = parseInt(reservationIdToExpand);
+      const reservationIndex = filteredReservations.findIndex(r => r.id === reservationId);
+      
+      if (reservationIndex !== -1) {
+        // Calcular a página onde a reserva está
+        const pageNumber = Math.floor(reservationIndex / itemsPerPage) + 1;
+        
+        // Definir a página correta
+        setCurrentPage(pageNumber);
+        
+        // Expandir a reserva
+        setExpandedReservation(reservationId);
+        
+        // Scroll suave até a reserva (com delay maior para garantir renderização)
+        setTimeout(() => {
+          const element = document.getElementById(`reservation-${reservationId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
+      }
+      
+      // Limpar o sessionStorage
+      sessionStorage.removeItem('expandReservationId');
+    }
+  }, [filteredReservations, itemsPerPage]);
 
   if (isLoading) {
     return (
