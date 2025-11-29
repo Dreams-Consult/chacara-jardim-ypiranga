@@ -164,7 +164,9 @@ export default function LotSelector({
   };
 
   const getReservationForLot = (lotId: string) => {
+    // Buscar apenas reservas que não estejam canceladas
     return reservations.find(r => 
+      r.status !== 'cancelled' &&
       r.lots?.some((l: any) => l.id === lotId || l.id === parseInt(lotId))
     );
   };

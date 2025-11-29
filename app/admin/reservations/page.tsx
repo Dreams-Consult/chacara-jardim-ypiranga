@@ -319,25 +319,53 @@ export default function ReservationsPage() {
     const reservationIdToExpand = sessionStorage.getItem('expandReservationId');
     if (reservationIdToExpand && filteredReservations.length > 0) {
       const reservationId = parseInt(reservationIdToExpand);
-      const reservationIndex = filteredReservations.findIndex(r => r.id === reservationId);
       
-      if (reservationIndex !== -1) {
-        // Calcular a página onde a reserva está
-        const pageNumber = Math.floor(reservationIndex / itemsPerPage) + 1;
+      // Buscar a reserva pelo ID e verificar se não está cancelada
+      const reservation = filteredReservations.find(r => r.id === reservationId);
+      
+      // Se a reserva está cancelada, buscar outra reserva com o mesmo lote que não esteja cancelada
+      let targetReservation: Reservation | undefined = reservation;
+      if (!reservation || reservation.status === 'cancelled') {
+        console.log('[Reservations] ⚠️ Reserva cancelada ou não encontrada, buscando alternativa...');
         
-        // Definir a página correta
-        setCurrentPage(pageNumber);
-        
-        // Expandir a reserva
-        setExpandedReservation(reservationId);
-        
-        // Scroll suave até a reserva (com delay maior para garantir renderização)
-        setTimeout(() => {
-          const element = document.getElementById(`reservation-${reservationId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Buscar o lote da reserva cancelada
+        if (reservation?.lots && reservation.lots.length > 0) {
+          const lotIds = reservation.lots.map((l: any) => l.id);
+          
+          // Buscar outra reserva com pelo menos um dos mesmos lotes e que não esteja cancelada
+          targetReservation = filteredReservations.find(r => 
+            r.id !== reservationId &&
+            r.status !== 'cancelled' &&
+            r.lots?.some((l: any) => lotIds.includes(l.id))
+          );
+          
+          if (targetReservation) {
+            console.log('[Reservations] ✅ Reserva alternativa encontrada:', targetReservation.id);
           }
-        }, 500);
+        }
+      }
+      
+      if (targetReservation) {
+        const reservationIndex = filteredReservations.findIndex(r => r.id === targetReservation.id);
+        
+        if (reservationIndex !== -1) {
+          // Calcular a página onde a reserva está
+          const pageNumber = Math.floor(reservationIndex / itemsPerPage) + 1;
+          
+          // Definir a página correta
+          setCurrentPage(pageNumber);
+          
+          // Expandir a reserva
+          setExpandedReservation(targetReservation.id);
+          
+          // Scroll suave até a reserva (com delay maior para garantir renderização)
+          setTimeout(() => {
+            const element = document.getElementById(`reservation-${targetReservation.id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 500);
+        }
       }
       
       // Limpar o sessionStorage
