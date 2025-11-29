@@ -687,9 +687,13 @@ export default function ReservationsPage() {
                             {reservation.lots.map((lot: any) => (
                             <div key={lot.id} className="bg-[var(--background)] p-3 rounded-lg border border-[var(--border)]">
                               <div className="flex items-start justify-between mb-2">
-                                <span className="text-blue-300 text-sm font-medium">
-                                  Lote {lot.lot_number}{lot.block_name ? ` - Quadra ${lot.block_name}` : ''}
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-blue-300 text-sm font-medium">
+                                    {lot.map_name && `${lot.map_name} / `}
+                                    {lot.block_name ? `${lot.block_name} / ` : ''}
+                                    Lote {lot.lot_number}
+                                  </span>
+                                </div>
                                 <span className="text-white text-sm font-bold">
                                   R$ {Number(lot.agreed_price || lot.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>

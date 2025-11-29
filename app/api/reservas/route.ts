@@ -20,14 +20,16 @@ export async function GET(request: NextRequest) {
     const reservationsWithLots = await Promise.all(
       (reservations as any[]).map(async (reservation) => {
         try {
-          // Primeiro tenta com blocks, se falhar, tenta sem blocks
+          // Primeiro tenta com blocks e maps, se falhar, tenta sem blocks
           let lots;
           try {
             [lots] = await connection!.execute(
-              `SELECT l.*, prl.purchase_request_id, prl.agreed_price, prl.first_payment, prl.installments, b.name as block_name 
+              `SELECT l.*, prl.purchase_request_id, prl.agreed_price, prl.first_payment, prl.installments, 
+                      b.name as block_name, m.name as map_name 
                FROM purchase_request_lots prl
                INNER JOIN lots l ON prl.lot_id = l.id
                LEFT JOIN blocks b ON l.block_id = b.id
+               LEFT JOIN maps m ON l.map_id = m.id
                WHERE prl.purchase_request_id = ?`,
               [reservation.id]
             );
@@ -35,9 +37,11 @@ export async function GET(request: NextRequest) {
             // Fallback sem blocks
             console.warn('[API /reservas GET] Tabela blocks não encontrada, usando fallback');
             [lots] = await connection!.execute(
-              `SELECT l.*, prl.purchase_request_id, prl.agreed_price, prl.first_payment, prl.installments
+              `SELECT l.*, prl.purchase_request_id, prl.agreed_price, prl.first_payment, prl.installments,
+                      m.name as map_name
                FROM purchase_request_lots prl
                INNER JOIN lots l ON prl.lot_id = l.id
+               LEFT JOIN maps m ON l.map_id = m.id
                WHERE prl.purchase_request_id = ?`,
               [reservation.id]
             );
