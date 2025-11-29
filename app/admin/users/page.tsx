@@ -679,9 +679,6 @@ export default function UsersPage() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
                 >
-                  {currentUser?.role === UserRole.DEV && (
-                    <option value={UserRole.DEV}>Desenvolvedor</option>
-                  )}
                   <option value={UserRole.ADMIN}>Administrador</option>
                   <option value={UserRole.VENDEDOR}>Vendedor</option>
                 </select>
@@ -1204,7 +1201,7 @@ export default function UsersPage() {
                   Selecione o novo cargo:
                 </label>
 
-                {Object.values(UserRole).map((role) => (
+                {Object.values(UserRole).filter(role => role !== UserRole.DEV).map((role) => (
                   <button
                     key={role}
                     onClick={() => handleChangeRole(selectedUserForRole.id, role)}
@@ -1218,18 +1215,15 @@ export default function UsersPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">
-                          {role === UserRole.DEV && '🔧'}
                           {role === UserRole.ADMIN && '👑'}
                           {role === UserRole.VENDEDOR && '💼'}
                         </span>
                         <div>
                           <p className="font-semibold text-white">
-                            {role === UserRole.DEV && 'Desenvolvedor'}
                             {role === UserRole.ADMIN && 'Administrador'}
                             {role === UserRole.VENDEDOR && 'Vendedor'}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            {role === UserRole.DEV && 'Acesso total ao sistema'}
                             {role === UserRole.ADMIN && 'Gerenciamento de usuários e mapas'}
                             {role === UserRole.VENDEDOR && 'Vendas e reservas de lotes'}
                           </p>
