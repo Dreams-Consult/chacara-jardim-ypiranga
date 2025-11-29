@@ -674,8 +674,12 @@ export default function MapDetails() {
                     <div className="text-xs mt-1 opacity-80 truncate">{block.description}</div>
                   )}
                   
-                  {/* Botões de ação no hover (funcionalidades do MapDetails) */}
-                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Botões de ação no hover e focus (funcionalidades do MapDetails) */}
+                  <div className={`absolute top-1 right-1 flex gap-1 transition-opacity ${
+                    selectedBlockId === block.id 
+                      ? 'opacity-100' 
+                      : 'opacity-0 group-hover:opacity-100'
+                  }`}>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
