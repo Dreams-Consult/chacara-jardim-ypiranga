@@ -56,8 +56,9 @@ export default function ReservationsPage() {
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [firstPaymentDisplay, setFirstPaymentDisplay] = useState<string>('');
   const [lotPrices, setLotPrices] = useState<{ [lotId: number]: string }>({});
+  const [lotFirstPayments, setLotFirstPayments] = useState<{ [lotId: number]: string }>({});
+  const [lotInstallments, setLotInstallments] = useState<{ [lotId: number]: number | null }>({});
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
   
   // Paginação
@@ -183,21 +184,28 @@ export default function ReservationsPage() {
     }
 
     setEditingReservation({ ...reservation });
-    setFirstPaymentDisplay(formatCurrency(reservation.first_payment || 0));
     
-    // Inicializar preços dos lotes
+    // Inicializar preços, first_payments e installments dos lotes
     const prices: { [lotId: number]: string } = {};
+    const firstPayments: { [lotId: number]: string } = {};
+    const installments: { [lotId: number]: number | null } = {};
+    
     if (reservation.lots && reservation.lots.length > 0) {
       reservation.lots.forEach((lot: any) => {
         prices[lot.id] = formatCurrency(lot.agreed_price || lot.price || 0);
+        firstPayments[lot.id] = formatCurrency(lot.first_payment || 0);
+        installments[lot.id] = lot.installments || null;
       });
     }
+    
     setLotPrices(prices);
+    setLotFirstPayments(firstPayments);
+    setLotInstallments(installments);
     
     setIsEditModalOpen(true);
   };
 
-  const handleFirstPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLotFirstPaymentChange = (lotId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     
     // Remove tudo exceto dígitos
@@ -205,13 +213,7 @@ export default function ReservationsPage() {
     
     // Converte para número e formata
     if (value === '') {
-      setFirstPaymentDisplay('');
-      if (editingReservation) {
-        setEditingReservation({
-          ...editingReservation,
-          first_payment: 0
-        });
-      }
+      setLotFirstPayments({ ...lotFirstPayments, [lotId]: '' });
       return;
     }
     
@@ -222,20 +224,9 @@ export default function ReservationsPage() {
     const cents = value.slice(-2);
     const reais = value.slice(0, -2);
     
-    // Formata com separador de milhar
-    const formattedReais = parseInt(reais).toLocaleString('pt-BR');
-    const formattedValue = `${formattedReais},${cents}`;
-    
-    setFirstPaymentDisplay(formattedValue);
-    
-    if (editingReservation) {
-      // Converte para número decimal
-      const numericValue = parseFloat(`${reais}.${cents}`);
-      setEditingReservation({
-        ...editingReservation,
-        first_payment: numericValue
-      });
-    }
+    // Formata para exibição
+    const displayValue = `${parseInt(reais).toLocaleString('pt-BR')},${cents}`;
+    setLotFirstPayments({ ...lotFirstPayments, [lotId]: displayValue });
   };
 
   const handleLotPriceChange = (lotId: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,10 +257,12 @@ export default function ReservationsPage() {
     if (!editingReservation) return;
 
     try {
-      // Preparar preços dos lotes
-      const lotsWithPrices = editingReservation.lots?.map((lot: any) => ({
+      // Preparar preços, first_payments e installments dos lotes
+      const lotsWithDetails = editingReservation.lots?.map((lot: any) => ({
         id: lot.id,
-        agreed_price: lotPrices[lot.id] ? parseCurrency(lotPrices[lot.id]) : (lot.agreed_price || lot.price)
+        agreed_price: lotPrices[lot.id] ? parseCurrency(lotPrices[lot.id]) : (lot.agreed_price || lot.price),
+        firstPayment: lotFirstPayments[lot.id] ? parseCurrency(lotFirstPayments[lot.id]) : null,
+        installments: lotInstallments[lot.id] || null
       })) || [];
 
       await axios.put(`${API_URL}/reservas/atualizar`, {
@@ -279,8 +272,6 @@ export default function ReservationsPage() {
         customer_phone: editingReservation.customer_phone,
         customer_cpf: editingReservation.customer_cpf,
         payment_method: editingReservation.payment_method,
-        first_payment: editingReservation.first_payment,
-        installments: editingReservation.installments,
         contract: editingReservation.contract,
         message: editingReservation.message,
         seller_name: editingReservation.seller_name,
@@ -290,7 +281,7 @@ export default function ReservationsPage() {
         created_at: editingReservation.created_at,
         status: editingReservation.status,
         userRole: user?.role,
-        lots: lotsWithPrices
+        lots: lotsWithDetails
       }, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
@@ -663,30 +654,43 @@ export default function ReservationsPage() {
                         </div>
                         {reservation.lots && reservation.lots.length > 0 && (
                           <div className="sm:col-span-2">
-                          <p className="text-white/50 text-xs font-medium mb-1">Lotes Reservados</p>
-                          <div className="flex flex-wrap gap-2">
+                          <p className="text-white/50 text-xs font-medium mb-2">Lotes Reservados</p>
+                          <div className="space-y-2">
                             {reservation.lots.map((lot: any) => (
-                            <span key={lot.id} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30">
-                              Lote {lot.lot_number}{lot.block_name ? ` - Quadra ${lot.block_name}` : ''} - R$ {Number(lot.agreed_price || lot.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
+                            <div key={lot.id} className="bg-[var(--background)] p-3 rounded-lg border border-[var(--border)]">
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="text-blue-300 text-sm font-medium">
+                                  Lote {lot.lot_number}{lot.block_name ? ` - Quadra ${lot.block_name}` : ''}
+                                </span>
+                                <span className="text-white text-sm font-bold">
+                                  R$ {Number(lot.agreed_price || lot.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              
+                              {/* Mostrar entrada e parcelas se existirem */}
+                              {(lot.first_payment || lot.installments) && (
+                                <div className="flex gap-4 mt-2 pt-2 border-t border-[var(--border)]">
+                                  {lot.first_payment && lot.first_payment > 0 && (
+                                    <div className="flex-1">
+                                      <p className="text-white/40 text-xs mb-0.5">Entrada</p>
+                                      <p className="text-green-400 text-xs font-bold">
+                                        R$ {Number(lot.first_payment).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {lot.installments && lot.installments > 0 && (
+                                    <div className="flex-1">
+                                      <p className="text-white/40 text-xs mb-0.5">Parcelas</p>
+                                      <p className="text-blue-400 text-xs font-bold">
+                                        {lot.installments}x
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             ))}
                           </div>
-                          </div>
-                        )}
-                        {reservation.first_payment && reservation.first_payment > 0 && (
-                          <div>
-                            <p className="text-white/50 text-xs font-medium mb-1">Entrada</p>
-                            <p className="text-green-400 text-sm font-bold">
-                              R$ {Number(reservation.first_payment).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </p>
-                          </div>
-                        )}
-                        {reservation.installments && reservation.installments > 0 && (
-                          <div>
-                            <p className="text-white/50 text-xs font-medium mb-1">Número de Parcelas</p>
-                            <p className="text-blue-400 text-sm font-bold">
-                              {reservation.installments}x
-                            </p>
                           </div>
                         )}
                         {reservation.contract && (
@@ -982,21 +986,61 @@ export default function ReservationsPage() {
                       </svg>
                       Lotes Reservados e Preços
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-4">
                       {editingReservation.lots.map((lot: any) => (
                         <div key={lot.id} className="bg-[var(--background)] p-3 rounded-lg border border-[var(--border)]">
-                          <label className="block text-white/70 text-xs font-medium mb-2">
+                          <label className="block text-white/70 text-sm font-medium mb-3">
                             Lote {lot.lot_number}{lot.block_name ? ` - Quadra ${lot.block_name}` : ''}
                           </label>
-                          <div className="flex items-center gap-2">
-                            <span className="text-white/50 text-sm">R$</span>
-                            <input
-                              type="text"
-                              value={lotPrices[lot.id] || ''}
-                              onChange={(e) => handleLotPriceChange(lot.id, e)}
-                              className="flex-1 px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-right font-semibold"
-                              placeholder="0,00"
-                            />
+                          
+                          <div className="space-y-2">
+                            {/* Preço do Lote */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-white/50 text-xs w-20">Valor:</span>
+                              <div className="flex-1 flex items-center gap-1">
+                                <span className="text-white/50 text-sm">R$</span>
+                                <input
+                                  type="text"
+                                  value={lotPrices[lot.id] || ''}
+                                  onChange={(e) => handleLotPriceChange(lot.id, e)}
+                                  className="flex-1 px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-right font-semibold"
+                                  placeholder="0,00"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Entrada (se não for Pix ou Dinheiro) */}
+                            {editingReservation.payment_method && editingReservation.payment_method !== 'pix' && editingReservation.payment_method !== 'dinheiro' && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-white/50 text-xs w-20">Entrada:</span>
+                                <div className="flex-1 flex items-center gap-1">
+                                  <span className="text-white/50 text-sm">R$</span>
+                                  <input
+                                    type="text"
+                                    value={lotFirstPayments[lot.id] || ''}
+                                    onChange={(e) => handleLotFirstPaymentChange(lot.id, e)}
+                                    className="flex-1 px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-right font-semibold"
+                                    placeholder="0,00"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Parcelas (se for Carnê, Cartão ou Financiamento) */}
+                            {(editingReservation.payment_method === 'carne' || editingReservation.payment_method === 'cartao' || editingReservation.payment_method === 'financing') && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-white/50 text-xs w-20">Parcelas:</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={lotInstallments[lot.id] || ''}
+                                  onChange={(e) => setLotInstallments({ ...lotInstallments, [lot.id]: parseInt(e.target.value) || null })}
+                                  className="flex-1 px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-right font-semibold"
+                                  placeholder="Ex: 12"
+                                />
+                                <span className="text-white/50 text-xs">x</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1011,15 +1055,21 @@ export default function ReservationsPage() {
                       value={editingReservation.payment_method || ''}
                       onChange={(e) => {
                         const newPaymentMethod = e.target.value;
-                        // Limpar entrada e parcelas se for pagamento à vista (pix ou dinheiro)
+                        // Limpar entrada e parcelas de todos os lotes se for pagamento à vista (pix ou dinheiro)
                         if (newPaymentMethod === 'pix' || newPaymentMethod === 'dinheiro') {
                           setEditingReservation({ 
                             ...editingReservation, 
-                            payment_method: newPaymentMethod,
-                            first_payment: null,
-                            installments: null
+                            payment_method: newPaymentMethod
                           });
-                          setFirstPaymentDisplay('');
+                          // Limpar todos os valores de first_payment e installments
+                          const emptyFirstPayments: { [lotId: number]: string } = {};
+                          const emptyInstallments: { [lotId: number]: number | null } = {};
+                          editingReservation.lots?.forEach((lot: any) => {
+                            emptyFirstPayments[lot.id] = '';
+                            emptyInstallments[lot.id] = null;
+                          });
+                          setLotFirstPayments(emptyFirstPayments);
+                          setLotInstallments(emptyInstallments);
                         } else {
                           setEditingReservation({ ...editingReservation, payment_method: newPaymentMethod });
                         }
@@ -1035,33 +1085,6 @@ export default function ReservationsPage() {
                       <option value="outro">📝 Outro</option>
                     </select>
                   </div>
-                  {editingReservation.payment_method && editingReservation.payment_method !== 'pix' && editingReservation.payment_method !== 'dinheiro' && (
-                    <div>
-                      <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$) *</label>
-                      <input
-                        type="text"
-                        required
-                        value={firstPaymentDisplay}
-                        onChange={handleFirstPaymentChange}
-                        className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                        placeholder="0,00"
-                      />
-                    </div>
-                  )}
-                  {(editingReservation.payment_method === 'carne' || editingReservation.payment_method === 'cartao' || editingReservation.payment_method === 'financing') && (
-                    <div>
-                      <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas *</label>
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={editingReservation.installments || ''}
-                        onChange={(e) => setEditingReservation({ ...editingReservation, installments: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                        placeholder="Ex: 12"
-                      />
-                    </div>
-                  )}
                   <div>
                     <label className="block text-white/80 text-sm font-semibold mb-2">Número do Contrato</label>
                     <input

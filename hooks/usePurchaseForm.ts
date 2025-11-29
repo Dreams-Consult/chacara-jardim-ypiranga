@@ -16,12 +16,17 @@ interface FormData {
   sellerCPF: string;
   paymentMethod: string;
   otherPayment: string;
-  firstPayment: number;
-  installments: number;
   contract: string;
 }
 
-export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: Record<string, number | null>, userId?: string) {
+export function usePurchaseForm(
+  lots: Lot[], 
+  onSuccess: () => void, 
+  lotPrices?: Record<string, number | null>, 
+  lotFirstPayments?: Record<string, number | null>,
+  lotInstallments?: Record<string, number | null>,
+  userId?: string
+) {
   const [formData, setFormData] = useState<FormData>({
     customerName: '',
     customerEmail: '',
@@ -34,8 +39,6 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
     sellerCPF: '',
     paymentMethod: '',
     otherPayment: '',
-    firstPayment: 0,
-    installments: 0,
     contract: '',
   });
 
@@ -125,12 +128,14 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
 
       console.log(`[usePurchaseForm] ✅ Todos os ${lots.length} lote(s) estão disponíveis, prosseguindo com a reserva...`);
 
-      // Preparar detalhes dos lotes com map_id, block_id e preço
+      // Preparar detalhes dos lotes com map_id, block_id, preço, firstPayment e installments
       const lotDetails = lots.map(lot => ({
         lotId: lot.id,
         mapId: lot.mapId,
         blockId: lot.blockId || null,
         price: lotPrices?.[lot.id] || lot.price,
+        firstPayment: lotFirstPayments?.[lot.id] || null,
+        installments: lotInstallments?.[lot.id] || null,
       }));
 
       // Criar objeto de requisição apenas com campos obrigatórios e preenchidos
@@ -151,10 +156,6 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void, lotPrices?: 
       if (formData.message) requestData.message = formData.message;
       if (formData.contract) requestData.contract = formData.contract;
       if (userId) requestData.userId = userId;
-      
-      // Sempre enviar firstPayment e installments (mesmo que sejam 0 ou null)
-      requestData.firstPayment = formData.firstPayment || null;
-      requestData.installments = formData.installments || null;
       
       if (formData.paymentMethod || formData.otherPayment) {
         requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;

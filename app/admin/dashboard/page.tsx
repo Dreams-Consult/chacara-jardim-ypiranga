@@ -100,11 +100,15 @@ export default function DashboardPage() {
         const reservationsData = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
         setReservations(reservationsData);
         
-        // Somar apenas first_payment de reservas concluídas (completed)
+        // Somar first_payment de cada lote das reservas concluídas (completed)
         const totalPayments = reservationsData.reduce((sum: number, reservation: any) => {
-          if (reservation.status === 'completed') {
-            const firstPayment = parseFloat(reservation.first_payment) || 0;
-            return sum + firstPayment;
+          if (reservation.status === 'completed' && reservation.lots && Array.isArray(reservation.lots)) {
+            // Somar first_payment de todos os lotes desta reserva
+            const reservationTotal = reservation.lots.reduce((lotSum: number, lot: any) => {
+              const lotFirstPayment = parseFloat(lot.first_payment) || 0;
+              return lotSum + lotFirstPayment;
+            }, 0);
+            return sum + reservationTotal;
           }
           return sum;
         }, 0);

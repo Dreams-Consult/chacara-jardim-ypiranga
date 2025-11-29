@@ -11,9 +11,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       lotIds,
-      lotDetails,
-      firstPayment,
-      installments,
+      lotDetails, // Cada item terá: { lotId, price, firstPayment, installments }
       customerName,
       customerEmail,
       customerPhone,
@@ -98,62 +96,28 @@ export async function POST(request: NextRequest) {
       const firstLot = lotsArray[0];
       const mapId = firstLot.map_id;
 
-      // 1. Criar um único registro em purchase_requests
-      // Tenta com installments, se não existir, usa formato antigo
-      let purchaseResult;
-      try {
-        [purchaseResult] = await connection.execute(
-          `INSERT INTO purchase_requests (
-            user_id, customer_name, customer_email, customer_phone,
-            customer_cpf, message, payment_method, seller_name, seller_email, 
-            seller_phone, seller_cpf, first_payment, installments, contract, status, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
-          [
-            userId || null,
-            customerName,
-            customerEmail || null,
-            customerPhone ? customerPhone.replace(/\D/g, '') : null,
-            customerCPF ? customerCPF.replace(/\D/g, '') : null,
-            message || null,
-            paymentMethod || null,
-            sellerName,
-            sellerEmail || null,
-            sellerPhone ? sellerPhone.replace(/\D/g, '') : null,
-            sellerCPF ? sellerCPF.replace(/\D/g, '') : null,
-            firstPayment || null,
-            installments || null,
-            contract || null,
-          ]
-        );
-      } catch (colError: any) {
-        // Se a coluna installments não existir, tenta sem ela
-        if (colError.code === 'ER_BAD_FIELD_ERROR') {
-          console.log('[API /mapas/lotes/reservar] ⚠️ Coluna installments não existe, usando formato antigo');
-          [purchaseResult] = await connection.execute(
-            `INSERT INTO purchase_requests (
-              user_id, customer_name, customer_email, customer_phone,
-              customer_cpf, message, payment_method, seller_name, seller_email, 
-              seller_phone, seller_cpf, first_payment, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
-            [
-              userId || null,
-              customerName,
-              customerEmail || null,
-              customerPhone ? customerPhone.replace(/\D/g, '') : null,
-              customerCPF ? customerCPF.replace(/\D/g, '') : null,
-              message || null,
-              paymentMethod || null,
-              sellerName,
-              sellerEmail || null,
-              sellerPhone ? sellerPhone.replace(/\D/g, '') : null,
-              sellerCPF ? sellerCPF.replace(/\D/g, '') : null,
-              firstPayment || null,
-            ]
-          );
-        } else {
-          throw colError;
-        }
-      }
+      // 1. Criar um único registro em purchase_requests (sem first_payment e installments)
+      const [purchaseResult] = await connection.execute(
+        `INSERT INTO purchase_requests (
+          user_id, customer_name, customer_email, customer_phone,
+          customer_cpf, message, payment_method, seller_name, seller_email, 
+          seller_phone, seller_cpf, contract, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+        [
+          userId || null,
+          customerName,
+          customerEmail || null,
+          customerPhone ? customerPhone.replace(/\D/g, '') : null,
+          customerCPF ? customerCPF.replace(/\D/g, '') : null,
+          message || null,
+          paymentMethod || null,
+          sellerName,
+          sellerEmail || null,
+          sellerPhone ? sellerPhone.replace(/\D/g, '') : null,
+          sellerCPF ? sellerCPF.replace(/\D/g, '') : null,
+          contract || null,
+        ]
+      );
 
       console.log('[API /mapas/lotes/reservar] ✅ Dados do vendedor salvos:', {
         seller_id: sellerId,
@@ -165,37 +129,20 @@ export async function POST(request: NextRequest) {
 
       const purchaseRequestId = (purchaseResult as any).insertId;
 
-      // 2. Criar registros em purchase_request_lots para cada lote com agreed_price
-      // Tenta inserir com agreed_price, se a coluna não existir, usa formato antigo
+      // 2. Criar registros em purchase_request_lots para cada lote com agreed_price, first_payment e installments
       for (const lotDetail of lotDetails) {
-        try {
-          await connection.execute(
-            `INSERT INTO purchase_request_lots (
-              purchase_request_id, lot_id, agreed_price
-            ) VALUES (?, ?, ?)`,
-            [
-              purchaseRequestId,
-              lotDetail.lotId,
-              lotDetail.price || null
-            ]
-          );
-        } catch (colError: any) {
-          // Se a coluna agreed_price não existir, tenta sem ela
-          if (colError.code === 'ER_BAD_FIELD_ERROR') {
-            console.log('[API /mapas/lotes/reservar] ⚠️ Coluna agreed_price não existe, usando formato antigo');
-            await connection.execute(
-              `INSERT INTO purchase_request_lots (
-                purchase_request_id, lot_id
-              ) VALUES (?, ?)`,
-              [
-                purchaseRequestId,
-                lotDetail.lotId
-              ]
-            );
-          } else {
-            throw colError;
-          }
-        }
+        await connection.execute(
+          `INSERT INTO purchase_request_lots (
+            purchase_request_id, lot_id, agreed_price, first_payment, installments
+          ) VALUES (?, ?, ?, ?, ?)`,
+          [
+            purchaseRequestId,
+            lotDetail.lotId,
+            lotDetail.price || null,
+            lotDetail.firstPayment || null,
+            lotDetail.installments || null
+          ]
+        );
       }
 
       // 3. Atualizar status dos lotes para 'reserved'

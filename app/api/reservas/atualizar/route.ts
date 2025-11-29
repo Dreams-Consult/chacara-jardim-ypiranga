@@ -14,8 +14,6 @@ export async function PUT(request: NextRequest) {
       customer_phone,
       customer_cpf,
       payment_method,
-      first_payment,
-      installments,
       contract,
       message,
       seller_name,
@@ -25,7 +23,7 @@ export async function PUT(request: NextRequest) {
       created_at,
       status,
       userRole,
-      lots
+      lots // Cada item terá: { id: lotId, agreed_price, firstPayment, installments }
     } = body;
 
     if (!id) {
@@ -68,7 +66,7 @@ export async function PUT(request: NextRequest) {
         mysqlCreatedAt = date.toISOString().slice(0, 19).replace('T', ' ');
       }
 
-      // Atualizar reserva
+      // Atualizar reserva (sem first_payment e installments)
       await connection.execute(
         `UPDATE purchase_requests SET
           customer_name = ?,
@@ -76,8 +74,6 @@ export async function PUT(request: NextRequest) {
           customer_phone = ?,
           customer_cpf = ?,
           payment_method = ?,
-          first_payment = ?,
-          installments = ?,
           contract = ?,
           message = ?,
           seller_name = ?,
@@ -92,8 +88,6 @@ export async function PUT(request: NextRequest) {
           customer_phone || null,
           customer_cpf || null,
           payment_method || null,
-          first_payment || null,
-          installments || null,
           contract || null,
           message || null,
           seller_name,
@@ -105,18 +99,25 @@ export async function PUT(request: NextRequest) {
         ]
       );
 
-      // Atualizar preços dos lotes se fornecidos
+      // Atualizar preços, first_payment e installments dos lotes se fornecidos
       if (lots && Array.isArray(lots) && lots.length > 0) {
         for (const lot of lots) {
-          if (lot.id && lot.agreed_price !== undefined) {
+          if (lot.id) {
             await connection.execute(
-              `UPDATE purchase_request_lots SET agreed_price = ? 
+              `UPDATE purchase_request_lots 
+               SET agreed_price = ?, first_payment = ?, installments = ?
                WHERE purchase_request_id = ? AND lot_id = ?`,
-              [lot.agreed_price, id, lot.id]
+              [
+                lot.agreed_price || null, 
+                lot.firstPayment || null, 
+                lot.installments || null, 
+                id, 
+                lot.id
+              ]
             );
           }
         }
-        console.log(`[API /reservas/atualizar] ✅ Preços de ${lots.length} lote(s) atualizados`);
+        console.log(`[API /reservas/atualizar] ✅ Preços e parcelas de ${lots.length} lote(s) atualizados`);
       }
 
       await connection.commit();

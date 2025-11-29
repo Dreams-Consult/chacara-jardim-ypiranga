@@ -52,6 +52,16 @@ export interface Map {
   updatedAt: Date;
 }
 
+export interface PurchaseRequestLot {
+  id: string;
+  lotId: string;
+  purchaseRequestId: string;
+  agreedPrice?: number;
+  firstPayment?: number; // Valor de entrada específico para este lote
+  installments?: number; // Número de parcelas específico para este lote
+  createdAt: Date;
+}
+
 export interface PurchaseRequest {
   id: string;
   lotId: string;
@@ -63,6 +73,7 @@ export interface PurchaseRequest {
   contract?: string;
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
   createdAt: Date;
+  lots?: PurchaseRequestLot[]; // Lotes associados com suas informações específicas
 }
 
 export enum UserRole {

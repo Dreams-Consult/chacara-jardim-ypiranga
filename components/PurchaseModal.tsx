@@ -89,6 +89,8 @@ const paymentOptions = [
 
 export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
   const { user } = useAuth();
+  
+  // Estados para preços dos lotes
   const [lotPrices, setLotPrices] = React.useState<Record<string, number | null>>(
     lots.reduce((acc, lot) => ({ ...acc, [lot.id]: lot.price }), {})
   );
@@ -98,11 +100,24 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
       [lot.id]: lot.price ? lot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''
     }), {})
   );
-  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices, user?.id);
+  
+  // Estados para first_payment por lote
+  const [lotFirstPayments, setLotFirstPayments] = React.useState<Record<string, number | null>>(
+    lots.reduce((acc, lot) => ({ ...acc, [lot.id]: null }), {})
+  );
+  const [lotFirstPaymentsDisplay, setLotFirstPaymentsDisplay] = React.useState<Record<string, string>>(
+    lots.reduce((acc, lot) => ({ ...acc, [lot.id]: '' }), {})
+  );
+  
+  // Estados para installments por lote
+  const [lotInstallments, setLotInstallments] = React.useState<Record<string, number | null>>(
+    lots.reduce((acc, lot) => ({ ...acc, [lot.id]: null }), {})
+  );
+  
+  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices, lotFirstPayments, lotInstallments, user?.id);
   const [cpfError, setCpfError] = React.useState<string>('');
   const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
   const [priceError, setPriceError] = React.useState<string>('');
-  const [firstPaymentDisplay, setFirstPaymentDisplay] = React.useState<string>('');
 
   // Calcular preço total com base nos valores editáveis (ignora valores nulos)
   const totalPrice = Object.values(lotPrices).reduce((sum: number, price) => sum + (price || 0), 0);
@@ -206,36 +221,35 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
       setFormData({ ...formData, paymentMethod: value });
     }
     
-    // Limpar entrada e parcelas se for pagamento à vista (pix ou dinheiro)
+    // Limpar entrada e parcelas de todos os lotes se for pagamento à vista (pix ou dinheiro)
     if (value === 'pix' || value === 'dinheiro') {
-      setFormData(prev => ({ ...prev, paymentMethod: value, otherPayment: '', firstPayment: 0, installments: 0 }));
-      setFirstPaymentDisplay('');
+      setFormData(prev => ({ ...prev, paymentMethod: value, otherPayment: '' }));
+      // Limpar first_payment e installments de todos os lotes
+      setLotFirstPayments(lots.reduce((acc, lot) => ({ ...acc, [lot.id]: null }), {}));
+      setLotFirstPaymentsDisplay(lots.reduce((acc, lot) => ({ ...acc, [lot.id]: '' }), {}));
+      setLotInstallments(lots.reduce((acc, lot) => ({ ...acc, [lot.id]: null }), {}));
     }
   }
 
-  // Função para formatar entrada como moeda brasileira
-  const handleFirstPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Função para formatar entrada como moeda brasileira por lote
+  const handleLotFirstPaymentChange = (lotId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    // Remove tudo exceto dígitos
     const numbers = inputValue.replace(/\D/g, '');
     
     if (numbers === '') {
-      setFirstPaymentDisplay('');
-      setFormData({ ...formData, firstPayment: 0 });
+      setLotFirstPaymentsDisplay(prev => ({ ...prev, [lotId]: '' }));
+      setLotFirstPayments(prev => ({ ...prev, [lotId]: null }));
       return;
     }
 
-    // Converte para número com centavos
     const numericValue = parseFloat(numbers) / 100;
-    
-    // Formata como moeda brasileira
     const formatted = numericValue.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
     
-    setFirstPaymentDisplay(formatted);
-    setFormData({ ...formData, firstPayment: numericValue });
+    setLotFirstPaymentsDisplay(prev => ({ ...prev, [lotId]: formatted }));
+    setLotFirstPayments(prev => ({ ...prev, [lotId]: numericValue }));
   };
 
   // Função para validar e enviar o formulário
@@ -305,10 +319,10 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             <h3 className="text-base font-bold text-white/80 mb-3">
               {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
             </h3>
-            <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+            <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
               {lots.map((lot) => (
                 <div key={lot.id} className="bg-[var(--background)] rounded-lg p-3 border border-[var(--border)]">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-white/70">Lote {lot.lotNumber}</span>
                       {lot.blockName && (
@@ -319,16 +333,57 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                     </div>
                     <span className="text-sm text-white/70">{lot.size}m²</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/50 font-medium">Valor: R$</span>
-                    <input
-                      type="text"
-                      value={lotPricesDisplay[lot.id] ?? ''}
-                      onChange={(e) => handleLotPriceChange(lot.id, e.target.value)}
-                      className="flex-1 px-2 py-1.5 text-sm bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none text-right"
-                      placeholder="0,00"
-                    />
+                  
+                  {/* Valor do Lote */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs text-white/50 font-medium w-16">Valor:</span>
+                    <div className="flex-1 flex items-center gap-1">
+                      <span className="text-xs text-white/50">R$</span>
+                      <input
+                        type="text"
+                        value={lotPricesDisplay[lot.id] ?? ''}
+                        onChange={(e) => handleLotPriceChange(lot.id, e.target.value)}
+                        className="flex-1 px-2 py-1.5 text-sm bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none text-right"
+                        placeholder="0,00"
+                      />
+                    </div>
                   </div>
+
+                  {/* Entrada (se não for Pix ou Dinheiro) */}
+                  {formData.paymentMethod && formData.paymentMethod !== 'pix' && formData.paymentMethod !== 'dinheiro' && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs text-white/50 font-medium w-16">Entrada:</span>
+                      <div className="flex-1 flex items-center gap-1">
+                        <span className="text-xs text-white/50">R$</span>
+                        <input
+                          type="text"
+                          value={lotFirstPaymentsDisplay[lot.id] ?? ''}
+                          onChange={(e) => handleLotFirstPaymentChange(lot.id, e)}
+                          className="flex-1 px-2 py-1.5 text-sm bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none text-right"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Parcelas (se for Carnê, Cartão ou Financiamento) */}
+                  {(formData.paymentMethod === 'carne' || formData.paymentMethod === 'cartao' || formData.paymentMethod === 'financing') && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-white/50 font-medium w-16">Parcelas:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={lotInstallments[lot.id] ?? ''}
+                        onChange={(e) => setLotInstallments(prev => ({ 
+                          ...prev, 
+                          [lot.id]: parseInt(e.target.value) || null 
+                        }))}
+                        className="flex-1 px-2 py-1.5 text-sm bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white font-semibold focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none text-right"
+                        placeholder="Ex: 12"
+                      />
+                      <span className="text-xs text-white/50">x</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -538,35 +593,6 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
               )}
             </div>
-
-            {formData.paymentMethod && formData.paymentMethod !== 'pix' && formData.paymentMethod !== 'dinheiro' && (
-              <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2">Entrada (R$) *</label>
-                <input
-                  type="text"
-                  required
-                  value={firstPaymentDisplay}
-                  onChange={handleFirstPaymentChange}
-                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                  placeholder="0,00"
-                />
-              </div>
-            )}
-
-            {(formData.paymentMethod === 'carne' || formData.paymentMethod === 'cartao' || formData.paymentMethod === 'financing') && (
-              <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2">Número de Parcelas *</label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={formData.installments || ''}
-                  onChange={(e) => setFormData({ ...formData, installments: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                  placeholder="Ex: 12"
-                />
-              </div>
-            )}
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
