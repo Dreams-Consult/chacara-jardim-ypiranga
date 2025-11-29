@@ -280,6 +280,7 @@ export default function AdminMapsLotsPage() {
                   lotsPerRow={15}
                   reservations={reservations}
                   userRole={user?.role}
+                  userId={user?.id}
                 />
               ) : selectedBlock ? (
                 <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-700">

@@ -17,6 +17,7 @@ interface LotSelectorProps {
   lotsPerRow?: number;
   reservations?: any[]; // Array de reservas para mostrar no tooltip
   userRole?: string; // Role do usuário para verificar permissões
+  userId?: number; // ID do usuário para verificar se é responsável pela reserva
 }
 
 export default function LotSelector({
@@ -32,6 +33,7 @@ export default function LotSelector({
   lotsPerRow = 10,
   reservations = [],
   userRole,
+  userId,
 }: LotSelectorProps) {
   const router = useRouter();
   const [selectedLotForModal, setSelectedLotForModal] = useState<Lot | null>(null);
@@ -637,7 +639,11 @@ export default function LotSelector({
               {(selectedLotForModal.status === LotStatus.RESERVED || selectedLotForModal.status === LotStatus.SOLD) ? (
                 (() => {
                   const reservation = getReservationForLot(selectedLotForModal.id);
-                  return reservation ? (
+                  // Verificar se o usuário pode ver o botão de redirecionamento
+                  const canViewReservation = userRole === 'admin' || userRole === 'dev' || 
+                    (reservation && userId && reservation.user_id === userId);
+                  
+                  return reservation && canViewReservation ? (
                     <button
                       onClick={() => {
                         handleReservationClick(reservation);
