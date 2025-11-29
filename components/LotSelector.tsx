@@ -327,6 +327,37 @@ export default function LotSelector({
                   Lote {selectedLotForModal.lotNumber}
                 </h3>
                 <div className="flex items-center gap-2">
+                  {/* Botão de excluir apenas para administradores e desenvolvedores */}
+                  {onLotDelete && userRole !== 'seller' && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Tem certeza que deseja excluir o lote ${selectedLotForModal.lotNumber}?`)) {
+                          setIsDeleting(true);
+                          try {
+                            await onLotDelete(selectedLotForModal.id);
+                            setSelectedLotForModal(null);
+                            setIsEditing(false);
+                            setEditedLot(null);
+                          } finally {
+                            setIsDeleting(false);
+                          }
+                        }
+                      }}
+                      disabled={isDeleting}
+                      className="p-2 rounded-lg transition-colors touch-manipulation bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Excluir lote"
+                    >
+                      {isDeleting ? (
+                        <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
                   {/* Botão de bloquear/desbloquear apenas para administradores e desenvolvedores */}
                   {onToggleLotStatus && userRole !== 'seller' && (selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
                     <button
@@ -647,85 +678,35 @@ export default function LotSelector({
                   </button>
                   {onLotEdit ? (
                     isEditing && editedLot ? (
-                      <>
-                        {onLotDelete && (
-                          <button
-                            onClick={async () => {
-                              if (confirm(`Tem certeza que deseja excluir o lote ${selectedLotForModal.lotNumber}?`)) {
-                                setIsDeleting(true);
-                                try {
-                                  await onLotDelete(selectedLotForModal.id);
-                                  setSelectedLotForModal(null);
-                                  setIsEditing(false);
-                                  setEditedLot(null);
-                                } finally {
-                                  setIsDeleting(false);
-                                }
-                              }
-                            }}
-                            disabled={isDeleting}
-                            className="px-4 sm:px-6 py-3 text-base bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 touch-manipulation"
-                          >
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            <span className="hidden sm:inline">{isDeleting ? 'Excluindo...' : 'Excluir'}</span>
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            onLotEdit(editedLot);
-                            setSelectedLotForModal(null);
-                            setIsEditing(false);
-                            setEditedLot(null);
-                          }}
-                          className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
-                        >
-                          Salvar Alterações
-                        </button>
-                      </>
+                      <button
+                        onClick={() => {
+                          onLotEdit(editedLot);
+                          setSelectedLotForModal(null);
+                          setIsEditing(false);
+                          setEditedLot(null);
+                        }}
+                        className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
+                      >
+                        Salvar Alterações
+                      </button>
                     ) : (
                       <>
                         {(selectedLotForModal.status === LotStatus.AVAILABLE || selectedLotForModal.status === LotStatus.BLOCKED) && (
-                          <>
-                            {onLotDelete && (
-                              <button
-                                onClick={async () => {
-                                  if (confirm(`Tem certeza que deseja excluir o lote ${selectedLotForModal.lotNumber}?`)) {
-                                    setIsDeleting(true);
-                                    try {
-                                      await onLotDelete(selectedLotForModal.id);
-                                      setSelectedLotForModal(null);
-                                    } finally {
-                                      setIsDeleting(false);
-                                    }
-                                  }
-                                }}
-                                disabled={isDeleting}
-                                className="px-4 sm:px-6 py-3 text-base bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 touch-manipulation min-w-[100px] sm:min-w-0"
-                              >
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                <span className="hidden sm:inline">{isDeleting ? 'Excluindo...' : 'Excluir'}</span>
-                              </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                setIsEditing(true);
-                                // Garante que pricePerM2 está calculado
-                                const lotWithCalculatedPrice = {
-                                  ...selectedLotForModal,
-                                  pricePerM2: selectedLotForModal.pricePerM2 || (selectedLotForModal.size > 0 ? selectedLotForModal.price / selectedLotForModal.size : 0)
-                                };
-                                setEditedLot(lotWithCalculatedPrice);
-                                setPriceDisplay(lotWithCalculatedPrice.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                              }}
-                              className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
-                            >
-                              Editar Lote
-                            </button>
-                          </>
+                          <button
+                            onClick={() => {
+                              setIsEditing(true);
+                              // Garante que pricePerM2 está calculado
+                              const lotWithCalculatedPrice = {
+                                ...selectedLotForModal,
+                                pricePerM2: selectedLotForModal.pricePerM2 || (selectedLotForModal.size > 0 ? selectedLotForModal.price / selectedLotForModal.size : 0)
+                              };
+                              setEditedLot(lotWithCalculatedPrice);
+                              setPriceDisplay(lotWithCalculatedPrice.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                            }}
+                            className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
+                          >
+                            Editar Lote
+                          </button>
                         )}
                       </>
                     )
