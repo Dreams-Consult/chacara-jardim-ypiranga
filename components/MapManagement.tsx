@@ -323,40 +323,65 @@ export default function MapManagement() {
 
       {isCreating && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              Novo Mapa
-            </h2>
-            <div className="space-y-5">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Novo Mapa</h2>
+                    <p className="text-white/90 text-sm">Cadastre um novo loteamento</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsCreating(false);
+                    setEditingMap(null);
+                    setSelectedFile(null);
+                    setFilePreview('');
+                  }}
+                  disabled={isSubmitting}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Nome</label>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Nome do Loteamento *</label>
                 <input
                   type="text"
                   value={editingMap?.name || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, name: e.target.value } as Map)
                   }
-                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
-                  placeholder="Nome do mapa"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                  placeholder="Ex: Chácara Jardim Ypiranga"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Descrição</label>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Descrição</label>
                 <textarea
                   value={editingMap?.description || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, description: e.target.value } as Map)
                   }
-                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] shadow-[var(--shadow-sm)]"
-                  placeholder="Descrição do mapa"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                  placeholder="Descrição detalhada do loteamento"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                <label className="block text-white/80 text-sm font-semibold mb-2">
                   Upload de Imagem ou PDF (Opcional)
                 </label>
                 <input
@@ -364,31 +389,31 @@ export default function MapManagement() {
                   accept="image/*,application/pdf"
                   onChange={handleFileUpload}
                   disabled={isSubmitting}
-                  className="w-full text-[var(--foreground)] font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)]/10 file:text-[var(--primary)] hover:file:bg-[var(--primary)]/20 disabled:opacity-50"
+                  className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)] file:text-white hover:file:bg-[var(--primary)]/90 file:cursor-pointer disabled:opacity-50"
                 />
                 {!filePreview && (
-                  <p className="text-xs text-blue-600 mt-2 bg-blue-50 p-3 rounded-xl border-2 border-blue-200 font-medium">
-                    💡 <span className="font-bold">Você pode criar o mapa sem imagem e adicionar a imagem depois.</span> Tamanho máximo: 50MB para PDFs, 10MB para imagens.
+                  <p className="text-xs text-blue-300 mt-2 bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                    💡 <span className="font-bold">Você pode criar o mapa sem imagem e adicionar depois.</span> Tamanho máximo: 50MB para PDFs, 10MB para imagens.
                   </p>
                 )}
               </div>
               {filePreview && (
                 <div>
-                  <label className="block text-sm font-bold text-[var(--foreground)] mb-2 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <label className="block text-white/80 text-sm font-semibold mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                    Preview da Imagem
+                    Preview do Arquivo
                   </label>
-                  <div className="border-2 border-green-500/50 rounded-xl overflow-hidden bg-gray-50 shadow-md">
+                  <div className="border-2 border-green-500/50 rounded-xl overflow-hidden bg-[var(--surface)]">
                     {selectedFile?.type === 'application/pdf' ? (
-                      <div className="p-10 text-center bg-gradient-to-br from-red-50 to-orange-50">
-                        <svg className="w-20 h-20 mx-auto mb-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="p-10 text-center bg-gradient-to-br from-[var(--surface)] to-[var(--background)]">
+                        <svg className="w-20 h-20 mx-auto mb-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                         </svg>
-                        <p className="text-base font-bold text-gray-800 break-words px-2 mb-2">{selectedFile?.name}</p>
-                        <p className="text-sm text-gray-600">Arquivo PDF selecionado</p>
-                        <p className="text-xs text-gray-500 mt-2">O PDF será convertido automaticamente para visualização</p>
+                        <p className="text-base font-bold text-white break-words px-2 mb-2">{selectedFile?.name}</p>
+                        <p className="text-sm text-white/70">Arquivo PDF selecionado</p>
+                        <p className="text-xs text-white/50 mt-2">O PDF será convertido automaticamente para visualização</p>
                       </div>
                     ) : (
                       <div className="p-2">
@@ -399,7 +424,7 @@ export default function MapManagement() {
                           className="w-full max-h-96 object-contain rounded-lg" 
                         />
                         <div className="text-center mt-2 pb-2">
-                          <p className="text-xs font-semibold text-gray-600">{selectedFile?.name}</p>
+                          <p className="text-xs font-semibold text-white/70">{selectedFile?.name}</p>
                         </div>
                       </div>
                     )}
@@ -407,7 +432,8 @@ export default function MapManagement() {
                 </div>
               )}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+
+            <div className="sticky bottom-0 bg-[var(--card-bg)] border-t border-[var(--border)] p-6 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
                   setIsCreating(false);
@@ -416,14 +442,14 @@ export default function MapManagement() {
                   setFilePreview('');
                 }}
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-xl hover:bg-[var(--surface-hover)] transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 bg-[var(--surface)] hover:bg-[var(--background)] text-white font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !editingMap?.name?.trim()}
-                className="flex-1 px-4 py-3 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary)]/90 transition-colors shadow-[var(--shadow-sm)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -551,55 +577,79 @@ export default function MapManagement() {
       {/* Modal de Edição de Detalhes */}
       {isEditingDetails && editingMap && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border-2 border-blue-500/30">
-            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Editar Mapa
-            </h2>
-            <div className="space-y-5">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-md shadow-2xl border-2 border-[var(--primary)]/30">
+            <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-6 rounded-t-2xl shadow-[var(--shadow-md)]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Editar Mapa</h2>
+                    <p className="text-white/90 text-sm">Alterar informações</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsEditingDetails(false);
+                    setEditingMap(null);
+                  }}
+                  disabled={isSubmitting}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Nome *</label>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Nome *</label>
                 <input
                   type="text"
                   value={editingMap.name || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, name: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-[var(--shadow-sm)]"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                   placeholder="Nome do mapa"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Descrição</label>
+                <label className="block text-white/80 text-sm font-semibold mb-2">Descrição</label>
                 <textarea
                   value={editingMap.description || ''}
                   onChange={(e) =>
                     setEditingMap({ ...editingMap, description: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 bg-white border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-[var(--shadow-sm)]"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                   placeholder="Descrição do mapa"
                   rows={3}
                 />
               </div>
             </div>
-            <div className="flex gap-2 mt-6">
+
+            <div className="bg-[var(--card-bg)] border-t border-[var(--border)] p-6 flex gap-3">
               <button
                 onClick={() => {
                   setIsEditingDetails(false);
                   setEditingMap(null);
                 }}
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50 cursor-pointer"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] hover:bg-[var(--background)] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleUpdateDetails}
-                disabled={isSubmitting}
-                className="flex-1 px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                disabled={isSubmitting || !editingMap?.name?.trim()}
+                className="flex-1 px-4 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
