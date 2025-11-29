@@ -17,7 +17,7 @@ interface LotSelectorProps {
   lotsPerRow?: number;
   reservations?: any[]; // Array de reservas para mostrar no tooltip
   userRole?: string; // Role do usuário para verificar permissões
-  userId?: number; // ID do usuário para verificar se é responsável pela reserva
+  userId?: number | string; // ID do usuário para verificar se é responsável pela reserva
 }
 
 export default function LotSelector({
@@ -641,7 +641,7 @@ export default function LotSelector({
                   const reservation = getReservationForLot(selectedLotForModal.id);
                   // Verificar se o usuário pode ver o botão de redirecionamento
                   const canViewReservation = userRole === 'admin' || userRole === 'dev' || 
-                    (reservation && userId && reservation.user_id === userId);
+                    (reservation && userId && reservation.user_id == userId); // Usar == para comparar string e number
                   
                   return reservation && canViewReservation ? (
                     <button
