@@ -176,7 +176,7 @@ export default function LotSelector({
       // Salvar ID da reserva no sessionStorage para expansão automática
       sessionStorage.setItem('expandReservationId', reservation.id.toString());
       // Redirecionar para a página de reservas
-      router.push('/admin/reservations');
+      router.push('/reservations');
     }
   };
 

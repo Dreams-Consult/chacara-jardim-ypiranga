@@ -12,7 +12,7 @@ export default function NotFound() {
     // Redireciona automaticamente para a página apropriada
     const redirectTimeout = setTimeout(() => {
       if (isAuthenticated) {
-        router.replace('/admin/dashboard');
+        router.replace('/dashboard');
       } else {
         router.replace('/login');
       }
@@ -41,7 +41,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {isAuthenticated ? (
             <button
-              onClick={() => router.push('/admin/dashboard')}
+              onClick={() => router.push('/dashboard')}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               Ir para Dashboard

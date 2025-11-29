@@ -89,7 +89,7 @@ function LoginForm() {
 
         if (!currentUser.first_login) {
           console.log('[Login] ✅ Login bem-sucedido, redirecionando...');
-          router.push('/admin/dashboard');
+          router.push('/dashboard');
         }else {
           console.log('[Login] Primeiro login detectado, redirecionando para atualização de senha...');
           router.push(`/password?userId=${currentUser.id}`);

@@ -107,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isActive = (path: string) => {
-    if (path === '/admin/dashboard') {
+    if (path === '/dashboard') {
       return pathname === path;
     }
     return pathname?.startsWith(path);
@@ -165,9 +165,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Dashboard - apenas para ADMIN e DEV */}
             {user.role !== UserRole.VENDEDOR && (
               <Link
-                href="/admin/dashboard"
+                href="/dashboard"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all cursor-pointer ${
-                  isActive('/admin/dashboard')
+                  isActive('/dashboard')
                     ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                     : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                 }`}
@@ -181,9 +181,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Mapas e Lotes - para todos */}
             <Link
-              href="/admin/maps"
+              href="/maps"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all cursor-pointer ${
-                isActive('/admin/maps')
+                isActive('/maps')
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                   : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
               }`}
@@ -196,9 +196,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Reservas - para todos */}
             <Link
-              href="/admin/reservations"
+              href="/reservations"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all cursor-pointer ${
-                isActive('/admin/reservations')
+                isActive('/reservations')
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                   : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
               }`}

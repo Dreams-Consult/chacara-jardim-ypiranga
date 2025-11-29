@@ -14,7 +14,7 @@ export default function AdminBlocksPage() {
     // Vendedores não têm acesso ao gerenciamento de quadras
     if (user?.role === UserRole.VENDEDOR) {
       console.log('[BlocksPage] ⚠️ Vendedor não tem permissão - redirecionando');
-      router.push('/admin/dashboard');
+      router.push('/dashboard');
     }
   }, [user, router]);
 

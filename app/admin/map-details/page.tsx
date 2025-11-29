@@ -14,7 +14,7 @@ export default function AdminMapDetailsPage() {
     // Vendedores não têm acesso ao gerenciamento detalhado de mapas
     if (user?.role === UserRole.VENDEDOR) {
       console.log('[MapDetails] ⚠️ Vendedor não tem permissão - redirecionando');
-      router.push('/admin/dashboard');
+      router.push('/dashboard');
     }
   }, [user, router]);
 

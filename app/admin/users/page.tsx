@@ -33,7 +33,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     if (!canAccessUsers) {
-      router.push('/admin/dashboard');
+      router.push('/dashboard');
     } else {
       loadUsers();
     }
