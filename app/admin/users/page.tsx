@@ -417,15 +417,15 @@ export default function UsersPage() {
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Gerenciamento de Usuários</h1>
+          <p className="text-sm sm:text-base text-gray-300 mt-1">
             Crie e gerencie usuários do sistema
           </p>
         </div>
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
+            className="bg-[var(--primary)] hover:bg-[var(--primary-light)] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 w-full sm:w-auto justify-center shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -438,19 +438,19 @@ export default function UsersPage() {
 
       {/* Seção de Usuários Pendentes */}
       {users.filter(u => u.status === UserStatus.PENDING).length > 0 ? (
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-visible">
-          <div className="bg-amber-50 border-b-2 border-amber-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="bg-[var(--card-bg)] rounded-xl shadow-md border border-[var(--border)] overflow-visible">
+          <div className="bg-gradient-to-r from-[var(--warning)] to-[var(--warning-dark)] px-4 sm:px-6 py-3 sm:py-4 rounded-t-xl">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="bg-amber-500 text-white p-2 rounded-lg flex-shrink-0">
+              <div className="bg-white/20 text-white p-2 rounded-lg flex-shrink-0 backdrop-blur-sm">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl font-bold text-amber-900 truncate">
+                <h2 className="text-lg sm:text-xl font-bold text-white truncate">
                   Cadastros Pendentes
                 </h2>
-                <p className="text-amber-700 text-xs sm:text-sm">
+                <p className="text-white/90 text-xs sm:text-sm">
                   {users.filter(u => u.status === UserStatus.PENDING).length} vendedor(es) aguardando
                 </p>
               </div>
@@ -460,33 +460,33 @@ export default function UsersPage() {
           {/* Tabela para Desktop - apenas telas muito grandes */}
           <div className="hidden xl:block overflow-visible">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-[var(--surface)] border-b border-[var(--border)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Nome
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     CPF
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Perfil
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-[var(--border)]">
                 {users.filter(u => u.status === UserStatus.PENDING).map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-[var(--surface-hover)] transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      <div className="text-sm font-medium text-white">{user.name}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-600 font-mono">
+                      <div className="text-sm text-gray-300 font-mono">
                         {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                       </div>
                     </td>
@@ -494,7 +494,7 @@ export default function UsersPage() {
                       {getRoleBadge(user.role)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium border bg-amber-100 text-amber-800 border-amber-200">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium border bg-[var(--warning)]/20 text-[var(--accent-light)] border-[var(--warning)]">
                         Pendente
                       </span>
                     </td>
@@ -502,13 +502,13 @@ export default function UsersPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApprove(user.id)}
-                          className="px-3 py-1 text-green-600 hover:text-white hover:bg-green-600 border border-green-600 rounded-lg font-medium transition-colors"
+                          className="px-3 py-1 text-white bg-[var(--success)] hover:bg-[var(--success-dark)] border border-[var(--success)] rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                         >
                           Aprovar
                         </button>
                         <button
                           onClick={() => handleReject(user.id)}
-                          className="px-3 py-1 text-red-600 hover:text-white hover:bg-red-600 border border-red-600 rounded-lg font-medium transition-colors"
+                          className="px-3 py-1 text-white bg-[var(--danger)] hover:bg-[var(--danger-dark)] border border-[var(--danger)] rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                         >
                           Rejeitar
                         </button>
@@ -521,32 +521,32 @@ export default function UsersPage() {
           </div>
 
           {/* Cards para Tablet e Mobile */}
-          <div className="xl:hidden divide-y divide-gray-200">
+          <div className="xl:hidden divide-y divide-[var(--border)]">
             {users.filter(u => u.status === UserStatus.PENDING).map((user) => (
-              <div key={user.id} className="p-4 hover:bg-gray-50 transition-colors">
+              <div key={user.id} className="p-4 hover:bg-[var(--surface-hover)] transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{user.email}</p>
+                    <h3 className="text-lg font-semibold text-white">{user.name}</h3>
+                    <p className="text-sm text-gray-300 mt-1">{user.email}</p>
                   </div>
-                  <span className="px-2 py-1 rounded-full text-xs font-medium border bg-amber-100 text-amber-800 border-amber-200">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium border bg-[var(--warning)]/20 text-[var(--accent-light)] border-[var(--warning)]">
                     Pendente
                   </span>
                 </div>
 
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center text-sm">
-                    <span className="font-medium text-gray-500 w-20">CPF:</span>
-                    <span className="text-gray-900 font-mono">
+                    <span className="font-medium text-gray-400 w-20">CPF:</span>
+                    <span className="text-white font-mono">
                       {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className="font-medium text-gray-500 w-20">CRECI:</span>
-                    <span className="text-gray-900">{user.creci || '-'}</span>
+                    <span className="font-medium text-gray-400 w-20">CRECI:</span>
+                    <span className="text-white">{user.creci || '-'}</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className="font-medium text-gray-500 w-20">Perfil:</span>
+                    <span className="font-medium text-gray-400 w-20">Perfil:</span>
                     {getRoleBadge(user.role)}
                   </div>
                 </div>
@@ -554,13 +554,13 @@ export default function UsersPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(user.id)}
-                    className="flex-1 px-4 py-2 text-green-600 bg-green-50 hover:bg-green-600 hover:text-white border border-green-600 rounded-lg font-medium transition-colors"
+                    className="flex-1 px-4 py-2 text-white bg-[var(--success)] hover:bg-[var(--success-dark)] border border-[var(--success)] rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                   >
                     ✓ Aprovar
                   </button>
                   <button
                     onClick={() => handleReject(user.id)}
-                    className="flex-1 px-4 py-2 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white border border-red-600 rounded-lg font-medium transition-colors"
+                    className="flex-1 px-4 py-2 text-white bg-[var(--danger)] hover:bg-[var(--danger-dark)] border border-[var(--danger)] rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                   >
                     ✗ Rejeitar
                   </button>
@@ -570,18 +570,18 @@ export default function UsersPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 p-4 sm:p-6 md:p-8">
+        <div className="bg-gradient-to-r from-[var(--success)] to-[var(--success-dark)] rounded-xl border-2 border-[var(--success)] p-4 sm:p-6 md:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <div className="bg-green-500 text-white p-2 sm:p-3 rounded-full flex-shrink-0">
+            <div className="bg-white/20 text-white p-2 sm:p-3 rounded-full flex-shrink-0 backdrop-blur-sm">
               <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="text-center sm:text-left">
-              <h3 className="text-lg sm:text-xl font-bold text-green-900 mb-1">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
                 Nenhum usuário pendente
               </h3>
-              <p className="text-sm sm:text-base text-green-700">
+              <p className="text-sm sm:text-base text-white/90">
                 Não há cadastros aguardando aprovação
               </p>
             </div>
@@ -591,14 +591,16 @@ export default function UsersPage() {
 
       {/* Formulário de Criação/Edição */}
       {isCreating && (
-        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4">
-            {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-[var(--card-bg)] rounded-xl shadow-md border border-[var(--border)] overflow-hidden">
+          <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-lg sm:text-xl font-bold text-white">
+              {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
+            </h2>
+          </div>
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nome Completo
                 </label>
                 <input
@@ -606,13 +608,13 @@ export default function UsersPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
                   placeholder="João da Silva"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email
                 </label>
                 <input
@@ -620,13 +622,13 @@ export default function UsersPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
                   placeholder="joao@email.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   CPF
                 </label>
                 <input
@@ -634,14 +636,14 @@ export default function UsersPage() {
                   value={formData.cpf}
                   onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
                   placeholder="000.000.000-00"
                   maxLength={14}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Telefone
                 </label>
                 <input
@@ -649,33 +651,33 @@ export default function UsersPage() {
                   value={formData.phone}
                   onChange={handlePhoneChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
                   placeholder="(00) 00000-0000"
                   maxLength={15}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   CRECI <span className="text-gray-500 text-xs">(opcional)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.creci}
                   onChange={(e) => setFormData({ ...formData, creci: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
                   placeholder="CRECI 12345-F"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Perfil
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
                 >
                   {currentUser?.role === UserRole.DEV && (
                     <option value={UserRole.DEV}>Desenvolvedor</option>
@@ -686,7 +688,7 @@ export default function UsersPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Senha {editingUser && '(deixe em branco para manter a atual)'}
                 </label>
                 <input
@@ -694,7 +696,7 @@ export default function UsersPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required={!editingUser}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[var(--surface)] text-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
                   placeholder="••••••••"
                   minLength={6}
                 />
@@ -704,14 +706,14 @@ export default function UsersPage() {
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                className="bg-[var(--primary)] hover:bg-[var(--primary-light)] text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
               >
                 {editingUser ? 'Salvar Alterações' : 'Criar Usuário'}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-medium transition-colors"
+                className="bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-white border border-[var(--border)] px-6 py-2 rounded-lg font-medium transition-colors"
               >
                 Cancelar
               </button>
@@ -721,20 +723,20 @@ export default function UsersPage() {
       )}
 
       {/* Lista Geral de Usuários */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-visible mb-6">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-6 py-4">
+      <div className="bg-[var(--card-bg)] rounded-xl shadow-md border border-[var(--border)] overflow-visible mb-6">
+        <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] px-6 py-4 rounded-t-xl">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-500 text-white p-2 rounded-lg">
+              <div className="bg-white/20 text-white p-2 rounded-lg backdrop-blur-sm">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-white">
                   Todos os Usuários
                 </h2>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-200 text-sm">
                   {users.filter(u => u.status !== UserStatus.PENDING).length} usuário(s) no total
                 </p>
               </div>
@@ -746,8 +748,8 @@ export default function UsersPage() {
                 onClick={() => setStatusFilter('all')}
                 className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'all'
-                    ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-white text-[var(--primary)] shadow-md'
+                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                 }`}
               >
                 Todos
@@ -756,8 +758,8 @@ export default function UsersPage() {
                 onClick={() => setStatusFilter('approved')}
                 className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'approved'
-                    ? 'bg-green-500 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-white text-[var(--primary)] shadow-md'
+                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                 }`}
               >
                 Aprovados
@@ -766,8 +768,8 @@ export default function UsersPage() {
                 onClick={() => setStatusFilter('rejected')}
                 className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'rejected'
-                    ? 'bg-red-500 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-white text-[var(--primary)] shadow-md'
+                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                 }`}
               >
                 Rejeitados
@@ -786,49 +788,49 @@ export default function UsersPage() {
             {/* Tabela para Desktop - apenas telas muito grandes */}
             <div className="hidden xl:block overflow-visible">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-[var(--surface)] border-b border-[var(--border)]">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Nome
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       CPF
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Telefone
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Perfil
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Situação
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-[var(--border)]">
                   {users.filter(u => {
                     if (u.status === UserStatus.PENDING) return false;
                     if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
                     if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
                     return true;
                   }).map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className="hover:bg-[var(--surface-hover)] transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-white">{user.name}</div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-600 font-mono">
+                        <div className="text-sm text-gray-300 font-mono">
                           {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-300">
                           {user.phone ? user.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '-'}
                         </div>
                       </td>
@@ -838,14 +840,14 @@ export default function UsersPage() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           {user.status === UserStatus.APPROVED ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--success)]/20 text-[var(--accent-light)] border border-[var(--success)]">
                               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
                               Aprovado
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--danger)]/20 text-red-300 border border-[var(--danger)]">
                               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                               </svg>
@@ -856,14 +858,14 @@ export default function UsersPage() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {user.active === true ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--success)]/20 text-[var(--accent-light)] border border-[var(--success)]">
                             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
                             Ativo
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-300">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-600/30 text-gray-400 border border-gray-600">
                             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
                             </svg>
@@ -875,7 +877,7 @@ export default function UsersPage() {
                         <div className="actions-menu-container">
                           <button
                             onClick={() => setActionsMenuOpen(actionsMenuOpen === user.id ? null : user.id)}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[var(--surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors shadow-md"
                             title="Ações"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -885,16 +887,16 @@ export default function UsersPage() {
                           </button>
 
                           {actionsMenuOpen === user.id && (
-                            <div className="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <div className="absolute right-0 bottom-full mb-1 w-48 bg-[var(--card-bg)] rounded-lg shadow-lg border border-[var(--border)] py-1 z-50">
                               <button
                                 onClick={() => {
                                   setSelectedUserForDetails(user);
                                   setIsDetailsModalOpen(true);
                                   setActionsMenuOpen(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                               >
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
@@ -905,9 +907,9 @@ export default function UsersPage() {
                                   openRoleModal(user);
                                   setActionsMenuOpen(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                               >
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                 </svg>
                                 Alterar Cargo
@@ -917,31 +919,31 @@ export default function UsersPage() {
                                   handleResetPassword(user.id, user.name);
                                   setActionsMenuOpen(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                               >
-                                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                 </svg>
                                 Resetar Senha
                               </button>
-                              <div className="border-t border-gray-200 my-1"></div>
+                              <div className="border-t border-[var(--border)] my-1"></div>
                               <button
                                 onClick={() => {
                                   handleToggleActive(user.id, user.name, user.active === true);
                                   setActionsMenuOpen(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                               >
                                 {user.active === true ? (
                                   <>
-                                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                     </svg>
                                     Desativar Usuário
                                   </>
                                 ) : (
                                   <>
-                                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Ativar Usuário
@@ -953,7 +955,7 @@ export default function UsersPage() {
                                   handleDeleteUser(user.id, user.name, user.role);
                                   setActionsMenuOpen(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[var(--danger)]/20 flex items-center gap-2 transition-colors"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -971,29 +973,29 @@ export default function UsersPage() {
             </div>
 
             {/* Cards para Tablet e Mobile */}
-            <div className="xl:hidden divide-y divide-gray-200">
+            <div className="xl:hidden divide-y divide-[var(--border)]">
               {users.filter(u => {
                 if (u.status === UserStatus.PENDING) return false;
                 if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
                 if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
                 return true;
               }).map((user) => (
-                <div key={user.id} className="p-4 hover:bg-gray-50 transition-colors">
+                <div key={user.id} className="p-4 hover:bg-[var(--surface-hover)] transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{user.email}</p>
+                      <h3 className="text-lg font-semibold text-white">{user.name}</h3>
+                      <p className="text-sm text-gray-300 mt-1">{user.email}</p>
                     </div>
                     <div className="flex flex-col gap-1">
                       {user.status === UserStatus.APPROVED ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[var(--success)]/20 text-[var(--accent-light)] border border-[var(--success)]">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                           Aprovado
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[var(--danger)]/20 text-red-300 border border-[var(--danger)]">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                           </svg>
@@ -1001,14 +1003,14 @@ export default function UsersPage() {
                         </span>
                       )}
                       {user.active === true ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[var(--success)]/20 text-[var(--accent-light)] border border-[var(--success)]">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                           Ativo
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-300">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-600/30 text-gray-400 border border-gray-600">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
                           </svg>
@@ -1020,23 +1022,23 @@ export default function UsersPage() {
 
                   <div className="space-y-2 mb-3">
                     <div className="flex items-center text-sm">
-                      <span className="font-medium text-gray-500 w-20">CPF:</span>
-                      <span className="text-gray-900 font-mono">
+                      <span className="font-medium text-gray-400 w-20">CPF:</span>
+                      <span className="text-white font-mono">
                         {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="font-medium text-gray-500 w-20">Telefone:</span>
-                      <span className="text-gray-900">
+                      <span className="font-medium text-gray-400 w-20">Telefone:</span>
+                      <span className="text-white">
                         {user.phone ? user.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '-'}
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="font-medium text-gray-500 w-20">CRECI:</span>
-                      <span className="text-gray-900">{user.creci || '-'}</span>
+                      <span className="font-medium text-gray-400 w-20">CRECI:</span>
+                      <span className="text-white">{user.creci || '-'}</span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="font-medium text-gray-500 w-20">Perfil:</span>
+                      <span className="font-medium text-gray-400 w-20">Perfil:</span>
                       {getRoleBadge(user.role)}
                     </div>
                   </div>
@@ -1044,7 +1046,7 @@ export default function UsersPage() {
                   <div className="relative actions-menu-container">
                     <button
                       onClick={() => setActionsMenuOpen(actionsMenuOpen === user.id ? null : user.id)}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors shadow-md"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -1053,16 +1055,16 @@ export default function UsersPage() {
                     </button>
 
                     {actionsMenuOpen === user.id && (
-                      <div className="absolute left-0 right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <div className="absolute left-0 right-0 bottom-full mb-1 bg-[var(--card-bg)] rounded-lg shadow-lg border border-[var(--border)] py-1 z-50">
                         <button
                           onClick={() => {
                             setSelectedUserForDetails(user);
                             setIsDetailsModalOpen(true);
                             setActionsMenuOpen(null);
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                         >
-                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
@@ -1073,9 +1075,9 @@ export default function UsersPage() {
                             openRoleModal(user);
                             setActionsMenuOpen(null);
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                         >
-                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                           </svg>
                           Alterar Cargo
@@ -1085,31 +1087,31 @@ export default function UsersPage() {
                             handleResetPassword(user.id, user.name);
                             setActionsMenuOpen(null);
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                         >
-                          <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                           </svg>
                           Resetar Senha
                         </button>
-                        <div className="border-t border-gray-200"></div>
+                        <div className="border-t border-[var(--border)]"></div>
                         <button
                           onClick={() => {
                             handleToggleActive(user.id, user.name, user.active === true);
                             setActionsMenuOpen(null);
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[var(--surface-hover)] flex items-center gap-2 transition-colors"
                         >
                           {user.active === true ? (
                             <>
-                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                               </svg>
                               Desativar Usuário
                             </>
                           ) : (
                             <>
-                              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                               Ativar Usuário
@@ -1121,7 +1123,7 @@ export default function UsersPage() {
                             handleDeleteUser(user.id, user.name, user.role);
                             setActionsMenuOpen(null);
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-[var(--danger)]/20 flex items-center gap-2 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1137,12 +1139,12 @@ export default function UsersPage() {
           </>
         ) : (
           <div className="p-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--surface)] rounded-full mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-300 text-lg">
               {statusFilter === 'approved' && 'Nenhum usuário aprovado'}
               {statusFilter === 'rejected' && 'Nenhum usuário rejeitado'}
               {statusFilter === 'all' && 'Nenhum usuário cadastrado'}
@@ -1159,14 +1161,14 @@ export default function UsersPage() {
       {/* Modal de Alteração de Cargo */}
       {isRoleModalOpen && selectedUserForRole && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--card-bg)] rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]">
             {/* Header do Modal */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4 rounded-t-xl">
+            <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] px-6 py-4 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">Alterar Cargo</h3>
                 <button
                   onClick={closeRoleModal}
-                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-1 transition-colors"
+                  className="text-white hover:bg-white/20 rounded-lg p-1 transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1178,18 +1180,18 @@ export default function UsersPage() {
             {/* Corpo do Modal */}
             <div className="p-6">
               {/* Informações do Usuário */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="bg-[var(--surface)] rounded-lg p-4 mb-6 border border-[var(--border)]">
                 <div className="flex items-start gap-3">
-                  <div className="bg-blue-100 rounded-full p-2">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-[var(--primary)]/20 rounded-full p-2">
+                    <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 text-lg">{selectedUserForRole.name}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{selectedUserForRole.email}</p>
+                    <h4 className="font-semibold text-white text-lg">{selectedUserForRole.name}</h4>
+                    <p className="text-sm text-gray-300 mt-1">{selectedUserForRole.email}</p>
                     <div className="mt-2">
-                      <span className="text-xs text-gray-500">Cargo atual: </span>
+                      <span className="text-xs text-gray-400">Cargo atual: </span>
                       {getRoleBadge(selectedUserForRole.role)}
                     </div>
                   </div>
@@ -1198,7 +1200,7 @@ export default function UsersPage() {
 
               {/* Seleção de Cargo */}
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Selecione o novo cargo:
                 </label>
 
@@ -1209,8 +1211,8 @@ export default function UsersPage() {
                     disabled={selectedUserForRole.role === role}
                     className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                       selectedUserForRole.role === role
-                        ? 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-60'
-                        : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                        ? 'bg-[var(--surface)]/50 border-[var(--border)] cursor-not-allowed opacity-60'
+                        : 'bg-[var(--surface)] border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--surface-hover)] shadow-md'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -1221,12 +1223,12 @@ export default function UsersPage() {
                           {role === UserRole.VENDEDOR && '💼'}
                         </span>
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-white">
                             {role === UserRole.DEV && 'Desenvolvedor'}
                             {role === UserRole.ADMIN && 'Administrador'}
                             {role === UserRole.VENDEDOR && 'Vendedor'}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-gray-400 mt-0.5">
                             {role === UserRole.DEV && 'Acesso total ao sistema'}
                             {role === UserRole.ADMIN && 'Gerenciamento de usuários e mapas'}
                             {role === UserRole.VENDEDOR && 'Vendas e reservas de lotes'}
@@ -1235,10 +1237,10 @@ export default function UsersPage() {
                       </div>
                       {selectedUserForRole.role === role && (
                         <div className="flex items-center gap-2">
-                          <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 text-[var(--success)]" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
-                          <span className="text-sm font-medium text-green-600">Atual</span>
+                          <span className="text-sm font-medium text-[var(--accent-light)]">Atual</span>
                         </div>
                       )}
                     </div>
@@ -1248,10 +1250,10 @@ export default function UsersPage() {
             </div>
 
             {/* Footer do Modal */}
-            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end">
+            <div className="bg-[var(--surface)] px-6 py-4 rounded-b-xl flex justify-end border-t border-[var(--border)]">
               <button
                 onClick={closeRoleModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
               >
                 Cancelar
               </button>
@@ -1267,11 +1269,11 @@ export default function UsersPage() {
           onClick={() => setIsDetailsModalOpen(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[var(--card-bg)] rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header do Modal */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-xl">
+            <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] px-6 py-4 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">Detalhes do Usuário</h3>
                 <button
@@ -1289,30 +1291,30 @@ export default function UsersPage() {
             <div className="p-6">
               <div className="space-y-4">
                 {/* Nome */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Nome Completo</label>
-                  <p className="text-lg font-semibold text-gray-900">{selectedUserForDetails.name}</p>
+                <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Nome Completo</label>
+                  <p className="text-lg font-semibold text-white">{selectedUserForDetails.name}</p>
                 </div>
 
                 {/* Email */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
-                  <p className="text-lg text-gray-900">{selectedUserForDetails.email}</p>
+                <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                  <p className="text-lg text-white">{selectedUserForDetails.email}</p>
                 </div>
 
                 {/* CPF */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">CPF</label>
-                  <p className="text-lg font-mono text-gray-900">
+                <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">CPF</label>
+                  <p className="text-lg font-mono text-white">
                     {selectedUserForDetails.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                   </p>
                 </div>
 
                 {/* Telefone e CRECI - em grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Telefone</label>
-                    <p className="text-lg text-gray-900">
+                  <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
+                    <p className="text-lg text-white">
                       {selectedUserForDetails.phone
                         ? selectedUserForDetails.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3')
                         : 'Não informado'
@@ -1320,9 +1322,9 @@ export default function UsersPage() {
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">CRECI</label>
-                    <p className="text-lg text-gray-900">
+                  <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">CRECI</label>
+                    <p className="text-lg text-white">
                       {selectedUserForDetails.creci || 'Não informado'}
                     </p>
                   </div>
@@ -1330,32 +1332,32 @@ export default function UsersPage() {
 
                 {/* Perfil e Status - em grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-2">Perfil</label>
+                  <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Perfil</label>
                     <div className="flex items-center">
                       {getRoleBadge(selectedUserForDetails.role)}
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
+                  <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
                     <div className="flex items-center">
                       {selectedUserForDetails.status === UserStatus.APPROVED ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--success)]/20 text-[var(--accent-light)] border border-[var(--success)]">
                           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                           Aprovado
                         </span>
                       ) : selectedUserForDetails.status === UserStatus.REJECTED ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--danger)]/20 text-red-300 border border-[var(--danger)]">
                           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                           </svg>
                           Rejeitado
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--warning)]/20 text-[var(--accent-light)] border border-[var(--warning)]">
                           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                           </svg>
@@ -1368,9 +1370,9 @@ export default function UsersPage() {
 
                 {/* Data de Cadastro */}
                 {selectedUserForDetails.createdAt && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Cadastrado em</label>
-                    <p className="text-lg text-gray-900">
+                  <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--border)]">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Cadastrado em</label>
+                    <p className="text-lg text-white">
                       {new Date(selectedUserForDetails.createdAt).toLocaleDateString('pt-BR', {
                         day: '2-digit',
                         month: 'long',
@@ -1385,13 +1387,13 @@ export default function UsersPage() {
             </div>
 
             {/* Footer do Modal */}
-            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end gap-3">
+            <div className="bg-[var(--surface)] px-6 py-4 rounded-b-xl flex justify-end gap-3 border-t border-[var(--border)]">
               <button
                 onClick={() => {
                   setIsDetailsModalOpen(false);
                   openRoleModal(selectedUserForDetails);
                 }}
-                className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--primary)] border border-[var(--primary)] rounded-lg hover:bg-[var(--primary-light)] transition-colors flex items-center gap-2 shadow-md"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -1400,7 +1402,7 @@ export default function UsersPage() {
               </button>
               <button
                 onClick={() => setIsDetailsModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
               >
                 Fechar
               </button>
