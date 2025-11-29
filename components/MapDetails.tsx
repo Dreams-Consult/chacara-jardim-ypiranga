@@ -450,6 +450,52 @@ export default function MapDetails() {
     }
   };
 
+  const handleDeleteLot = async (lotId: string) => {
+    try {
+      console.log('[MapDetails] 🗑️ Excluindo lote:', lotId);
+      
+      // Buscar o lote em todas as quadras para verificar status
+      let lot: Lot | undefined;
+      for (const block of blocks) {
+        const lotsInBlock = await loadLotsForBlock(block.id);
+        lot = lotsInBlock.find((l: Lot) => l.id === lotId);
+        if (lot) break;
+      }
+
+      if (!lot) {
+        throw new Error('Lote não encontrado.');
+      }
+
+      // Verificar se o lote está reservado ou vendido
+      if (lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD) {
+        alert(
+          `❌ Não é possível excluir este lote\n\n` +
+          `O lote está ${lot.status === LotStatus.RESERVED ? 'reservado' : 'vendido'}.\n\n` +
+          `📋 O que fazer:\n` +
+          `1. Acesse a página de Reservas\n` +
+          `2. Cancele a ${lot.status === LotStatus.RESERVED ? 'reserva' : 'venda'}\n` +
+          `3. Tente excluir o lote novamente`
+        );
+        return;
+      }
+
+      const response = await axios.delete(`${API_URL}/mapas/lotes/deletar?lotId=${lotId}`, {
+        timeout: 10000,
+      });
+
+      console.log('[MapDetails] ✅ Lote excluído:', response.data);
+      
+      // Força refresh dos cards após excluir lote
+      setRefreshTrigger(prev => prev + 1);
+      alert('✅ Lote excluído com sucesso!');
+    } catch (error: any) {
+      console.error('[MapDetails] ❌ Erro ao excluir lote:', error);
+      const errorMessage = error.response?.data?.error || 'Erro ao excluir lote. Tente novamente.';
+      alert(`❌ ${errorMessage}`);
+      throw error;
+    }
+  };
+
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -741,6 +787,7 @@ export default function MapDetails() {
               loadLotsForBlock={loadLotsForBlock}
               handleAddLotToBlock={handleAddLotToBlock}
               handleEditLot={handleEditLot}
+              handleDeleteLot={handleDeleteLot}
               handleToggleLotStatus={handleToggleLotStatus}
               handleDeleteBlock={handleDeleteBlock}
               setEditingBlock={setEditingBlock}
@@ -1191,6 +1238,7 @@ interface BlockCardProps {
   loadLotsForBlock: (blockId: string) => Promise<Lot[]>;
   handleAddLotToBlock: (blockId: string) => void;
   handleEditLot: (lot: Lot) => Promise<void>;
+  handleDeleteLot: (lotId: string) => Promise<void>;
   handleToggleLotStatus: (lotId: string, currentStatus: LotStatus) => Promise<void>;
   handleDeleteBlock: (blockId: string) => Promise<void>;
   setEditingBlock: (block: Block) => void;
@@ -1207,6 +1255,7 @@ function BlockCard({
   loadLotsForBlock,
   handleAddLotToBlock,
   handleEditLot,
+  handleDeleteLot,
   handleToggleLotStatus,
   handleDeleteBlock,
   setEditingBlock,
@@ -1274,6 +1323,7 @@ function BlockCard({
             lots={blockLots}
             blocks={allBlocks}
             onLotEdit={handleEditLot}
+            onLotDelete={handleDeleteLot}
             onToggleLotStatus={handleToggleLotStatus}
             selectedLotIds={[]}
             allowMultipleSelection={false}
