@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -72,9 +73,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!user) return null;
 
     const styles = {
-      [UserRole.DEV]: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      [UserRole.ADMIN]: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-      [UserRole.VENDEDOR]: 'bg-green-500/20 text-green-300 border-green-500/30',
+      [UserRole.DEV]: 'bg-purple-500 text-white border-purple-600 shadow-md',
+      [UserRole.ADMIN]: 'bg-blue-500 text-white border-blue-600 shadow-md',
+      [UserRole.VENDEDOR]: 'bg-emerald-500 text-white border-emerald-600 shadow-md',
     };
 
     const labels = {
@@ -96,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-          <p className="text-white/70">Carregando...</p>
+          <p className="text-[var(--foreground)] opacity-70">Carregando...</p>
         </div>
       </div>
     );
@@ -118,6 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      <ThemeToggle />
       <div className="flex">
         {/* Overlay para mobile */}
         {sidebarOpen && (
@@ -144,8 +146,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-white">Admin</h1>
-                  <p className="text-xs text-white/70">Vale dos Carajás</p>
+                  <h1 className="text-lg font-bold text-[var(--foreground)]">Admin</h1>
+                  <p className="text-xs text-[var(--foreground)] opacity-70">Vale dos Carajás</p>
                 </div>
               </div>
               {/* Botão fechar (mobile) */}
@@ -288,13 +290,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* User Info & Logout */}
           <div className="mt-auto border-t border-[var(--border)] p-4">
-            <div className="bg-[var(--surface)]/50 rounded-lg p-3">
+            <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)] shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                   {user?.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)] truncate">{user?.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {getRoleBadge()}
                   </div>
@@ -302,7 +304,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-sm font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

@@ -626,7 +626,7 @@ export default function MapDetails() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
-          <p className="text-white font-semibold">Carregando dados do mapa...</p>
+          <p className="text-[var(--foreground)] font-semibold">Carregando dados do mapa...</p>
         </div>
       </div>
     );
@@ -665,7 +665,7 @@ export default function MapDetails() {
         </button>
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white">{map.name}</h1>
+            <h1 className="text-3xl font-bold text-[var(--foreground)] opacity-80">{map.name}</h1>
             {map.description && <p className="text-white/70 mt-1">{map.description}</p>}
           </div>
           <div className="flex gap-3">
@@ -702,22 +702,22 @@ export default function MapDetails() {
           </div>
         ) : (
           <>
-            <label className="block text-sm font-bold text-white mb-2">Selecione uma Quadra</label>
+            <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">Selecione uma Quadra</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {blocks.map((block) => (
                 <div
                   key={block.id}
                   onClick={() => setSelectedBlockId(selectedBlockId === block.id ? '' : block.id)}
-                  className={`p-4 rounded-xl font-semibold transition-all relative group cursor-pointer ${
+                  className={`p-4 rounded-xl font-semibold transition-all relative group cursor-pointer border-2 ${
                     selectedBlockId === block.id
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-105'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-105 border-blue-500'
+                      : 'bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] border-[var(--border)] hover:border-blue-400 hover:shadow-md'
                   }`}
                 >
-                  <div className="text-xs mb-1">Quadra</div>
+                  <div className="text-xs mb-1 opacity-70">Quadra</div>
                   <div className="text-lg font-bold">{block.name}</div>
                   {block.description && (
-                    <div className="text-xs mt-1 opacity-80 truncate">{block.description}</div>
+                    <div className="text-xs mt-1 opacity-70 truncate">{block.description}</div>
                   )}
                   
                   {/* Botões de ação no hover e focus (funcionalidades do MapDetails) */}
@@ -764,7 +764,7 @@ export default function MapDetails() {
         <div className="mb-8">
           <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-[var(--foreground)] opacity-80 flex items-center gap-2">
                 <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
@@ -804,7 +804,7 @@ export default function MapDetails() {
       {/* Visualização da Imagem/PDF do Mapa */}
       {map && map.imageUrl && map.imageUrl.trim() !== '' && (
         <div className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] p-6">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--foreground)] opacity-80 mb-4 flex items-center gap-2">
             <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

@@ -194,7 +194,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <p className="text-white text-lg font-semibold">Carregando dashboard...</p>
+            <p className="text-[var(--foreground)] text-lg font-semibold">Carregando dashboard...</p>
           </div>
         </div>
       </div>
@@ -206,8 +206,8 @@ export default function DashboardPage() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-white/70">Visão geral dos loteamentos</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">Dashboard</h1>
+        <p className="text-[var(--foreground)] opacity-70">Visão geral dos loteamentos</p>
       </div>
 
       {/* Estatísticas Principais */}
@@ -290,7 +290,7 @@ export default function DashboardPage() {
       {/* Estatísticas de Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-[var(--card-bg)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -301,9 +301,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-white font-medium">Disponível</span>
+                  <span className="text-[var(--foreground)] font-medium">Disponível</span>
                 </div>
-                <span className="text-white font-bold">{availableLots} ({totalLots > 0 ? ((availableLots / totalLots) * 100).toFixed(1) : 0}%)</span>
+                <span className="text-[var(--foreground)] font-bold">{availableLots} ({totalLots > 0 ? ((availableLots / totalLots) * 100).toFixed(1) : 0}%)</span>
               </div>
               <div className="w-full bg-[var(--surface)] rounded-full h-3">
                 <div
@@ -317,9 +317,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-white font-medium">Reservado</span>
+                  <span className="text-[var(--foreground)] font-medium">Reservado</span>
                 </div>
-                <span className="text-white font-bold">{reservedLots} ({totalLots > 0 ? ((reservedLots / totalLots) * 100).toFixed(1) : 0}%)</span>
+                <span className="text-[var(--foreground)] font-bold">{reservedLots} ({totalLots > 0 ? ((reservedLots / totalLots) * 100).toFixed(1) : 0}%)</span>
               </div>
               <div className="w-full bg-[var(--surface)] rounded-full h-3">
                 <div
@@ -333,9 +333,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-white font-medium">Vendido</span>
+                  <span className="text-[var(--foreground)] font-medium">Vendido</span>
                 </div>
-                <span className="text-white font-bold">{soldLots} ({totalLots > 0 ? ((soldLots / totalLots) * 100).toFixed(1) : 0}%)</span>
+                <span className="text-[var(--foreground)] font-bold">{soldLots} ({totalLots > 0 ? ((soldLots / totalLots) * 100).toFixed(1) : 0}%)</span>
               </div>
               <div className="w-full bg-[var(--surface)] rounded-full h-3">
                 <div
@@ -349,9 +349,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                  <span className="text-white font-medium">Bloqueado</span>
+                  <span className="text-[var(--foreground)] font-medium">Bloqueado</span>
                 </div>
-                <span className="text-white font-bold">
+                <span className="text-[var(--foreground)] font-bold">
                   {blockedSlots} ({totalLots > 0 ? ((blockedSlots / totalLots) * 100).toFixed(1) : 0}%)
                 </span>
               </div>
@@ -366,7 +366,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-[var(--card-bg)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -374,28 +374,28 @@ export default function DashboardPage() {
           </h2>
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[var(--primary)]/20 to-[var(--primary-light)]/20 border border-[var(--primary)]/30 rounded-xl p-4">
-              <p className="text-white/70 text-sm font-medium mb-1">Valor Total dos Lotes</p>
-              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Valor Total dos Lotes</p>
+              <p className="text-[var(--foreground)] text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-              <p className="text-white/70 text-sm font-medium mb-1">Disponível para Venda</p>
-              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Disponível para Venda</p>
+              <p className="text-[var(--foreground)] text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-              <p className="text-white/70 text-sm font-medium mb-1">Valor dos Lotes Reservados</p>
-              <p className="text-white text-2xl font-bold">R$ {reservedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Valor dos Lotes Reservados</p>
+              <p className="text-[var(--foreground)] text-2xl font-bold">R$ {reservedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-              <p className="text-white/70 text-sm font-medium mb-1">Valor Já Vendido</p>
-              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Valor Já Vendido</p>
+              <p className="text-[var(--foreground)] text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-              <p className="text-white/70 text-sm font-medium mb-1">Total de Entradas Recebidas</p>
-              <p className="text-white text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Total de Entradas Recebidas</p>
+              <p className="text-[var(--foreground)] text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </div>
@@ -403,7 +403,7 @@ export default function DashboardPage() {
 
       {/* Lista de Mapas */}
       <div className="bg-[var(--card-bg)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
@@ -413,11 +413,11 @@ export default function DashboardPage() {
         {maps.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--surface)] rounded-full mb-4">
-              <svg className="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-[var(--foreground)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
             </div>
-            <p className="text-white/70 text-lg">Nenhum mapa cadastrado</p>
+            <p className="text-[var(--foreground)] opacity-70 text-lg">Nenhum mapa cadastrado</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -430,14 +430,14 @@ export default function DashboardPage() {
 
               return (
                 <div key={map.id} className="bg-[var(--surface)] rounded-xl p-5 border border-[var(--border)] hover:shadow-[var(--shadow-md)] transition-all">
-                  <h3 className="text-white font-bold text-lg mb-3">{map.name}</h3>
+                  <h3 className="text-[var(--foreground)] font-bold text-lg mb-3">{map.name}</h3>
                   {map.description && (
-                    <p className="text-white/70 text-sm mb-4 line-clamp-2">{map.description}</p>
+                    <p className="text-[var(--foreground)] opacity-70 text-sm mb-4 line-clamp-2">{map.description}</p>
                   )}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/70">Total de Lotes:</span>
-                      <span className="text-white font-bold">{mapLots.length}</span>
+                      <span className="text-[var(--foreground)] opacity-70">Total de Lotes:</span>
+                      <span className="text-[var(--foreground)] font-bold">{mapLots.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-green-400">Disponíveis:</span>

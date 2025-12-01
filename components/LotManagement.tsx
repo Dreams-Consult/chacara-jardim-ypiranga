@@ -320,13 +320,13 @@ export default function LotManagement() {
           <div className="flex gap-3 items-center">
             <button
               onClick={() => router.push(`/admin/blocks?mapId=${mapId}`)}
-              className="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
+              className="px-4 py-2 bg-purple-600 text-[var(--foreground)] font-medium rounded-lg hover:bg-purple-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
             >
               Gerenciar Quadras
             </button>
             <button
               onClick={handleNewLot}
-              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
+              className="px-4 py-2 bg-blue-600 text-[var(--foreground)] font-medium rounded-lg hover:bg-blue-700 shadow-md transition-all hover:shadow-lg cursor-pointer"
             >
               + Novo Lote
             </button>
@@ -464,14 +464,14 @@ export default function LotManagement() {
             }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Lote {viewingLot.lotNumber}</h2>
-                  <p className="text-white/90 text-sm mt-1">
+                  <h2 className="text-2xl font-bold text-[var(--foreground)]">Lote {viewingLot.lotNumber}</h2>
+                  <p className="text-[var(--foreground)] opacity-90 text-sm mt-1">
                     {viewingLot.status === LotStatus.RESERVED ? '🔒 Reservado' : '✓ Vendido'}
                   </p>
                 </div>
                 <button
                   onClick={() => setViewingLot(null)}
-                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                  className="text-[var(--foreground)] hover:bg-white/20 rounded-lg p-2 transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -544,7 +544,7 @@ export default function LotManagement() {
             <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end">
               <button
                 onClick={() => setViewingLot(null)}
-                className="px-6 py-2.5 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-6 py-2.5 text-sm font-medium text-[var(--foreground)] bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Fechar
               </button>
