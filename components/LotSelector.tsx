@@ -534,10 +534,10 @@ export default function LotSelector({
                           <div className="bg-[var(--surface)] rounded-xl p-4 border-l-4 border-yellow-500">
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="text-[var(--foreground)] font-bold text-lg">Informações do Lote</h4>
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-md border-2 ${
                                 selectedLotForModal.status === LotStatus.RESERVED 
-                                  ? 'bg-yellow-500/20 text-yellow-300' 
-                                  : 'bg-red-500/20 text-red-300'
+                                  ? 'bg-yellow-500 text-white border-yellow-600' 
+                                  : 'bg-red-500 text-white border-red-600'
                               }`}>
                                 {selectedLotForModal.status === LotStatus.RESERVED ? 'Reservado' : 'Vendido'}
                               </span>
@@ -738,22 +738,22 @@ export default function LotSelector({
       )}
 
       {allowMultipleSelection && selectedLots.length > 0 && (
-        <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-3 sm:p-4">
-          <h4 className="text-white font-bold mb-2 text-base sm:text-lg">
+        <div className="bg-blue-500/30 border-2 border-blue-400 rounded-xl p-3 sm:p-4 shadow-lg">
+          <h4 className="text-[var(--foreground)] font-bold mb-2 text-base sm:text-lg">
             Seleção Atual ({selectedLots.length} {selectedLots.length === 1 ? 'lote' : 'lotes'})
           </h4>
           <div className="space-y-2">
-            <div className="flex justify-between text-white/80 text-sm">
+            <div className="flex justify-between text-[var(--foreground)]/80 text-sm">
               <span>Lotes:</span>
               <span className="font-medium">
                 {selectedLots.map(l => l.lotNumber).join(', ')}
               </span>
             </div>
-            <div className="flex justify-between text-white/80 text-sm">
+            <div className="flex justify-between text-[var(--foreground)]/80 text-sm">
               <span>Área Total:</span>
               <span className="font-medium">{totalSize}m²</span>
             </div>
-            <div className="flex justify-between text-white text-base sm:text-lg font-bold pt-2 border-t border-white/20">
+            <div className="flex justify-between text-[var(--foreground)] text-base sm:text-lg font-bold pt-2 border-t border-[var(--border)]">
               <span>Total:</span>
               <span>R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>

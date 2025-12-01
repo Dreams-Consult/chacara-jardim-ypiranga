@@ -318,13 +318,13 @@ export default function AdminMapsLotsPage() {
             {/* Contador de Lotes */}
             <div className="flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center">
-                <span className="text-[var(--foreground)] font-bold text-lg">{selectedLots.length}</span>
+                <span className="text-white font-bold text-lg">{selectedLots.length}</span>
               </div>
-              <div className="text-[var(--foreground)]">
+              <div className="text-white">
                 <p className="font-bold text-lg leading-tight">
                   {selectedLots.length === 1 ? '1 Lote' : `${selectedLots.length} Lotes`}
                 </p>
-                <p className="text-[var(--foreground)] opacity-80 text-sm">Selecionado{selectedLots.length > 1 ? 's' : ''}</p>
+                <p className="text-white opacity-80 text-sm">Selecionado{selectedLots.length > 1 ? 's' : ''}</p>
               </div>
             </div>
 
@@ -335,7 +335,7 @@ export default function AdminMapsLotsPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={handleClearSelection}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-[var(--foreground)] rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 backdrop-blur-sm border border-white/20"
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 backdrop-blur-sm border border-white/20"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -413,19 +413,19 @@ export default function AdminMapsLotsPage() {
               {viewingLot.status !== LotStatus.AVAILABLE && (
                 <div className={`rounded-xl p-4 border-2 ${
                 viewingLot.status === LotStatus.RESERVED
-                  ? 'bg-amber-50 border-amber-300'
+                  ? 'bg-amber-100 border-amber-400'
                   : viewingLot.status === LotStatus.SOLD
-                  ? 'bg-red-50 border-red-300'
+                  ? 'bg-red-100 border-red-400'
                   : viewingLot.status === LotStatus.BLOCKED
-                  ? 'bg-gray-200 border-gray-400'
-                  : 'bg-gray-100 border-gray-300'
+                  ? 'bg-gray-300 border-gray-500'
+                  : 'bg-gray-200 border-gray-400'
                 }`}>
-                <p className={`text-sm font-medium ${
+                <p className={`text-sm font-semibold ${
                 viewingLot.status === LotStatus.RESERVED
-                  ? 'text-amber-800'
+                  ? 'text-amber-900'
                   : viewingLot.status === LotStatus.SOLD
-                  ? 'text-red-800'
-                  : 'text-gray-700'
+                  ? 'text-red-900'
+                  : 'text-gray-800'
                 }`}>
                 {viewingLot.status === LotStatus.RESERVED &&
                   '⚠️ Este lote está reservado.'}
@@ -446,14 +446,14 @@ export default function AdminMapsLotsPage() {
 
               <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
                 <label className="block text-sm font-medium text-[var(--foreground)] opacity-70 mb-1">Status</label>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold shadow-md ${
                 viewingLot.status === LotStatus.AVAILABLE
-                  ? 'bg-green-100 text-green-800'
+                  ? 'bg-green-500 text-white border-2 border-green-600'
                   : viewingLot.status === LotStatus.RESERVED
-                  ? 'bg-amber-100 text-amber-800'
+                  ? 'bg-amber-500 text-white border-2 border-amber-600'
                   : viewingLot.status === LotStatus.SOLD
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-gray-200 text-gray-700'
+                  ? 'bg-red-500 text-white border-2 border-red-600'
+                  : 'bg-gray-500 text-white border-2 border-gray-600'
                 }`}>
                 {viewingLot.status === LotStatus.AVAILABLE && 'Disponível'}
                 {viewingLot.status === LotStatus.RESERVED && 'Reservado'}

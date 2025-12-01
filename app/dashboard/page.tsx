@@ -373,28 +373,28 @@ export default function DashboardPage() {
             Valores Financeiros
           </h2>
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-[var(--primary)]/20 to-[var(--primary-light)]/20 border border-[var(--primary)]/30 rounded-xl p-4">
-              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Valor Total dos Lotes</p>
+            <div className="bg-gradient-to-r from-blue-500/30 to-purple-500/30 border-2 border-blue-400 rounded-xl p-4 shadow-lg">
+              <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Valor Total dos Lotes</p>
               <p className="text-[var(--foreground)] text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Disponível para Venda</p>
+            <div className="bg-green-500/25 border-2 border-green-400 rounded-xl p-4 shadow-md">
+              <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Disponível para Venda</p>
               <p className="text-[var(--foreground)] text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Valor dos Lotes Reservados</p>
+            <div className="bg-yellow-500/25 border-2 border-yellow-400 rounded-xl p-4 shadow-md">
+              <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Valor dos Lotes Reservados</p>
               <p className="text-[var(--foreground)] text-2xl font-bold">R$ {reservedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Valor Já Vendido</p>
+            <div className="bg-red-500/25 border-2 border-red-400 rounded-xl p-4 shadow-md">
+              <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Valor Já Vendido</p>
               <p className="text-[var(--foreground)] text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-              <p className="text-[var(--foreground)] opacity-70 text-sm font-medium mb-1">Total de Entradas Recebidas</p>
+            <div className="bg-blue-500/25 border-2 border-blue-400 rounded-xl p-4 shadow-md">
+              <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Total de Entradas Recebidas</p>
               <p className="text-[var(--foreground)] text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
@@ -429,31 +429,31 @@ export default function DashboardPage() {
               const mapBlocked = mapLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
 
               return (
-                <div key={map.id} className="bg-[var(--surface)] rounded-xl p-5 border border-[var(--border)] hover:shadow-[var(--shadow-md)] transition-all">
+                <div key={map.id} className="bg-[var(--surface)] rounded-xl p-5 border-2 border-[var(--border)] hover:border-blue-400 hover:shadow-lg transition-all">
                   <h3 className="text-[var(--foreground)] font-bold text-lg mb-3">{map.name}</h3>
                   {map.description && (
-                    <p className="text-[var(--foreground)] opacity-70 text-sm mb-4 line-clamp-2">{map.description}</p>
+                    <p className="text-[var(--foreground)] opacity-80 text-sm mb-4 line-clamp-2">{map.description}</p>
                   )}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--foreground)] opacity-70">Total de Lotes:</span>
-                      <span className="text-[var(--foreground)] font-bold">{mapLots.length}</span>
+                      <span className="text-[var(--foreground)] font-medium">Total de Lotes:</span>
+                      <span className="text-[var(--foreground)] font-bold text-base">{mapLots.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-400">Disponíveis:</span>
-                      <span className="text-green-400 font-bold">{mapAvailable}</span>
+                      <span className="text-green-500 font-medium">Disponíveis:</span>
+                      <span className="text-green-500 font-bold text-base">{mapAvailable}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-yellow-400">Reservados:</span>
-                      <span className="text-yellow-400 font-bold">{mapReserved}</span>
+                      <span className="text-yellow-500 font-medium">Reservados:</span>
+                      <span className="text-yellow-500 font-bold text-base">{mapReserved}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-red-400">Vendidos:</span>
-                      <span className="text-red-400 font-bold">{mapSold}</span>
+                      <span className="text-red-500 font-medium">Vendidos:</span>
+                      <span className="text-red-500 font-bold text-base">{mapSold}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Bloqueados:</span>
-                      <span className="text-gray-500 font-bold">{mapBlocked}</span>
+                      <span className="text-gray-400 font-medium">Bloqueados:</span>
+                      <span className="text-gray-400 font-bold text-base">{mapBlocked}</span>
                     </div>
                   </div>
                 </div>

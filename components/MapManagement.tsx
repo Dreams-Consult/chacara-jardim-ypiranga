@@ -333,8 +333,8 @@ export default function MapManagement() {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">Novo Mapa</h2>
-                    <p className="text-[var(--foreground)] opacity-90 text-sm">Cadastre um novo loteamento</p>
+                    <h2 className="text-white text-2xl font-bold">Novo Mapa</h2>
+                    <p className="text-white opacity-90 text-sm">Cadastre um novo loteamento</p>
                   </div>
                 </div>
                 <button
@@ -389,7 +389,7 @@ export default function MapManagement() {
                   accept="image/*,application/pdf"
                   onChange={handleFileUpload}
                   disabled={isSubmitting}
-                  className="w-full text-[var(--foreground)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)] file:text-[var(--foreground)] hover:file:bg-[var(--primary)]/90 file:cursor-pointer disabled:opacity-50"
+                  className="w-full text-[var(--foreground)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)] file:text-white hover:file:bg-[var(--primary)]/90 file:cursor-pointer disabled:opacity-50"
                 />
                 {!filePreview && (
                   <p className="text-xs text-blue-300 mt-2 bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
@@ -449,7 +449,7 @@ export default function MapManagement() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !editingMap?.name?.trim()}
-                className="flex-1 px-4 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--foreground)] font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -536,7 +536,7 @@ export default function MapManagement() {
                 </button>
                 <button
                   onClick={() => handleEditDetails(map)}
-                  className="px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+                  className="px-4 py-2.5 bg-yellow-500 text-white font-semibold rounded-xl hover:bg-yellow-600 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
                   title="Editar nome e descrição"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
