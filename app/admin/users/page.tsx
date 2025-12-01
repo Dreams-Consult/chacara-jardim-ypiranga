@@ -592,126 +592,139 @@ export default function UsersPage() {
       {/* Formulário de Criação/Edição */}
       {isCreating && (
         <div className="bg-[var(--card-bg)] rounded-xl shadow-md border border-[var(--border)] overflow-hidden">
-          <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] px-4 sm:px-6 py-3 sm:py-4">
-            <h2 className="text-lg sm:text-xl font-bold text-[var(--foreground)]">
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-800 px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
               {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
             </h2>
+            <p className="text-white/90 text-sm mt-1">Preencha os dados abaixo para {editingUser ? 'atualizar o' : 'criar um novo'} usuário</p>
           </div>
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Nome Completo
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  Nome Completo *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-[var(--foreground)]/40 transition-all"
                   placeholder="João da Silva"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Email
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  Email *
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-[var(--foreground)]/40 transition-all"
                   placeholder="joao@email.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  CPF
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  CPF *
                 </label>
                 <input
                   type="text"
                   value={formData.cpf}
                   onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                   required
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-[var(--foreground)]/40 transition-all font-mono"
                   placeholder="000.000.000-00"
                   maxLength={14}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Telefone
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  Telefone *
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={handlePhoneChange}
                   required
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-[var(--foreground)]/40 transition-all"
                   placeholder="(00) 00000-0000"
                   maxLength={15}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  CRECI <span className="text-gray-500 text-xs">(opcional)</span>
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  CRECI <span className="text-[var(--foreground)]/50 text-xs font-normal">(opcional)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.creci}
                   onChange={(e) => setFormData({ ...formData, creci: e.target.value })}
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-[var(--foreground)]/40 transition-all"
                   placeholder="CRECI 12345-F"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Perfil
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  Perfil *
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all cursor-pointer"
                 >
-                  <option value={UserRole.ADMIN}>Administrador</option>
-                  <option value={UserRole.VENDEDOR}>Vendedor</option>
+                  <option value={UserRole.ADMIN}>👑 Administrador</option>
+                  <option value={UserRole.VENDEDOR}>💼 Vendedor</option>
                 </select>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Senha {editingUser && '(deixe em branco para manter a atual)'}
+                <label className="block text-sm font-semibold text-[var(--foreground)] opacity-90 mb-2">
+                  Senha {editingUser ? <span className="text-[var(--foreground)]/50 text-xs font-normal">(deixe em branco para manter a atual)</span> : '*'}
                 </label>
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required={!editingUser}
-                  className="w-full px-3 py-2 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-gray-500"
+                  className="w-full px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-[var(--foreground)]/40 transition-all"
                   placeholder="••••••••"
                   minLength={6}
                 />
+                {!editingUser && (
+                  <p className="mt-1.5 text-xs text-[var(--foreground)]/60">Mínimo de 6 caracteres</p>
+                )}
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-4 border-t border-[var(--border)] mt-6">
               <button
                 type="submit"
-                className="bg-[var(--primary)] hover:bg-[var(--primary-light)] text-[var(--foreground)] px-6 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 {editingUser ? 'Salvar Alterações' : 'Criar Usuário'}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--foreground)] border border-[var(--border)] px-6 py-2 rounded-lg font-medium transition-colors"
+                className="bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--foreground)] border-2 border-[var(--border)] px-8 py-3 rounded-lg font-semibold transition-all flex items-center gap-2"
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
                 Cancelar
               </button>
             </div>

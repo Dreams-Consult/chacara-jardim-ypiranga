@@ -306,28 +306,6 @@ export default function AdminMapsLotsPage() {
                 </div>
               </div>
               </div>
-
-              <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] p-5">
-              <h2 className="text-sm font-bold text-[var(--foreground)] mb-3 opacity-70">LEGENDA</h2>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[var(--success)] rounded shadow-sm"></div>
-                <span className="text-sm text-[var(--foreground)]">Disponível</span>
-                </div>
-                <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[var(--warning)] rounded shadow-sm"></div>
-                <span className="text-sm text-[var(--foreground)]">Reservado</span>
-                </div>
-                <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[var(--danger)] rounded shadow-sm"></div>
-                <span className="text-sm text-[var(--foreground)]">Vendido</span>
-                </div>
-                <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-gray-500 rounded shadow-sm"></div>
-                <span className="text-sm text-[var(--foreground)]">Bloqueado</span>
-                </div>
-              </div>
-              </div>
             </div>
           </div>
         </>

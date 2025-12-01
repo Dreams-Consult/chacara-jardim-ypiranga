@@ -132,7 +132,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Sidebar */}
         <aside className={`
           fixed inset-y-0 left-0 z-50
-          w-64 bg-[var(--card-bg)] h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col
+          w-64 bg-[var(--card-bg)] border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
@@ -321,27 +321,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Main Content */}
         <main className="flex-1 lg:ml-64">
           {/* Header com botão de menu (mobile) */}
-          <div className="lg:hidden sticky top-0 z-30 bg-[var(--card-bg)] border-b border-[var(--border)] px-4 py-3 flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 text-[var(--foreground)]/70 hover:text-[var(--foreground)] hover:bg-[var(--surface)]/50 rounded-lg transition-colors"
-              aria-label="Abrir menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          <div className="lg:hidden sticky top-0 z-30 bg-[var(--card-bg)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 text-[var(--foreground)]/70 hover:text-[var(--foreground)] hover:bg-[var(--surface)]/50 rounded-lg transition-colors"
+                aria-label="Abrir menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-[var(--foreground)]">Admin</h1>
-                <p className="text-xs text-[var(--foreground)]/60">Vale dos Carajás</p>
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold text-[var(--foreground)]">Admin</h1>
+                  <p className="text-xs text-[var(--foreground)]/60">Vale dos Carajás</p>
+                </div>
               </div>
             </div>
+            
+            {/* Theme Toggle Mobile */}
+            <ThemeToggle variant="inline" />
           </div>
 
           {children}

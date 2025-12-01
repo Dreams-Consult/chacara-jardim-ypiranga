@@ -761,24 +761,24 @@ export default function LotSelector({
         </div>
       )}
 
-      <div className="bg-gray-800 rounded-xl p-3 sm:p-4 shadow-lg">
-        <h3 className="text-white font-semibold mb-3 text-base sm:text-lg">Legenda:</h3>
+      <div className="rounded-xl p-3 sm:p-4 shadow-lg">
+        <h3 className="text-[var(--foreground)]/80 font-semibold mb-3 text-base sm:text-lg">Legenda:</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded flex-shrink-0"></div>
-            <span className="text-white/80 text-xs sm:text-sm">Disponível</span>
+            <span className="text-[var(--foreground)]/80 text-xs sm:text-sm">Disponível</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-500 rounded flex-shrink-0"></div>
-            <span className="text-white/80 text-xs sm:text-sm">Reservado</span>
+            <span className="text-[var(--foreground)]/80 text-xs sm:text-sm">Reservado</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded flex-shrink-0"></div>
-            <span className="text-white/80 text-xs sm:text-sm">Vendido</span>
+            <span className="text-[var(--foreground)]/80 text-xs sm:text-sm">Vendido</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded flex-shrink-0"></div>
-            <span className="text-white/80 text-xs sm:text-sm">Bloqueado</span>
+            <span className="text-[var(--foreground)]/80 text-xs sm:text-sm">Bloqueado</span>
           </div>
         </div>
       </div>
