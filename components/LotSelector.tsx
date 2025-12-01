@@ -531,7 +531,11 @@ export default function LotSelector({
                       const reservation = getReservationForLot(selectedLotForModal.id);
                       return (
                         <>
-                          <div className="bg-[var(--surface)] rounded-xl p-4 border-l-4 border-yellow-500">
+                          <div className={`bg-[var(--surface)] rounded-xl p-4 border-l-4 ${
+                            selectedLotForModal.status === LotStatus.SOLD 
+                              ? 'border-red-500' 
+                              : 'border-yellow-500'
+                          }`}>
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="text-[var(--foreground)] font-bold text-lg">Informações do Lote</h4>
                               <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-md border-2 ${
