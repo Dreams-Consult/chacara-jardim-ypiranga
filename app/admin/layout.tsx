@@ -131,13 +131,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Sidebar */}
         <aside className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          w-64 bg-[var(--card-bg)] min-h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col
+          fixed inset-y-0 left-0 z-50
+          w-64 bg-[var(--card-bg)] h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           {/* Header do Sidebar */}
-          <div className="p-6 border-b border-[var(--border)]">
+          <div className="flex-shrink-0 p-6 border-b border-[var(--border)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-xl flex items-center justify-center">
@@ -163,7 +163,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          <nav className="p-4 space-y-2">
+          {/* Área de Navegação com Scroll */}
+          <div className="flex-1 overflow-y-auto">
+            <nav className="p-4 space-y-2">
             {/* Dashboard - apenas para ADMIN e DEV */}
             {user.role !== UserRole.VENDEDOR && (
               <Link
@@ -287,9 +289,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
           )}
+          </div>
 
-          {/* User Info & Logout */}
-          <div className="mt-auto border-t border-[var(--border)] p-4">
+          {/* User Info & Logout - Sempre Visível */}
+          <div className="flex-shrink-0 border-t border-[var(--border)] p-4">
             <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)] shadow-md">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
@@ -316,7 +319,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 w-full lg:w-auto">
+        <main className="flex-1 lg:ml-64">
           {/* Header com botão de menu (mobile) */}
           <div className="lg:hidden sticky top-0 z-30 bg-[var(--card-bg)] border-b border-[var(--border)] px-4 py-3 flex items-center gap-3">
             <button
