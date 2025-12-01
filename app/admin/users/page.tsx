@@ -418,14 +418,14 @@ export default function UsersPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">Gerenciamento de Usuários</h1>
-          <p className="text-sm sm:text-base text-gray-300 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Crie e gerencie usuários do sistema
           </p>
         </div>
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="bg-[var(--primary)] hover:bg-[var(--primary-light)] text-[var(--foreground)] px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 w-full sm:w-auto justify-center shadow-md hover:shadow-lg"
+            className="bg-[var(--primary)] hover:bg-[var(--primary-light)] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 w-full sm:w-auto justify-center shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -572,16 +572,16 @@ export default function UsersPage() {
       ) : (
         <div className="bg-gradient-to-r from-[var(--success)] to-[var(--success-dark)] rounded-xl border-2 border-[var(--success)] p-4 sm:p-6 md:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <div className="bg-white/20 text-[var(--foreground)] p-2 sm:p-3 rounded-full flex-shrink-0 backdrop-blur-sm">
+            <div className="bg-white/20 text-white p-2 sm:p-3 rounded-full flex-shrink-0 backdrop-blur-sm">
               <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="text-center sm:text-left">
-              <h3 className="text-lg sm:text-xl font-bold text-[var(--foreground)] mb-1">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
                 Nenhum usuário pendente
               </h3>
-              <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90">
+              <p className="text-sm sm:text-base text-white opacity-90">
                 Não há cadastros aguardando aprovação
               </p>
             </div>
@@ -743,10 +743,10 @@ export default function UsersPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[var(--foreground)]">
+                <h2 className="text-xl font-bold text-white">
                   Todos os Usuários
                 </h2>
-                <p className="text-gray-200 text-sm">
+                <p className="text-white opacity-90 text-sm">
                   {users.filter(u => u.status !== UserStatus.PENDING).length} usuário(s) no total
                 </p>
               </div>
@@ -759,7 +759,7 @@ export default function UsersPage() {
                 className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'all'
                     ? 'bg-white text-[var(--primary)] shadow-md'
-                    : 'bg-white/20 text-[var(--foreground)] hover:bg-white/30 backdrop-blur-sm'
+                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                 }`}
               >
                 Todos
@@ -769,7 +769,7 @@ export default function UsersPage() {
                 className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'approved'
                     ? 'bg-white text-[var(--primary)] shadow-md'
-                    : 'bg-white/20 text-[var(--foreground)] hover:bg-white/30 backdrop-blur-sm'
+                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                 }`}
               >
                 Aprovados
@@ -779,7 +779,7 @@ export default function UsersPage() {
                 className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   statusFilter === 'rejected'
                     ? 'bg-white text-[var(--primary)] shadow-md'
-                    : 'bg-white/20 text-[var(--foreground)] hover:bg-white/30 backdrop-blur-sm'
+                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                 }`}
               >
                 Rejeitados

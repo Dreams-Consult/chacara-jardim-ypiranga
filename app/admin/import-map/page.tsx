@@ -663,7 +663,7 @@ export default function ImportMapPage() {
             type="file"
             accept=".json"
             onChange={handleFileUpload}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-[var(--foreground)] cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-[var(--foreground)] file:font-semibold hover:file:bg-blue-600 transition-colors"
+            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white file:font-semibold hover:file:bg-blue-600 transition-colors"
           />
         </div>
 

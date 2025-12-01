@@ -424,13 +424,13 @@ export default function ReservationsPage() {
         >
           <div className="flex items-center justify-between mb-4">
         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-          <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
           </div>
-          <p className="text-[var(--foreground)] opacity-90 text-sm font-medium mb-1">Total de Reservas</p>
-          <p className="text-[var(--foreground)] text-4xl font-bold">{reservations.length}</p>
+          <p className="text-white text-sm font-medium mb-1">Total de Reservas</p>
+          <p className="text-white text-4xl font-bold">{reservations.length}</p>
         </div>
 
         <div 
@@ -441,13 +441,13 @@ export default function ReservationsPage() {
         >
           <div className="flex items-center justify-between mb-4">
         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-          <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
           </div>
-          <p className="text-[var(--foreground)] opacity-90 text-sm font-medium mb-1">Pendentes</p>
-          <p className="text-[var(--foreground)] text-4xl font-bold">
+          <p className="text-white text-sm font-medium mb-1">Pendentes</p>
+          <p className="text-white text-4xl font-bold">
         {reservations.filter(r => r.status === 'pending').length}
           </p>
         </div>
@@ -460,13 +460,13 @@ export default function ReservationsPage() {
         >
           <div className="flex items-center justify-between mb-4">
         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-          <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
           </div>
-          <p className="text-[var(--foreground)] opacity-90 text-sm font-medium mb-1">Concluídas</p>
-          <p className="text-[var(--foreground)] text-4xl font-bold">
+          <p className="text-white text-sm font-medium mb-1">Concluídas</p>
+          <p className="text-white text-4xl font-bold">
         {reservations.filter(r => r.status === 'completed').length}
           </p>
         </div>
@@ -479,13 +479,13 @@ export default function ReservationsPage() {
         >
           <div className="flex items-center justify-between mb-4">
         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-          <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
           </div>
-          <p className="text-[var(--foreground)] opacity-90 text-sm font-medium mb-1">Canceladas</p>
-          <p className="text-[var(--foreground)] text-4xl font-bold">
+          <p className="text-white text-sm font-medium mb-1">Canceladas</p>
+          <p className="text-white text-4xl font-bold">
         {reservations.filter(r => r.status === 'cancelled').length}
           </p>
         </div>
@@ -688,7 +688,7 @@ export default function ReservationsPage() {
                             <div key={lot.id} className="bg-[var(--background)] p-3 rounded-lg border border-[var(--border)]">
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex flex-col gap-1">
-                                  <span className="text-blue-300 text-sm font-medium">
+                                  <span className="text-blue-600 text-sm font-medium">
                                     {lot.map_name && `${lot.map_name} / `}
                                     {lot.block_name ? `${lot.block_name} / ` : ''}
                                     Lote {lot.lot_number}
@@ -748,7 +748,7 @@ export default function ReservationsPage() {
                       {(reservation.status === 'pending' || user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
                         <button
                           onClick={() => handleEdit(reservation)}
-                          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-[var(--foreground)] font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -761,7 +761,7 @@ export default function ReservationsPage() {
                         <>
                           <button
                             onClick={() => handleApprove(reservation.id)}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-[var(--foreground)] font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -770,7 +770,7 @@ export default function ReservationsPage() {
                           </button>
                           <button
                             onClick={() => handleReject(reservation.id)}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-[var(--foreground)] font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -784,7 +784,7 @@ export default function ReservationsPage() {
                       {reservation.status === 'completed' && (user?.role === UserRole.ADMIN || user?.role === UserRole.DEV) && (
                         <button
                           onClick={() => handleReject(reservation.id)}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-[var(--foreground)] font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md cursor-pointer"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -873,22 +873,28 @@ export default function ReservationsPage() {
       {isEditModalOpen && editingReservation && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-3xl shadow-2xl border-2 border-[var(--primary)]/30 my-4 max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-[var(--card-bg)] border-b border-[var(--border)] p-6 z-10">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-[var(--foreground)] p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
-                  <svg className="w-6 h-6 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Editar Reserva #{editingReservation.id}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-white text-2xl font-bold">Editar Reserva #{editingReservation.id}</h2>
+                    <p className="text-white opacity-90 text-sm">Atualizar informações da reserva</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false);
                     setEditingReservation(null);
                   }}
-                  className="text-[var(--foreground)] opacity-60 hover:text-[var(--foreground)] transition-colors p-2"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+                  type="button"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

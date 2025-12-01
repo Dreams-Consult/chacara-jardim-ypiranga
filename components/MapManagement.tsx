@@ -579,13 +579,13 @@ export default function MapManagement() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">Editar Mapa</h2>
-                    <p className="text-[var(--foreground)] opacity-90 text-sm">Alterar informações</p>
+                    <h2 className="text-white text-2xl font-bold">Editar Mapa</h2>
+                    <p className="text-white opacity-90 text-sm">Alterar informações</p>
                   </div>
                 </div>
                 <button
@@ -646,7 +646,7 @@ export default function MapManagement() {
               <button
                 onClick={handleUpdateDetails}
                 disabled={isSubmitting || !editingMap?.name?.trim()}
-                className="flex-1 px-4 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--foreground)] font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
