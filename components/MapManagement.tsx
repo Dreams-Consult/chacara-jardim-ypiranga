@@ -571,12 +571,6 @@ export default function MapManagement() {
         ))}
       </div>
 
-      {maps.length === 0 && !isCreating && (
-        <div className="text-center py-12">
-          <p className="text-[var(--foreground)] text-lg font-semibold">Nenhum mapa cadastrado. Clique em &ldquo;Novo Mapa&rdquo; para começar.</p>
-        </div>
-      )}
-
       {/* Modal de Edição de Detalhes */}
       {isEditingDetails && editingMap && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">

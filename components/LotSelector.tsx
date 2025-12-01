@@ -327,10 +327,10 @@ export default function LotSelector({
       {/* Modal de detalhes do lote */}
       {selectedLotForModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-gray-900 rounded-2xl max-w-lg w-full shadow-2xl border border-gray-700 my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col">
-            <div className="p-4 sm:p-6 border-b border-gray-700 flex-shrink-0">
+          <div className="bg-[var(--card-bg)] rounded-2xl max-w-lg w-full shadow-2xl border border-[var(--border)] my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div className="p-4 sm:p-6 border-b border-[var(--border)] flex-shrink-0">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl sm:text-2xl font-bold text-white">
+                <h3 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
                   Lote {selectedLotForModal.lotNumber}
                 </h3>
                 <div className="flex items-center gap-2">
@@ -398,7 +398,7 @@ export default function LotSelector({
                       setIsEditing(false);
                       setEditedLot(null);
                     }}
-                    className="text-gray-400 hover:text-white transition-colors p-2 -m-2 touch-manipulation"
+                    className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-2 -m-2 touch-manipulation"
                     aria-label="Fechar"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,23 +414,23 @@ export default function LotSelector({
                 // Modo de edição
                 <>
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Número do Lote *</label>
+                    <label className="block text-[var(--foreground)] text-sm mb-2">Número do Lote *</label>
                     <input
                       type="text"
                       value={editedLot.lotNumber}
                       onChange={(e) => setEditedLot({ ...editedLot, lotNumber: e.target.value })}
-                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      className="w-full px-4 py-3 sm:py-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder-[var(--foreground)]/40 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholder="Ex: 01, A1, etc"
                     />
                   </div>
 
                   {blocks.length > 0 && (
                     <div>
-                      <label className="block text-gray-400 text-sm mb-2">Quadra</label>
+                      <label className="block text-[var(--foreground)] text-sm mb-2">Quadra</label>
                       <select
                         value={editedLot.blockId || ''}
                         onChange={(e) => setEditedLot({ ...editedLot, blockId: e.target.value || undefined })}
-                        className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base cursor-pointer focus:ring-2 focus:ring-blue-500 touch-manipulation"
+                        className="w-full px-4 py-3 sm:py-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-base cursor-pointer focus:ring-2 focus:ring-blue-500 touch-manipulation"
                       >
                         <option value="">Sem quadra</option>
                         {blocks.map((block) => (
@@ -443,7 +443,7 @@ export default function LotSelector({
                   )}
 
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Área (m²) *</label>
+                    <label className="block text-[var(--foreground)] text-sm mb-2">Área (m²) *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -457,15 +457,15 @@ export default function LotSelector({
                           size: newSize
                         });
                       }}
-                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      className="w-full px-4 py-3 sm:py-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder-[var(--foreground)]/40 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholder="300.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Preço Total (R$) *</label>
+                    <label className="block text-[var(--foreground)] text-sm mb-2">Preço Total (R$) *</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">R$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--foreground)]/60 font-bold text-base">R$</span>
                       <input
                         type="text"
                         value={priceDisplay}
@@ -504,19 +504,19 @@ export default function LotSelector({
                             price: numericValue
                           });
                         }}
-                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                        className="w-full pl-12 sm:pl-10 pr-4 py-3 sm:py-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder-[var(--foreground)]/40 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                         placeholder="0,00"
                       />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">💡 Preencha manualmente o valor do lote</p>
+                    <p className="text-xs text-[var(--foreground)]/60 mt-1">💡 Preencha manualmente o valor do lote</p>
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Descrição</label>
+                    <label className="block text-[var(--foreground)] text-sm mb-2">Descrição</label>
                     <textarea
                       value={editedLot.description || ''}
                       onChange={(e) => setEditedLot({ ...editedLot, description: e.target.value })}
-                      className="w-full px-4 py-3 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation resize-none"
+                      className="w-full px-4 py-3 sm:py-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder-[var(--foreground)]/40 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation resize-none"
                       rows={3}
                       placeholder="Informações adicionais sobre o lote"
                     />
@@ -531,9 +531,9 @@ export default function LotSelector({
                       const reservation = getReservationForLot(selectedLotForModal.id);
                       return (
                         <>
-                          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-yellow-500">
+                          <div className="bg-[var(--surface)] rounded-xl p-4 border-l-4 border-yellow-500">
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-white font-bold text-lg">Informações do Lote</h4>
+                              <h4 className="text-[var(--foreground)] font-bold text-lg">Informações do Lote</h4>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                 selectedLotForModal.status === LotStatus.RESERVED 
                                   ? 'bg-yellow-500/20 text-yellow-300' 
@@ -543,24 +543,24 @@ export default function LotSelector({
                               </span>
                             </div>
                             <div className="space-y-3">
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400 text-sm">Número do Lote</span>
-                                <span className="text-white font-bold text-lg">{selectedLotForModal.lotNumber}</span>
+                              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+                                <span className="text-[var(--foreground)]/60 text-sm">Número do Lote</span>
+                                <span className="text-[var(--foreground)] font-bold text-lg">{selectedLotForModal.lotNumber}</span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400 text-sm">Área</span>
-                                <span className="text-white font-semibold">{selectedLotForModal.size} m²</span>
+                              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+                                <span className="text-[var(--foreground)]/60 text-sm">Área</span>
+                                <span className="text-[var(--foreground)] font-semibold">{selectedLotForModal.size} m²</span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400 text-sm">Valor</span>
-                                <span className="text-white font-bold text-lg">
+                              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+                                <span className="text-[var(--foreground)]/60 text-sm">Valor</span>
+                                <span className="text-[var(--foreground)] font-bold text-lg">
                                   R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
                               {reservation && (
                                 <div className="flex justify-between items-center py-2">
-                                  <span className="text-gray-400 text-sm">Comprador/Reservado por</span>
-                                  <span className="text-white font-semibold">{reservation.customer_name}</span>
+                                  <span className="text-[var(--foreground)]/60 text-sm">Comprador/Reservado por</span>
+                                  <span className="text-[var(--foreground)] font-semibold">{reservation.customer_name}</span>
                                 </div>
                               )}
                             </div>
@@ -589,8 +589,8 @@ export default function LotSelector({
                     // Visualização completa para lotes disponíveis/bloqueados
                     <>
                       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
-                          <p className="text-gray-400 text-xs sm:text-sm mb-1">Status</p>
+                        <div className="bg-[var(--surface)] rounded-xl p-3 sm:p-4">
+                          <p className="text-[var(--foreground)]/60 text-xs sm:text-sm mb-1">Status</p>
                           <p className={`font-bold text-base sm:text-lg ${
                             selectedLotForModal.status === LotStatus.AVAILABLE
                               ? 'text-green-400'
@@ -600,37 +600,37 @@ export default function LotSelector({
                           </p>
                         </div>
 
-                        <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
-                          <p className="text-gray-400 text-xs sm:text-sm mb-1">Área</p>
-                          <p className="font-bold text-base sm:text-lg text-white">{selectedLotForModal.size}m²</p>
+                        <div className="bg-[var(--surface)] rounded-xl p-3 sm:p-4">
+                          <p className="text-[var(--foreground)]/60 text-xs sm:text-sm mb-1">Área</p>
+                          <p className="font-bold text-base sm:text-lg text-[var(--foreground)]">{selectedLotForModal.size}m²</p>
                         </div>
                       </div>
 
                       {selectedLotForModal.blockId && blocks.length > 0 && (
-                        <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
-                          <p className="text-gray-400 text-xs sm:text-sm mb-1">Quadra</p>
-                          <p className="font-bold text-base sm:text-lg text-white">
+                        <div className="bg-[var(--surface)] rounded-xl p-3 sm:p-4">
+                          <p className="text-[var(--foreground)]/60 text-xs sm:text-sm mb-1">Quadra</p>
+                          <p className="font-bold text-base sm:text-lg text-[var(--foreground)]">
                             {blocks.find(b => b.id === selectedLotForModal.blockId)?.name || 'Não identificada'}
                           </p>
                         </div>
                       )}
 
-                      <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
-                        <p className="text-gray-400 text-xs sm:text-sm mb-1">Valor Total</p>
-                        <p className="font-bold text-xl sm:text-2xl text-white">
+                      <div className="bg-[var(--surface)] rounded-xl p-3 sm:p-4">
+                        <p className="text-[var(--foreground)]/60 text-xs sm:text-sm mb-1">Valor Total</p>
+                        <p className="font-bold text-xl sm:text-2xl text-[var(--foreground)]">
                           R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                         {selectedLotForModal.pricePerM2 && (
-                          <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                          <p className="text-[var(--foreground)]/60 text-xs sm:text-sm mt-1">
                             R$ {selectedLotForModal.pricePerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/m²
                           </p>
                         )}
                       </div>
 
                       {selectedLotForModal.description && (
-                        <div className="bg-gray-800 rounded-xl p-3 sm:p-4">
-                          <p className="text-gray-400 text-xs sm:text-sm mb-2">Descrição</p>
-                          <p className="text-white text-sm">{selectedLotForModal.description}</p>
+                        <div className="bg-[var(--surface)] rounded-xl p-3 sm:p-4">
+                          <p className="text-[var(--foreground)]/60 text-xs sm:text-sm mb-2">Descrição</p>
+                          <p className="text-[var(--foreground)] text-sm">{selectedLotForModal.description}</p>
                         </div>
                       )}
                     </>
@@ -639,7 +639,7 @@ export default function LotSelector({
               )}
             </div>
 
-            <div className="p-4 sm:p-6 border-t border-gray-700 flex gap-2 sm:gap-3 flex-shrink-0">
+            <div className="p-4 sm:p-6 border-t border-[var(--border)] flex gap-2 sm:gap-3 flex-shrink-0">
               {/* Modal para lotes reservados/vendidos: apenas botão de redirecionar */}
               {(selectedLotForModal.status === LotStatus.RESERVED || selectedLotForModal.status === LotStatus.SOLD) ? (
                 (() => {

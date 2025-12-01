@@ -697,8 +697,8 @@ export default function MapDetails() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <p className="text-white text-lg font-semibold mb-2">Nenhuma quadra cadastrada</p>
-            <p className="text-white/70 text-sm font-medium">Clique em "Adicionar Quadra" para começar a organizar seus lotes</p>
+            <p className="text-[var(--foreground)] text-lg font-semibold mb-2">Nenhuma quadra cadastrada</p>
+            <p className="text-[var(--foreground)]/80 text-sm font-medium">Clique em "Adicionar Quadra" para começar a organizar seus lotes</p>
           </div>
         ) : (
           <>
@@ -858,26 +858,26 @@ export default function MapDetails() {
             <div className="p-4 sm:p-6">
               <div className="space-y-5">
                 <div>
-                  <label className="block text-white/80 text-sm font-semibold mb-2">
+                  <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
                     Nome da Quadra *
                   </label>
                   <input
                     type="text"
                     value={editingBlock.name}
                     onChange={(e) => setEditingBlock({ ...editingBlock, name: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
                     placeholder="Ex: Quadra A, Quadra 1, Setor Norte"
                     autoFocus
                   />
                 </div>
                 <div>
-                  <label className="block text-white/80 text-sm font-semibold mb-2">
+                  <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
                     Descrição
                   </label>
                   <textarea
                     value={editingBlock.description || ''}
                     onChange={(e) => setEditingBlock({ ...editingBlock, description: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
                     placeholder="Descrição opcional da quadra"
                     rows={3}
                   />
@@ -987,7 +987,7 @@ export default function MapDetails() {
             
             <div className="p-4 sm:p-6 space-y-5">
               <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2">
+                <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
                   Selecionar Arquivo
                 </label>
                 <input
@@ -995,16 +995,16 @@ export default function MapDetails() {
                   accept="image/*,application/pdf"
                   onChange={handleImageSelect}
                   disabled={isUploadingImage}
-                  className="w-full px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--primary)] file:text-white file:font-semibold hover:file:bg-[var(--primary-dark)] transition-colors disabled:opacity-50"
+                  className="w-full px-3 py-2 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--primary)] file:text-white file:font-semibold hover:file:bg-[var(--primary-dark)] transition-colors disabled:opacity-50"
                 />
-                <p className="text-xs text-white/50 mt-1">
+                <p className="text-xs text-[var(--foreground)]/60 mt-1">
                   Formatos aceitos: JPG, PNG, GIF, PDF. Tamanho máximo: 10MB (imagens) ou 50MB (PDF)
                 </p>
               </div>
 
               {imagePreview && (
                 <div>
-                  <p className="text-sm font-semibold text-white/80 mb-2">Preview:</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)] mb-2">Preview:</p>
                   {imagePreview === 'PDF' ? (
                     <div className="w-full h-40 bg-[var(--surface)] rounded-lg border-2 border-[var(--primary)] flex flex-col items-center justify-center">
                       <svg className="w-16 h-16 text-red-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
@@ -1108,40 +1108,40 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
   return (
     <div className="space-y-5">
       <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-xl p-3">
-        <p className="text-sm text-white/80">
+        <p className="text-sm text-[var(--foreground)]">
           <strong>Quadra:</strong> {blockName || 'Não identificada'}
         </p>
       </div>
 
       <div>
-        <label className="block text-white/80 text-sm font-semibold mb-2">
+        <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
           Número do Lote *
         </label>
         <input
           type="text"
           value={lotNumber}
           onChange={(e) => setLotNumber(e.target.value)}
-          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
           placeholder="Ex: 01, A1, etc"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="block text-white/80 text-sm font-semibold mb-2">
+        <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
           Área (m²) *
         </label>
         <input
           type="number"
           value={size || ''}
           onChange={(e) => setSize(parseFloat(e.target.value) || 0)}
-          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
           placeholder="300"
         />
       </div>
 
       <div>
-        <label className="block text-white/80 text-sm font-semibold mb-2">
+        <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
           Preço Total (R$) *
         </label>
         <input
@@ -1176,35 +1176,35 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
             const numericValue = parseFloat(`${reais}.${cents}`);
             setTotalPrice(numericValue);
           }}
-          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
           placeholder="0,00"
         />
-        <p className="text-xs text-white/50 mt-1">💡 Preencha manualmente o valor do lote</p>
+        <p className="text-xs text-[var(--foreground)]/60 mt-1">💡 Preencha manualmente o valor do lote</p>
       </div>
 
       <div>
-        <label className="block text-white/80 text-sm font-semibold mb-2">
+        <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
           Status
         </label>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as LotStatus)}
-          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white cursor-pointer focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] cursor-pointer focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
         >
           <option value={LotStatus.AVAILABLE}>Disponível</option>
           <option value={LotStatus.BLOCKED}>Bloqueado</option>
         </select>
-        <p className="text-xs text-white/50 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
+        <p className="text-xs text-[var(--foreground)]/60 mt-1">💡 Para reservar ou vender, use a página de Reservas</p>
       </div>
 
       <div>
-        <label className="block text-white/80 text-sm font-semibold mb-2">
+        <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
           Descrição
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+          className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
           placeholder="Informações adicionais sobre o lote"
           rows={3}
         />

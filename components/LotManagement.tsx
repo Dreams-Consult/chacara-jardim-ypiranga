@@ -454,7 +454,7 @@ export default function LotManagement() {
           onClick={() => setViewingLot(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[var(--card-bg)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className={`px-6 py-4 rounded-t-2xl ${
@@ -496,17 +496,17 @@ export default function LotManagement() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Número</label>
-                  <p className="text-xl font-bold text-gray-900">{viewingLot.lotNumber}</p>
+                <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-[var(--foreground)] opacity-70 mb-1">Número</label>
+                  <p className="text-xl font-bold text-[var(--foreground)]">{viewingLot.lotNumber}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Área</label>
-                  <p className="text-xl font-bold text-gray-900">{viewingLot.size} m²</p>
+                <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-[var(--foreground)] opacity-70 mb-1">Área</label>
+                  <p className="text-xl font-bold text-[var(--foreground)]">{viewingLot.size} m²</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Preço Total</label>
-                  <p className="text-xl font-bold text-gray-900">
+                <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)] md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--foreground)] opacity-70 mb-1">Preço Total</label>
+                  <p className="text-xl font-bold text-[var(--foreground)]">
                     R$ {viewingLot.price.toLocaleString('pt-BR')}
                   </p>
                   {viewingLot.pricePerM2 && (
@@ -518,15 +518,15 @@ export default function LotManagement() {
               </div>
 
               {viewingLot.description && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-2">Descrição</label>
-                  <p className="text-gray-900">{viewingLot.description}</p>
+                <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-[var(--foreground)] opacity-70 mb-2">Descrição</label>
+                  <p className="text-[var(--foreground)]">{viewingLot.description}</p>
                 </div>
               )}
 
               {viewingLot.features && viewingLot.features.length > 0 && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-500 mb-3">Características</label>
+                <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
+                  <label className="block text-sm font-medium text-[var(--foreground)] opacity-70 mb-3">Características</label>
                   <div className="flex flex-wrap gap-2">
                     {viewingLot.features.map((feature, index) => (
                       <span

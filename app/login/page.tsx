@@ -117,7 +117,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-[var(--card-bg)] rounded-2xl shadow-xl p-8 border border-[var(--border)]">
           {/* Logo e Título */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -125,10 +125,10 @@ function LoginForm() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">
               Imobiliária Vale dos Carajás
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-[var(--foreground)] opacity-70 mt-2">
               Sistema de Gerenciamento
             </p>
           </div>
@@ -136,7 +136,7 @@ function LoginForm() {
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="cpf" className="block text-sm font-medium text-[var(--foreground)] opacity-90 mb-2">
                 CPF
               </label>
               <input
@@ -146,13 +146,13 @@ function LoginForm() {
                 onChange={handleCPFChange}
                 required
                 maxLength={14}
-                className="text-black w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-[var(--foreground)]/40"
                 placeholder="000.000.000-00"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[var(--foreground)] opacity-90 mb-2">
                 Senha
               </label>
               <div className="relative">
