@@ -290,11 +290,11 @@ export default function MapManagement() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 pr-0 lg:pr-20">
         <h1 className="text-3xl font-bold text-[var(--foreground)]">Gerenciar Loteamentos</h1>
         <button
           onClick={() => setIsCreating(true)}
-          className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+          className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer w-full sm:w-auto"
         >
           Novo Mapa
         </button>

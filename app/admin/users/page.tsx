@@ -415,10 +415,10 @@ export default function UsersPage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6 overflow-x-hidden">
       {/* Cabeçalho */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pr-0 lg:pr-20">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">Gerenciamento de Usuários</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-200 opacity-70 dark:text-[var(--foreground)] mt-1">
             Crie e gerencie usuários do sistema
           </p>
         </div>
