@@ -53,10 +53,12 @@ function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
   if (isConverting) {
     return (
       <div className="text-center p-4">
-        <svg className="w-12 h-12 mx-auto mb-2 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <p className="text-xs font-semibold text-gray-600">Carregando PDF...</p>
+        <div className="inline-flex items-center justify-center w-12 h-12 bg-[var(--primary)] rounded-full mb-2 animate-pulse mx-auto">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </div>
+        <p className="text-xs font-semibold text-[var(--foreground)]">Carregando PDF...</p>
       </div>
     );
   }
@@ -302,12 +304,12 @@ export default function MapManagement() {
 
       {isLoading ? (
         <div className="text-center py-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
-            <svg className="w-8 h-8 text-[var(--accent)] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)] rounded-full mb-4 animate-pulse shadow-[var(--shadow-lg)]">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
-          <p className="text-[var(--foreground)] font-semibold">Carregando mapas...</p>
+          <p className="text-[var(--foreground)] text-lg font-semibold">Carregando mapas...</p>
         </div>
       ) : maps.length === 0 && !isCreating ? (
         <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-[var(--accent)]/40 shadow-[var(--shadow-md)]">

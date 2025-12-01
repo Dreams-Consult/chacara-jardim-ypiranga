@@ -92,16 +92,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   // Não renderizar até montar no cliente (evita hydration mismatch)
-  if (!mounted || isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-          <p className="text-[var(--foreground)] opacity-70">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (!mounted || isCheckingAuth) {
+  //   return (
+  //     <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+  //         <p className="text-[var(--foreground)] opacity-70">Carregando...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (!isAuthenticated || !user) {
     return null;
