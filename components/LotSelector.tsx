@@ -218,7 +218,12 @@ export default function LotSelector({
                   ${isSelected ? 'ring-2 ring-blue-300 ring-offset-1 sm:ring-offset-2 ring-offset-gray-900' : ''}
                 `}
                 onClick={() => handleLotClick(lot)}
-                onMouseEnter={(e) => handleMouseEnter(lot, e)}
+                onMouseEnter={(e) => {
+                  // Apenas mostrar tooltip em desktop (não mobile)
+                  if (window.innerWidth >= 1024) {
+                    handleMouseEnter(lot, e);
+                  }
+                }}
                 onMouseLeave={handleMouseLeave}
                 title={`Lote ${lot.lotNumber} - ${lot.status}`}
               >
