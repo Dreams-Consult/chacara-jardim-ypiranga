@@ -80,10 +80,10 @@ export default function AdminMapsLotsPage() {
     }
   };
 
-  // Buscar reservas para mostrar informações nos tooltips e modais
-  useEffect(() => {
-    fetchReservations();
-  }, []);
+  // Não carregar reservas automaticamente - apenas quando necessário
+  // useEffect(() => {
+  //   fetchReservations();
+  // }, []);
 
   // Recarregar reservas quando os lotes mudarem (indica que houve uma alteração)
   useEffect(() => {

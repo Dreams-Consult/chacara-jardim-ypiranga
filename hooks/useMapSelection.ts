@@ -62,14 +62,14 @@ export const useMapSelection = () => {
           if (currentMapExists) {
             // Mapa selecionado ainda existe, manter seleção
             console.log(`📌 [Página Pública] Mantendo mapa selecionado: ${currentMapId}`);
-            await loadBlocksForMap(currentMapId);
+            // Não carregar quadras automaticamente - usuário deve selecionar
           } else if (allMaps.length > 0) {
             // Não há mapa selecionado OU o mapa não existe mais: selecionar o primeiro
             const firstMap = allMaps[0];
             console.log(`🎯 [Página Pública] Selecionando primeiro mapa: ${firstMap.id} - ${firstMap.name}`);
             setSelectedMap(firstMap);
             selectedMapIdRef.current = firstMap.id;
-            await loadBlocksForMap(firstMap.id);
+            // Não carregar quadras automaticamente - usuário deve selecionar
           }
         } else {
           console.log('📭 [Página Pública] Nenhum mapa retornado pela API');

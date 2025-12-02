@@ -114,11 +114,11 @@ export default function ReservationsPage() {
     loadData();
   }, [loadData]);
 
-  // Polling automático a cada 10 segundos
-  useRealtimeUpdates(() => {
-    console.log('🔄 Auto-refresh de reservas');
-    loadData();
-  }, 10000);
+  // Polling automático removido - atualização manual apenas
+  // useRealtimeUpdates(() => {
+  //   console.log('🔄 Auto-refresh de reservas');
+  //   loadData();
+  // }, 10000);
 
   const handleApprove = async (reservationId: number) => {
     // Verificar permissão antes de prosseguir

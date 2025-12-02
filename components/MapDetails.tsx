@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { Map, Block, Lot, LotStatus } from '@/types';
 import { useBlockOperations } from '@/hooks/useBlockOperations';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { loadPdfJs } from '@/lib/pdfjs-wrapper';
 import LotSelector from '@/components/LotSelector';
 import InteractiveMap from '@/components/InteractiveMap';
@@ -187,13 +186,14 @@ export default function MapDetails() {
     }
   }, [blocks, selectedBlockId]);
 
-  useRealtimeUpdates(() => {
-    if (mapId) {
-      loadMapData();
-      loadBlocks(mapId);
-      fetchReservations(); // Recarregar reservas também
-    }
-  }, 10000);
+  // Polling automático removido - atualização manual apenas
+  // useRealtimeUpdates(() => {
+  //   if (mapId) {
+  //     loadMapData();
+  //     loadBlocks(mapId);
+  //     fetchReservations(); // Recarregar reservas também
+  //   }
+  // }, 10000);
 
   const handleAddBlock = () => {
     setEditingBlock({
