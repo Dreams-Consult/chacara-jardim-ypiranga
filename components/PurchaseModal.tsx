@@ -136,7 +136,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
   return (
     <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
+      <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-4 sm:p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -170,7 +170,7 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
             <h3 className="text-base font-bold text-[var(--foreground)] mb-3">
               {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
             </h3>
-            <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
+            <div className="space-y-3 mb-4 max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {lots.map((lot) => (
                 <div key={lot.id} className="rounded-lg p-3 border border-blue-300/50">
                   <div className="flex justify-between items-center">
@@ -297,11 +297,16 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 </div>
               </div>
             </div>
+          </form>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <div className="sticky bottom-0 bg-[var(--card-bg)] border-t border-[var(--border)] p-4 sm:p-6 flex flex-col sm:flex-row gap-3 rounded-b-2xl">
               <button
                 type="submit"
                 disabled={isSubmitting || cpfError !== '' || sellerCpfError !== ''}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }}
                 className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] cursor-pointer"
               >
                 {isSubmitting ? (
@@ -323,7 +328,6 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                 Cancelar
               </button>
             </div>
-          </form>
         </div>
       </div>
     </div>

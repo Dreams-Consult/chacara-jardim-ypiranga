@@ -124,7 +124,7 @@ export default function LotSelector({
 
   const getLotColor = (lot: Lot): string => {
     if (selectedLotIds.includes(lot.id)) {
-      return 'bg-emerald-500 hover:bg-emerald-600 border-emerald-700';
+      return 'bg-blue-500 hover:bg-blue-600 border-blue-700';
     }
 
     switch (lot.status) {
@@ -215,7 +215,7 @@ export default function LotSelector({
                   min-h-[45px] sm:min-h-[60px]
                   ${getLotColor(lot)}
                   ${isClickable ? 'cursor-pointer active:scale-95 sm:hover:scale-105 touch-manipulation' : 'cursor-not-allowed opacity-70'}
-                  ${isSelected ? 'ring-2 ring-emerald-300 ring-offset-1 sm:ring-offset-2 ring-offset-gray-900' : ''}
+                  ${isSelected ? 'ring-2 ring-blue-300 ring-offset-1 sm:ring-offset-2 ring-offset-gray-900' : ''}
                 `}
                 onClick={() => handleLotClick(lot)}
                 onMouseEnter={(e) => {
@@ -327,7 +327,7 @@ export default function LotSelector({
       {/* Modal de detalhes do lote */}
       {selectedLotForModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-[var(--card-bg)] rounded-2xl max-w-lg w-full shadow-2xl border border-[var(--border)] my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+          <div className="bg-[var(--card-bg)] rounded-2xl max-w-lg w-full shadow-2xl border border-[var(--border)] my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <div className="p-4 sm:p-6 border-b border-[var(--border)] flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
@@ -643,7 +643,7 @@ export default function LotSelector({
               )}
             </div>
 
-            <div className="p-4 sm:p-6 border-t border-[var(--border)] flex gap-2 sm:gap-3 flex-shrink-0">
+            <div className="sticky bottom-0 p-4 sm:p-6 border-t border-[var(--border)] flex gap-2 sm:gap-3 flex-shrink-0 bg-[var(--card-bg)] rounded-b-2xl">
               {/* Modal para lotes reservados/vendidos: apenas botão de redirecionar */}
               {(selectedLotForModal.status === LotStatus.RESERVED || selectedLotForModal.status === LotStatus.SOLD) ? (
                 (() => {
@@ -728,7 +728,7 @@ export default function LotSelector({
                   ) : (
                     <button
                       onClick={handleAddLot}
-                      className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-4 sm:px-6 py-3 text-base bg-[var(--success)] hover:bg-[var(--success-dark)] text-white font-semibold rounded-xl transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={selectedLotForModal.status !== LotStatus.AVAILABLE}
                     >
                       {selectedLotIds.includes(selectedLotForModal.id) ? 'Remover da Seleção' : 'Adicionar à Seleção'}

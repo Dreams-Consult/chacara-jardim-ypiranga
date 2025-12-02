@@ -130,6 +130,8 @@ export default function MapDetails() {
   const [isAddingLot, setIsAddingLot] = useState(false);
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedBlockForLot, setSelectedBlockForLot] = useState<string>('');
+  const [canSubmitLot, setCanSubmitLot] = useState(false);
+  const [submitLotFn, setSubmitLotFn] = useState<(() => void) | null>(null);
   const [isEditingImage, setIsEditingImage] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
@@ -621,12 +623,12 @@ export default function MapDetails() {
     return (
       <div className="min-h-screen bg-[var(--background)] p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
-            <svg className="w-8 h-8 text-[var(--accent)] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)] rounded-full mb-4 animate-pulse shadow-[var(--shadow-lg)]">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
-          <p className="text-[var(--foreground)] font-semibold">Carregando dados do mapa...</p>
+          <p className="text-[var(--foreground)] text-lg font-semibold">Carregando dados do mapa...</p>
         </div>
       </div>
     );
@@ -671,7 +673,7 @@ export default function MapDetails() {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setIsEditingImage(true)}
-              className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+              className="px-5 py-2.5 bg-yellow-500 text-white font-semibold rounded-xl hover:bg-yellow-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -680,7 +682,7 @@ export default function MapDetails() {
             </button>
             <button
               onClick={handleAddBlock}
-              className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
+              className="px-5 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
             >
               + Adicionar Quadra
             </button>
@@ -732,7 +734,7 @@ export default function MapDetails() {
                         setEditingBlock(block);
                         setIsAddingBlock(true);
                       }}
-                      className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm"
+                      className="p-1.5 bg-yellow-500/80 hover:bg-yellow-600 rounded-lg backdrop-blur-sm cursor-pointer"
                       title="Editar quadra"
                     >
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -744,7 +746,7 @@ export default function MapDetails() {
                         e.stopPropagation();
                         handleDeleteBlock(block.id);
                       }}
-                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg"
+                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg cursor-pointer"
                       title="Excluir quadra"
                     >
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -910,12 +912,12 @@ export default function MapDetails() {
       {/* Modal de Adicionar Lote */}
       {isAddingLot && (
         <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
-          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-4 sm:p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
                   </div>
@@ -946,7 +948,33 @@ export default function MapDetails() {
                   setIsAddingLot(false);
                   setSelectedBlockForLot('');
                 }}
+                onSubmitChange={(canSubmit, submit) => {
+                  setCanSubmitLot(canSubmit);
+                  setSubmitLotFn(() => submit);
+                }}
               />
+            </div>
+            <div className="sticky bottom-0 bg-[var(--card-bg)] border-t border-[var(--border)] p-4 sm:p-6 flex flex-col sm:flex-row gap-3 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddingLot(false);
+                  setSelectedBlockForLot('');
+                }}
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (submitLotFn) submitLotFn();
+                }}
+                disabled={!canSubmitLot}
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Adicionar Lote
+              </button>
             </div>
           </div>
         </div>
@@ -1074,9 +1102,10 @@ interface LotFormProps {
   blockName: string;
   onSave: (lot: Lot) => void;
   onCancel: () => void;
+  onSubmitChange?: (canSubmit: boolean, submit: () => void) => void;
 }
 
-function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
+function LotForm({ blockId, blockName, onSave, onCancel, onSubmitChange }: LotFormProps) {
   const [lotNumber, setLotNumber] = useState('');
   const [size, setSize] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -1104,6 +1133,14 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
 
     onSave(lot);
   };
+
+  // Notificar o pai quando o estado mudar
+  React.useEffect(() => {
+    const canSubmit = !!(lotNumber && size && totalPrice);
+    if (onSubmitChange) {
+      onSubmitChange(canSubmit, handleSubmit);
+    }
+  }, [lotNumber, size, totalPrice]);
 
   return (
     <div className="space-y-5">
@@ -1208,24 +1245,6 @@ function LotForm({ blockId, blockName, onSave, onCancel }: LotFormProps) {
           placeholder="Informações adicionais sobre o lote"
           rows={3}
         />
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] cursor-pointer"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!lotNumber || !size || !totalPrice}
-          className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed cursor-pointer"
-        >
-          Adicionar Lote
-        </button>
       </div>
     </div>
   );

@@ -296,8 +296,9 @@ export default function MapManagement() {
         <h1 className="text-3xl font-bold text-[var(--foreground)]">Gerenciar Loteamentos</h1>
         <button
           onClick={() => setIsCreating(true)}
-          className="px-5 py-2.5 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-xl hover:bg-[var(--accent-light)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer w-full sm:w-auto"
+          className="px-5 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success)]/90 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2"
         >
+          <span className="text-xl font-bold">+</span>
           Novo Mapa
         </button>
       </div>
