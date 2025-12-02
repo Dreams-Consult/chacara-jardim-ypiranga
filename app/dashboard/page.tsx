@@ -40,7 +40,7 @@ export default function DashboardPage() {
         id: data.mapId,
         name: data.name,
         description: data.description || '',
-        imageUrl: data.imageUrl || '',
+        imageUrl: '', // Não carregar imagem no dashboard
         imageType: 'image',
         width: data.width || 800,
         height: data.height || 600,
