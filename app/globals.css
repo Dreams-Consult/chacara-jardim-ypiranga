@@ -78,10 +78,10 @@
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* Fallback para :root sem data-theme (dark por padrão) */
+/* Fallback para :root sem data-theme (light por padrão) */
 :root {
-  --background: #1a4a42;
-  --foreground: #ffffff;
+  --background: #f8f9fa;
+  --foreground: #1a1a1a;
   --primary: #1e5a37;
   --primary-light: #2d7a4f;
   --primary-dark: #0f3d24;
@@ -89,22 +89,22 @@
   --secondary-light: #9d7456;
   --secondary-dark: #5e4330;
   --accent: #d4a574;
-  --accent-light: #e6b885;
+  --accent-light: #c49563;
   --success: #1e7e34;
   --success-dark: #155d27;
   --warning: #d66a1f;
   --warning-dark: #b35419;
   --danger: #b02836;
   --danger-dark: #8c1f2a;
-  --card-bg: #234f47;
-  --surface: #2a5850;
-  --surface-hover: #316159;
-  --border: rgba(212, 165, 116, 0.3);
-  --border-strong: rgba(212, 165, 116, 0.5);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --card-bg: #ffffff;
+  --surface: #f1f3f5;
+  --surface-hover: #e9ecef;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 body {

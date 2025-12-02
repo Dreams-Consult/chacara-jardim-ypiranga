@@ -124,7 +124,7 @@ export default function LotSelector({
 
   const getLotColor = (lot: Lot): string => {
     if (selectedLotIds.includes(lot.id)) {
-      return 'bg-blue-500 hover:bg-blue-600 border-blue-700';
+      return 'bg-emerald-500 hover:bg-emerald-600 border-emerald-700';
     }
 
     switch (lot.status) {
@@ -215,7 +215,7 @@ export default function LotSelector({
                   min-h-[45px] sm:min-h-[60px]
                   ${getLotColor(lot)}
                   ${isClickable ? 'cursor-pointer active:scale-95 sm:hover:scale-105 touch-manipulation' : 'cursor-not-allowed opacity-70'}
-                  ${isSelected ? 'ring-2 ring-blue-300 ring-offset-1 sm:ring-offset-2 ring-offset-gray-900' : ''}
+                  ${isSelected ? 'ring-2 ring-emerald-300 ring-offset-1 sm:ring-offset-2 ring-offset-gray-900' : ''}
                 `}
                 onClick={() => handleLotClick(lot)}
                 onMouseEnter={(e) => {

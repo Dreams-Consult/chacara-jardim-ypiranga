@@ -163,8 +163,8 @@ export default function AdminMapsLotsPage() {
                     onClick={() => selectBlock(block.id)}
                     className={`p-4 rounded-xl font-semibold transition-all border-2 ${
                       selectedBlock?.id === block.id
-                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-105 border-blue-500'
-                        : 'bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] border-[var(--border)] hover:border-blue-400 hover:shadow-md'
+                        ? 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-lg scale-105 border-emerald-500'
+                        : 'bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] border-[var(--border)] hover:border-emerald-400 hover:shadow-md'
                     }`}
                   >
                     <div className="text-xs mb-1 opacity-70">Quadra</div>
@@ -220,11 +220,11 @@ export default function AdminMapsLotsPage() {
                 </p>
               </div>
             ) : (
-              <div className="text-center py-12 bg-blue-500/10 rounded-xl border-2 border-dashed border-blue-500/30">
-                <svg className="w-16 h-16 mx-auto mb-4 text-blue-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-12 bg-emerald-500/10 rounded-xl border-2 border-dashed border-emerald-500/30">
+                <svg className="w-16 h-16 mx-auto mb-4 text-emerald-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-blue-400 text-lg font-semibold">
+                <p className="text-emerald-400 text-lg font-semibold">
                   Selecione uma quadra
                 </p>
               </div>
