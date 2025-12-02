@@ -120,9 +120,20 @@ export default function InteractiveMap({
     previewArea,
   });
 
+  // Handler para prevenir scroll da página ao usar zoom no mapa
+  const handleContainerWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
-    <div ref={containerRef} className="relative">
-      {isConverting && (
+    <div 
+      ref={containerRef} 
+      className="relative"
+      onWheel={handleContainerWheel}
+      style={{ touchAction: 'none' }}
+    >
+      {isConverting ? (
         <div className="border-2 border-gray-300 rounded-lg p-12 text-center bg-gray-50">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4">
             <svg className="w-8 h-8 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,8 +143,7 @@ export default function InteractiveMap({
           <p className="text-gray-600 font-medium mb-2">Convertendo PDF...</p>
           <p className="text-gray-500 text-sm">Por favor, aguarde</p>
         </div>
-      )}
-      {!isConverting && effectiveImageUrl && effectiveImageUrl.trim() !== '' ? (
+      ) : effectiveImageUrl && effectiveImageUrl.trim() !== '' ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={imageRef} src={effectiveImageUrl} alt="Map" className="hidden" />
@@ -148,8 +158,13 @@ export default function InteractiveMap({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="border border-gray-300 rounded-lg shadow-lg cursor-crosshair max-w-full touch-none"
-            style={{ touchAction: 'none' }}
+            className="border border-gray-300 rounded-lg shadow-lg cursor-crosshair max-w-full touch-none select-none"
+            style={{ 
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              userSelect: 'none'
+            }}
           />
         </>
       ) : (

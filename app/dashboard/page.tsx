@@ -157,6 +157,10 @@ export default function DashboardPage() {
     .filter((lot) => lot.status === LotStatus.AVAILABLE)
     .reduce((sum, lot) => sum + lot.price, 0);
   
+  const blockedValue = allLots
+    .filter((lot) => lot.status === LotStatus.BLOCKED)
+    .reduce((sum, lot) => sum + lot.price, 0);
+  
   // Calcular valor reservado usando agreed_price das reservas
   const reservedValue = reservations
     .filter((res: any) => res.status === 'pending')
@@ -391,6 +395,11 @@ export default function DashboardPage() {
             <div className="bg-red-500/25 border-2 border-red-400 rounded-xl p-4 shadow-md">
               <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Valor Já Vendido</p>
               <p className="text-[var(--foreground)] text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+
+            <div className="bg-gray-500/25 border-2 border-gray-400 rounded-xl p-4 shadow-md">
+              <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Valor dos Lotes Bloqueados</p>
+              <p className="text-[var(--foreground)] text-2xl font-bold">R$ {blockedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-blue-500/25 border-2 border-blue-400 rounded-xl p-4 shadow-md">

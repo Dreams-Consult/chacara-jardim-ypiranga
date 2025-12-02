@@ -39,6 +39,12 @@ export function useInteractiveMap({
   const [initialScale, setInitialScale] = useState(1);
   const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 });
   const [pinchCenter, setPinchCenter] = useState<{ x: number; y: number } | null>(null);
+  
+  // Estados para melhorar pan em mobile
+  const [lastTouchTime, setLastTouchTime] = useState(0);
+  const [touchVelocity, setTouchVelocity] = useState({ x: 0, y: 0 });
+  const [lastTouchPos, setLastTouchPos] = useState({ x: 0, y: 0 });
+  const animationFrameRef = useRef<number | null>(null);
 
   // Estados para desenho de retângulo
   const [isDrawingRect, setIsDrawingRect] = useState(false);
@@ -396,13 +402,29 @@ export function useInteractiveMap({
       setInitialScale(scale);
       setInitialOffset({ x: offset.x, y: offset.y });
       setPinchCenter({ x: centerX, y: centerY });
+      
+      // Cancela qualquer animação de momentum
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     } else if (e.touches.length === 1 && !isEditMode) {
       // Pan: salva posição inicial
+      const touch = e.touches[0];
       setIsPanning(true);
       setPanStart({
-        x: e.touches[0].clientX - offset.x,
-        y: e.touches[0].clientY - offset.y,
+        x: touch.clientX - offset.x,
+        y: touch.clientY - offset.y,
       });
+      setLastTouchPos({ x: touch.clientX, y: touch.clientY });
+      setLastTouchTime(Date.now());
+      setTouchVelocity({ x: 0, y: 0 });
+      
+      // Cancela qualquer animação de momentum
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     }
   };
 
@@ -447,20 +469,89 @@ export function useInteractiveMap({
       setScale(newScale);
       setOffset({ x: newOffsetX, y: newOffsetY });
     } else if (e.touches.length === 1 && isPanning && !isEditMode) {
-      // Pan
+      // Pan com suavização usando requestAnimationFrame
       e.preventDefault();
-      setOffset({
-        x: e.touches[0].clientX - panStart.x,
-        y: e.touches[0].clientY - panStart.y,
+      
+      const touch = e.touches[0];
+      const now = Date.now();
+      const timeDelta = now - lastTouchTime;
+      
+      if (timeDelta > 0) {
+        const deltaX = touch.clientX - lastTouchPos.x;
+        const deltaY = touch.clientY - lastTouchPos.y;
+        
+        // Calcula velocidade para momentum
+        const velocityX = deltaX / timeDelta;
+        const velocityY = deltaY / timeDelta;
+        
+        setTouchVelocity({ x: velocityX, y: velocityY });
+        setLastTouchPos({ x: touch.clientX, y: touch.clientY });
+        setLastTouchTime(now);
+      }
+      
+      // Usa requestAnimationFrame para suavizar o movimento
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
+      animationFrameRef.current = requestAnimationFrame(() => {
+        setOffset({
+          x: touch.clientX - panStart.x,
+          y: touch.clientY - panStart.y,
+        });
       });
     }
   };
 
   const handleTouchEnd = () => {
+    // Aplica efeito de momentum/inertia após soltar o toque
+    if (isPanning && (Math.abs(touchVelocity.x) > 0.1 || Math.abs(touchVelocity.y) > 0.1)) {
+      let currentVelocityX = touchVelocity.x;
+      let currentVelocityY = touchVelocity.y;
+      let currentOffset = { ...offset };
+      
+      const applyMomentum = () => {
+        // Reduz a velocidade gradualmente (friction)
+        currentVelocityX *= 0.92;
+        currentVelocityY *= 0.92;
+        
+        // Para quando a velocidade for muito baixa
+        if (Math.abs(currentVelocityX) < 0.1 && Math.abs(currentVelocityY) < 0.1) {
+          animationFrameRef.current = null;
+          return;
+        }
+        
+        // Aplica a velocidade ao offset
+        currentOffset.x += currentVelocityX * 16; // ~16ms por frame
+        currentOffset.y += currentVelocityY * 16;
+        
+        setOffset({ ...currentOffset });
+        
+        // Continua a animação
+        animationFrameRef.current = requestAnimationFrame(applyMomentum);
+      };
+      
+      // Inicia a animação de momentum
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      animationFrameRef.current = requestAnimationFrame(applyMomentum);
+    }
+    
     setInitialPinchDistance(null);
     setPinchCenter(null);
     setIsPanning(false);
+    setTouchVelocity({ x: 0, y: 0 });
   };
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
