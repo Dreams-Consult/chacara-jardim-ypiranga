@@ -5,112 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Map } from '@/types';
 import { useMapOperations } from '@/hooks/useMapOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
-import { loadPdfJs } from '@/lib/pdfjs-wrapper';
+import InteractiveMap from '@/components/InteractiveMap';
 import axios from 'axios';
-
-// Componente para renderizar preview de PDF com zoom
-function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
-  const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
-  const [isConverting, setIsConverting] = useState(true);
-  const [zoom, setZoom] = useState(1);
-
-  useEffect(() => {
-    const convertPDF = async () => {
-      try {
-        const pdfjsLib = await loadPdfJs();
-
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        const page = await pdf.getPage(1);
-        
-        const scale = 1;
-        const viewport = page.getViewport({ scale });
-        
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        if (context) {
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
-          
-          const imageData = canvas.toDataURL('image/png');
-          setPdfImageUrl(imageData);
-        }
-      } catch (error) {
-        console.error('[PDFPreview] Erro ao converter PDF:', error);
-      } finally {
-        setIsConverting(false);
-      }
-    };
-
-    convertPDF();
-  }, [pdfUrl]);
-
-  if (isConverting) {
-    return (
-      <div className="text-center p-4">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-[var(--primary)] rounded-full mb-2 animate-pulse mx-auto">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </div>
-        <p className="text-xs font-semibold text-[var(--foreground)]">Carregando PDF...</p>
-      </div>
-    );
-  }
-
-  if (pdfImageUrl) {
-    return (
-      <div className="relative">
-        <div className="absolute top-2 right-2 flex gap-2 z-10">
-          <button
-            onClick={() => setZoom(Math.min(zoom + 0.25, 3))}
-            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1 px-2 rounded shadow"
-            title="Zoom In"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setZoom(Math.max(zoom - 0.25, 0.5))}
-            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1 px-2 rounded shadow"
-            title="Zoom Out"
-          >
-            -
-          </button>
-          <button
-            onClick={() => setZoom(1)}
-            className="bg-white hover:bg-gray-100 text-gray-800 text-xs py-1 px-2 rounded shadow"
-            title="Reset"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-        </div>
-        <div className="overflow-auto max-h-full">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={pdfImageUrl}
-            alt={mapName}
-            className="object-contain"
-            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-center p-4">
-      <svg className="w-16 h-16 mx-auto mb-2 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-      </svg>
-      <p className="text-sm font-bold text-gray-700">Erro ao carregar PDF</p>
-    </div>
-  );
-}
 
 export default function MapManagement() {
   const router = useRouter();
@@ -481,18 +377,13 @@ export default function MapManagement() {
           <div key={map.id} className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow">
             <div className="h-64 bg-gradient-to-br from-[var(--surface)] to-[var(--background)] flex items-center justify-center overflow-hidden relative">
               {map.imageUrl && map.imageUrl.trim() !== '' ? (
-                map.imageUrl.startsWith('data:application/pdf') ? (
-                  <div className="w-full h-full">
-                    <PDFPreview pdfUrl={map.imageUrl} mapName={map.name} />
-                  </div>
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={map.imageUrl}
-                    alt={map.name}
-                    className="w-full h-full object-contain p-2"
+                <div className="w-full h-full">
+                  <InteractiveMap
+                    imageUrl={map.imageUrl}
+                    lots={[]}
+                    isEditMode={false}
                   />
-                )
+                </div>
               ) : (
                 <div className="text-[var(--foreground)] opacity-70 text-center p-4">
                   <svg className="w-16 h-16 mx-auto mb-2 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

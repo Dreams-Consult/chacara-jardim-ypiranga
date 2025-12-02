@@ -51,8 +51,8 @@ export default function InteractiveMap({
           // Pegar primeira página
           const page = await pdf.getPage(1);
           
-          // Configurar escala para boa qualidade
-          const scale = 2;
+          // Aumentar escala para 4x - renderiza em alta resolução para zoom
+          const scale = 4;
           const viewport = page.getViewport({ scale });
           
           // Criar canvas temporário
@@ -68,8 +68,8 @@ export default function InteractiveMap({
               viewport: viewport
             }).promise;
             
-            // Converter canvas para imagem
-            const imageData = canvas.toDataURL('image/png');
+            // Qualidade máxima no PNG
+            const imageData = canvas.toDataURL('image/png', 1.0);
             setPdfImageUrl(imageData);
           }
         } catch (error) {

@@ -8,112 +8,10 @@ import { useBlockOperations } from '@/hooks/useBlockOperations';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { loadPdfJs } from '@/lib/pdfjs-wrapper';
 import LotSelector from '@/components/LotSelector';
+import InteractiveMap from '@/components/InteractiveMap';
 import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = '/api';
-
-// Componente para renderizar preview de PDF com zoom
-function PDFPreview({ pdfUrl, mapName }: { pdfUrl: string; mapName: string }) {
-  const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
-  const [isConverting, setIsConverting] = useState(true);
-  const [zoom, setZoom] = useState(1);
-
-  useEffect(() => {
-    const convertPDF = async () => {
-      try {
-        const pdfjsLib = await loadPdfJs();
-
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        const page = await pdf.getPage(1);
-        
-        const scale = 2;
-        const viewport = page.getViewport({ scale });
-        
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        if (context) {
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
-          
-          const imageData = canvas.toDataURL('image/png');
-          setPdfImageUrl(imageData);
-        }
-      } catch (error) {
-        console.error('[PDFPreview] Erro ao converter PDF:', error);
-      } finally {
-        setIsConverting(false);
-      }
-    };
-
-    convertPDF();
-  }, [pdfUrl]);
-
-  if (isConverting) {
-    return (
-      <div className="text-center p-8">
-        <svg className="w-16 h-16 mx-auto mb-3 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <p className="text-sm font-semibold text-gray-600">Convertendo PDF...</p>
-        <p className="text-xs text-gray-500 mt-1">Por favor, aguarde</p>
-      </div>
-    );
-  }
-
-  if (pdfImageUrl) {
-    return (
-      <div className="relative">
-        <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
-          <button
-            onClick={() => setZoom(Math.min(zoom + 0.25, 3))}
-            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200"
-            title="Zoom In"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setZoom(Math.max(zoom - 0.25, 0.5))}
-            className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-2 px-3 rounded-lg shadow-lg border border-gray-200"
-            title="Zoom Out"
-          >
-            -
-          </button>
-          <button
-            onClick={() => setZoom(1)}
-            className="bg-white hover:bg-gray-100 text-gray-800 font-medium text-xs py-2 px-3 rounded-lg shadow-lg border border-gray-200"
-            title="Reset"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-        </div>
-        <div className="overflow-auto max-h-[800px] rounded-lg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={pdfImageUrl}
-            alt={mapName}
-            className="rounded-lg shadow-md"
-            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.2s' }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-center p-8">
-      <svg className="w-16 h-16 mx-auto mb-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-      </svg>
-      <p className="text-sm font-bold text-gray-700">Erro ao carregar PDF</p>
-    </div>
-  );
-}
 
 export default function MapDetails() {
   const searchParams = useSearchParams();
@@ -138,6 +36,7 @@ export default function MapDetails() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string>('');
   const [reservations, setReservations] = useState<any[]>([]);
+  const [allLots, setAllLots] = useState<Lot[]>([]); // Todos os lotes do mapa para InteractiveMap
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
 
@@ -180,6 +79,33 @@ export default function MapDetails() {
     } catch (error) {
       console.error('[MapDetails] ❌ Erro ao buscar lotes da quadra:', error);
       return [];
+    }
+  }, [mapId]);
+
+  // Função para carregar TODOS os lotes do mapa
+  const loadAllLots = useCallback(async () => {
+    if (!mapId) return;
+
+    try {
+      console.log('[MapDetails] 🔄 Carregando todos os lotes do mapa...');
+      const response = await axios.get(`${API_URL}/mapas/lotes`, {
+        params: { mapId }, // Sem blockId = todos os lotes
+        timeout: 10000,
+      });
+
+      const data = response.data[0];
+      if (data && data.lots && Array.isArray(data.lots)) {
+        const lotsWithMapId = data.lots.map((lot: Lot) => ({
+          ...lot,
+          mapId: data.mapId || mapId,
+          createdAt: new Date(lot.createdAt),
+          updatedAt: new Date(lot.updatedAt),
+        }));
+        console.log('[MapDetails] ✅ Total de lotes carregados:', lotsWithMapId.length);
+        setAllLots(lotsWithMapId);
+      }
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao carregar todos os lotes:', error);
     }
   }, [mapId]);
 
@@ -250,8 +176,9 @@ export default function MapDetails() {
     if (mapId) {
       loadMapData();
       loadBlocks(mapId);
+      loadAllLots(); // Carregar todos os lotes para o InteractiveMap
     }
-  }, [mapId, loadMapData, loadBlocks]);
+  }, [mapId, loadMapData, loadBlocks, loadAllLots]);
 
   // Selecionar automaticamente a primeira quadra quando as quadras forem carregadas
   useEffect(() => {
@@ -399,6 +326,8 @@ export default function MapDetails() {
 
       // Força refresh apenas dos cards de quadra
       setRefreshTrigger(prev => prev + 1);
+      // Recarregar todos os lotes para atualizar o InteractiveMap
+      loadAllLots();
       setIsAddingLot(false);
       setSelectedBlockForLot('');
       alert('✅ Lote salvo com sucesso!');
@@ -413,6 +342,8 @@ export default function MapDetails() {
     await handleSaveLot(lot);
     // Força refresh dos cards após editar lote
     setRefreshTrigger(prev => prev + 1);
+    // Recarregar todos os lotes para atualizar o InteractiveMap
+    loadAllLots();
   };
 
   const handleToggleLotStatus = async (lotId: string, currentStatus: LotStatus) => {
@@ -446,6 +377,8 @@ export default function MapDetails() {
 
       // Força refresh dos cards após alterar status
       setRefreshTrigger(prev => prev + 1);
+      // Recarregar todos os lotes para atualizar o InteractiveMap
+      loadAllLots();
     } catch (error) {
       console.error('Erro ao alterar status do lote:', error);
       throw error;
@@ -489,6 +422,8 @@ export default function MapDetails() {
       
       // Força refresh dos cards após excluir lote
       setRefreshTrigger(prev => prev + 1);
+      // Recarregar todos os lotes para atualizar o InteractiveMap
+      loadAllLots();
       alert('✅ Lote excluído com sucesso!');
     } catch (error: any) {
       console.error('[MapDetails] ❌ Erro ao excluir lote:', error);
@@ -690,6 +625,65 @@ export default function MapDetails() {
         </div>
       </div>
 
+      {/* Estatísticas de Status dos Lotes */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-white text-sm font-medium mb-1">Disponível</p>
+          <p className="text-white text-4xl font-bold">
+            {allLots.filter(lot => lot.status === LotStatus.AVAILABLE).length}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-white text-sm font-medium mb-1">Reservado</p>
+          <p className="text-white text-4xl font-bold">
+            {allLots.filter(lot => lot.status === LotStatus.RESERVED).length}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-white text-sm font-medium mb-1">Vendido</p>
+          <p className="text-white text-4xl font-bold">
+            {allLots.filter(lot => lot.status === LotStatus.SOLD).length}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-white text-sm font-medium mb-1">Bloqueado</p>
+          <p className="text-white text-4xl font-bold">
+            {allLots.filter(lot => lot.status === LotStatus.BLOCKED).length}
+          </p>
+        </div>
+      </div>
+
       {/* Seleção de Quadras com Botões (estilo maps/page.tsx) */}
       <div className="mb-8">
         {!blocks || blocks.length === 0 ? (
@@ -803,26 +797,25 @@ export default function MapDetails() {
         </div>
       )}
 
-      {/* Visualização da Imagem/PDF do Mapa */}
+      {/* Mapa Interativo */}
       {map && map.imageUrl && map.imageUrl.trim() !== '' && (
-        <div className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] p-6">
+        <div className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] p-6 mb-8">
           <h2 className="text-xl font-bold text-[var(--foreground)] opacity-80 mb-4 flex items-center gap-2">
             <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            Imagem do Mapa
+            Visualização do Mapa
           </h2>
-          <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-4 flex items-center justify-center">
-            {map.imageUrl.startsWith('data:application/pdf') ? (
-              <PDFPreview pdfUrl={map.imageUrl} mapName={map.name} />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={map.imageUrl}
-                alt={map.name}
-                className="max-w-full h-auto rounded-lg shadow-md"
-              />
-            )}
+          <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-4">
+            <InteractiveMap
+              imageUrl={map.imageUrl}
+              lots={allLots}
+              onLotClick={(lot) => {
+                console.log('[MapDetails] Lote clicado:', lot);
+                // Aqui você pode adicionar lógica adicional se necessário
+              }}
+              selectedLotIds={[]}
+            />
           </div>
         </div>
       )}

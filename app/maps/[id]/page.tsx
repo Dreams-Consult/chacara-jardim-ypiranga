@@ -228,6 +228,65 @@ export default function MapViewPage() {
           </div>
         )}
 
+        {/* Estatísticas de Status dos Lotes */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-white text-sm font-medium mb-1">Disponível</p>
+            <p className="text-white text-4xl font-bold">
+              {allLots.filter(lot => lot.status === 'available').length}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-white text-sm font-medium mb-1">Reservado</p>
+            <p className="text-white text-4xl font-bold">
+              {allLots.filter(lot => lot.status === 'reserved').length}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-white text-sm font-medium mb-1">Vendido</p>
+            <p className="text-white text-4xl font-bold">
+              {allLots.filter(lot => lot.status === 'sold').length}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-white text-sm font-medium mb-1">Bloqueado</p>
+            <p className="text-white text-4xl font-bold">
+              {allLots.filter(lot => lot.status === 'blocked').length}
+            </p>
+          </div>
+        </div>
+
         {/* Seleção de Quadras */}
         {blocks.length > 0 && (
           <div className="mb-6 bg-[var(--card-bg)] rounded-xl p-6 shadow-[var(--shadow-md)]">
