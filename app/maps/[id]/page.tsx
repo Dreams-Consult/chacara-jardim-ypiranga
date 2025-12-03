@@ -31,12 +31,15 @@ export default function MapViewPage() {
       setLoading(true);
       setError(null);
 
-      // Carregar dados do mapa
+      // Carregar dados apenas do mapa específico (não buscar todos)
       const mapResponse = await axios.get(`${API_URL}/mapas`, {
+        params: { id: mapId },
         timeout: 10000,
       });
 
-      const mapData = mapResponse.data.find((m: any) => m.mapId === mapId || m.id === mapId);
+      // Se a API suportar filtro por ID, virá apenas um mapa, senão filtramos
+      const mapsData = Array.isArray(mapResponse.data) ? mapResponse.data : [mapResponse.data];
+      const mapData = mapsData.find((m: any) => m.mapId === mapId || m.id === mapId);
 
       if (mapData) {
         const mapObj: Map = {

@@ -11,7 +11,50 @@ export async function GET(request: NextRequest) {
   try {
     connection = await mysql.createConnection(dbConfig);
 
-    // Buscar todas as reservas
+    const { searchParams } = new URL(request.url);
+    const minimal = searchParams.get('minimal') === 'true';
+
+    if (minimal) {
+      // Retornar apenas campos essenciais para tooltip em /maps/
+      const [reservations] = await connection.execute(
+        'SELECT id, customer_name, seller_name, status, created_at FROM purchase_requests ORDER BY created_at DESC'
+      );
+
+      // Para cada reserva, buscar apenas IDs dos lotes
+      const reservationsWithLots = await Promise.all(
+        (reservations as any[]).map(async (reservation) => {
+          try {
+            const [lots] = await connection!.execute(
+              'SELECT lot_id as id FROM purchase_request_lots WHERE purchase_request_id = ?',
+              [reservation.id]
+            );
+            
+            return {
+              id: reservation.id,
+              customer_name: reservation.customer_name,
+              seller_name: reservation.seller_name,
+              status: reservation.status,
+              created_at: reservation.created_at,
+              lots: lots || [],
+            };
+          } catch (error) {
+            console.error(`[API /reservas GET] Erro ao buscar lotes da reserva ${reservation.id}:`, error);
+            return {
+              id: reservation.id,
+              customer_name: reservation.customer_name,
+              seller_name: reservation.seller_name,
+              status: reservation.status,
+              created_at: reservation.created_at,
+              lots: [],
+            };
+          }
+        })
+      );
+
+      return NextResponse.json(reservationsWithLots || [], { status: 200 });
+    }
+
+    // Buscar todas as reservas (modo completo)
     const [reservations] = await connection.execute(
       'SELECT * FROM purchase_requests ORDER BY created_at DESC'
     );

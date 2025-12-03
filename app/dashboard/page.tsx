@@ -8,119 +8,51 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = '/api';
 
+interface DashboardStats {
+  summary: {
+    totalMaps: number;
+    totalLots: number;
+    availableLots: number;
+    reservedLots: number;
+    soldLots: number;
+    blockedLots: number;
+  };
+  financial: {
+    totalValue: number;
+    availableValue: number;
+    reservedValue: number;
+    soldValue: number;
+    blockedValue: number;
+    totalFirstPayments: number;
+  };
+  maps: Array<{
+    id: string;
+    name: string;
+    description: string;
+    totalLots: number;
+    availableLots: number;
+    reservedLots: number;
+    soldLots: number;
+    blockedLots: number;
+  }>;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [maps, setMaps] = useState<Map[]>([]);
-  const [allLots, setAllLots] = useState<Lot[]>([]);
-  const [reservations, setReservations] = useState<any[]>([]);
-  const [totalFirstPayments, setTotalFirstPayments] = useState<number>(0);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
 
-      // Carregar todos os mapas
-      const mapsResponse = await axios.get(`${API_URL}/mapas`, { timeout: 10000 });
-      const mapsData = Array.isArray(mapsResponse.data) ? mapsResponse.data : [];
-
-      interface MapData {
-        mapId: string;
-        name: string;
-        description?: string;
-        imageUrl?: string;
-        width?: number;
-        height?: number;
-        createdAt: string | Date;
-        updatedAt: string | Date;
-      }
-
-      const loadedMaps: Map[] = mapsData.map((data: MapData) => ({
-        id: data.mapId,
-        name: data.name,
-        description: data.description || '',
-        imageUrl: '', // Não carregar imagem no dashboard
-        imageType: 'image',
-        width: data.width || 800,
-        height: data.height || 600,
-        createdAt: new Date(data.createdAt),
-        updatedAt: new Date(data.updatedAt),
-      }));
-
-      setMaps(loadedMaps);
-
-      // Carregar todos os lotes de todos os mapas
-      const allLotsPromises = loadedMaps.map(async (map) => {
-        try {
-          const lotsResponse = await axios.get(`${API_URL}/mapas/lotes`, {
-            params: { mapId: map.id },
-            timeout: 10000,
-          });
-
-          const data = lotsResponse.data?.[0];
-          if (data?.lots && Array.isArray(data.lots)) {
-            interface LotData {
-              id: string;
-              lotNumber: string;
-              area: { points: string | { x: number; y: number }[] };
-              status: LotStatus;
-              price: number;
-              size: number;
-              description?: string;
-              features?: string[];
-              createdAt: string | Date;
-              updatedAt: string | Date;
-            }
-
-            return data.lots.map((lot: LotData) => {
-              // lot.area não existe mais no retorno da API
-              return {
-                ...lot,
-                mapId: map.id,
-                createdAt: new Date(lot.createdAt),
-                updatedAt: new Date(lot.updatedAt),
-              };
-            });
-          }
-          return [];
-        } catch (error) {
-          console.error(`Erro ao carregar lotes do mapa ${map.id}:`, error);
-          return [];
-        }
-      });
-
-      const lotsArrays = await Promise.all(allLotsPromises);
-      const flatLots = lotsArrays.flat();
-      setAllLots(flatLots);
-
-      // Carregar total de pagamentos de entrada das reservas
-      try {
-        const reservationsResponse = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
-        const reservationsData = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
-        setReservations(reservationsData);
-        
-        // Somar first_payment de cada lote das reservas concluídas (completed)
-        const totalPayments = reservationsData.reduce((sum: number, reservation: any) => {
-          if (reservation.status === 'completed' && reservation.lots && Array.isArray(reservation.lots)) {
-            // Somar first_payment de todos os lotes desta reserva
-            const reservationTotal = reservation.lots.reduce((lotSum: number, lot: any) => {
-              const lotFirstPayment = parseFloat(lot.first_payment) || 0;
-              return lotSum + lotFirstPayment;
-            }, 0);
-            return sum + reservationTotal;
-          }
-          return sum;
-        }, 0);
-        
-        setTotalFirstPayments(totalPayments);
-      } catch (error) {
-        console.error('Erro ao carregar total de pagamentos de entrada:', error);
-        setTotalFirstPayments(0);
-        setReservations([]);
-      }
+      // Carregar estatísticas agregadas do dashboard (apenas uma requisição otimizada)
+      const response = await axios.get<DashboardStats>(`${API_URL}/dashboard/stats`, { timeout: 10000 });
+      setStats(response.data);
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
+      setStats(null);
     } finally {
       setIsLoading(false);
     }
@@ -147,46 +79,22 @@ export default function DashboardPage() {
     return null;
   }
 
-  const totalLots = allLots.length;
-  const availableLots = allLots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
-  const reservedLots = allLots.filter((lot) => lot.status === LotStatus.RESERVED).length;
-  const soldLots = allLots.filter((lot) => lot.status === LotStatus.SOLD).length;
-  const blockedSlots = allLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
+  // Extrair dados das estatísticas (com valores padrão)
+  const totalMaps = stats?.summary.totalMaps || 0;
+  const totalLots = stats?.summary.totalLots || 0;
+  const availableLots = stats?.summary.availableLots || 0;
+  const reservedLots = stats?.summary.reservedLots || 0;
+  const soldLots = stats?.summary.soldLots || 0;
+  const blockedSlots = stats?.summary.blockedLots || 0;
 
-  const availableValue = allLots
-    .filter((lot) => lot.status === LotStatus.AVAILABLE)
-    .reduce((sum, lot) => sum + lot.price, 0);
-  
-  const blockedValue = allLots
-    .filter((lot) => lot.status === LotStatus.BLOCKED)
-    .reduce((sum, lot) => sum + lot.price, 0);
-  
-  // Calcular valor reservado usando agreed_price das reservas
-  const reservedValue = reservations
-    .filter((res: any) => res.status === 'pending')
-    .reduce((sum: number, res: any) => {
-      if (res.lots && Array.isArray(res.lots)) {
-        return sum + res.lots.reduce((lotSum: number, lot: any) => {
-          return lotSum + (parseFloat(lot.agreed_price) || parseFloat(lot.price) || 0);
-        }, 0);
-      }
-      return sum;
-    }, 0);
-  
-  // Calcular valor vendido usando agreed_price das reservas
-  const soldValue = reservations
-    .filter((res: any) => res.status === 'completed')
-    .reduce((sum: number, res: any) => {
-      if (res.lots && Array.isArray(res.lots)) {
-        return sum + res.lots.reduce((lotSum: number, lot: any) => {
-          return lotSum + (parseFloat(lot.agreed_price) || parseFloat(lot.price) || 0);
-        }, 0);
-      }
-      return sum;
-    }, 0);
+  const totalValue = stats?.financial.totalValue || 0;
+  const availableValue = stats?.financial.availableValue || 0;
+  const reservedValue = stats?.financial.reservedValue || 0;
+  const soldValue = stats?.financial.soldValue || 0;
+  const blockedValue = stats?.financial.blockedValue || 0;
+  const totalFirstPayments = stats?.financial.totalFirstPayments || 0;
 
-  // Valor total = disponíveis (preço base) + reservados (agreed_price) + vendidos (agreed_price)
-  const totalValue = availableValue + reservedValue + soldValue;
+  const maps = stats?.maps || [];
 
   if (isLoading) {
     return (
@@ -204,8 +112,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  console.log(maps)
 
   return (
     <div className="p-6">
@@ -225,7 +131,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Total de Loteamentos</p>
-          <p className="text-white text-4xl font-bold">{maps.length}</p>
+          <p className="text-white text-4xl font-bold">{totalMaps}</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -419,7 +325,7 @@ export default function DashboardPage() {
           Mapas Cadastrados
         </h2>
 
-        {maps.length === 0 ? (
+        {totalMaps === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--surface)] rounded-full mb-4">
               <svg className="w-8 h-8 text-[var(--foreground)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,44 +336,36 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {maps.map((map) => {
-              const mapLots = allLots.filter((lot) => lot.mapId === map.id);
-              const mapAvailable = mapLots.filter((lot) => lot.status === LotStatus.AVAILABLE).length;
-              const mapReserved = mapLots.filter((lot) => lot.status === LotStatus.RESERVED).length;
-              const mapSold = mapLots.filter((lot) => lot.status === LotStatus.SOLD).length;
-              const mapBlocked = mapLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
-
-              return (
-                <div key={map.id} className="bg-[var(--surface)] rounded-xl p-5 border-2 border-[var(--border)] hover:border-blue-400 hover:shadow-lg transition-all">
-                  <h3 className="text-[var(--foreground)] font-bold text-lg mb-3">{map.name}</h3>
-                  {map.description && (
-                    <p className="text-[var(--foreground)] opacity-80 text-sm mb-4 line-clamp-2">{map.description}</p>
-                  )}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--foreground)] font-medium">Total de Lotes:</span>
-                      <span className="text-[var(--foreground)] font-bold text-base">{mapLots.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-500 font-medium">Disponíveis:</span>
-                      <span className="text-green-500 font-bold text-base">{mapAvailable}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-yellow-500 font-medium">Reservados:</span>
-                      <span className="text-yellow-500 font-bold text-base">{mapReserved}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-red-500 font-medium">Vendidos:</span>
-                      <span className="text-red-500 font-bold text-base">{mapSold}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400 font-medium">Bloqueados:</span>
-                      <span className="text-gray-400 font-bold text-base">{mapBlocked}</span>
-                    </div>
+            {maps.map((map) => (
+              <div key={map.id} className="bg-[var(--surface)] rounded-xl p-5 border-2 border-[var(--border)] hover:border-blue-400 hover:shadow-lg transition-all">
+                <h3 className="text-[var(--foreground)] font-bold text-lg mb-3">{map.name}</h3>
+                {map.description && (
+                  <p className="text-[var(--foreground)] opacity-80 text-sm mb-4 line-clamp-2">{map.description}</p>
+                )}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[var(--foreground)] font-medium">Total de Lotes:</span>
+                    <span className="text-[var(--foreground)] font-bold text-base">{map.totalLots}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-green-500 font-medium">Disponíveis:</span>
+                    <span className="text-green-500 font-bold text-base">{map.availableLots}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-yellow-500 font-medium">Reservados:</span>
+                    <span className="text-yellow-500 font-bold text-base">{map.reservedLots}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-red-500 font-medium">Vendidos:</span>
+                    <span className="text-red-500 font-bold text-base">{map.soldLots}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400 font-medium">Bloqueados:</span>
+                    <span className="text-gray-400 font-bold text-base">{map.blockedLots}</span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>

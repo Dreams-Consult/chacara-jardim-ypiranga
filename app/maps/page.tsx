@@ -70,10 +70,10 @@ export default function AdminMapsLotsPage() {
     loadAllMapLots();
   }, [selectedMap?.id]);
 
-  // Função para buscar reservas
+  // Função para buscar reservas (apenas dados mínimos para tooltip)
   const fetchReservations = async () => {
     try {
-      const response = await axios.get('/api/reservas');
+      const response = await axios.get('/api/reservas?minimal=true');
       setReservations(response.data);
     } catch (error) {
       console.error('Erro ao buscar reservas:', error);
