@@ -292,8 +292,19 @@ export default function LotSelector({
 
               {(hoveredLot.status === LotStatus.RESERVED || hoveredLot.status === LotStatus.SOLD) && (() => {
                 const reservation = getReservationForLot(hoveredLot.id);
+                const lotInReservation = reservation?.lots?.find(
+                  (l: any) => l.id === hoveredLot.id || l.id === parseInt(hoveredLot.id)
+                );
+                const displayPrice = lotInReservation?.agreed_price 
+                  ? Number(lotInReservation.agreed_price) 
+                  : hoveredLot.price;
+                
                 return reservation ? (
                   <div className="space-y-2">
+                    <div className="text-sm">
+                      <p className="text-gray-400">Valor Acordado</p>
+                      <p className="text-white font-semibold">R$ {displayPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
                     <div className="text-sm">
                       <p className="text-gray-400">Cliente</p>
                       <p className="text-white font-semibold">{reservation.customer_name}</p>
@@ -529,6 +540,14 @@ export default function LotSelector({
                     // Visualização mínima para lotes reservados/vendidos
                     (() => {
                       const reservation = getReservationForLot(selectedLotForModal.id);
+                      // Buscar agreed_price do lote na reserva
+                      const lotInReservation = reservation?.lots?.find(
+                        (l: any) => l.id === selectedLotForModal.id || l.id === parseInt(selectedLotForModal.id)
+                      );
+                      const displayPrice = lotInReservation?.agreed_price 
+                        ? Number(lotInReservation.agreed_price) 
+                        : selectedLotForModal.price;
+                      
                       return (
                         <>
                           <div className={`bg-[var(--surface)] rounded-xl p-4 border-l-4 ${
@@ -556,11 +575,19 @@ export default function LotSelector({
                                 <span className="text-[var(--foreground)] font-semibold">{selectedLotForModal.size} m²</span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
-                                <span className="text-[var(--foreground)]/60 text-sm">Valor</span>
+                                <span className="text-[var(--foreground)]/60 text-sm">Valor Acordado</span>
                                 <span className="text-[var(--foreground)] font-bold text-lg">
-                                  R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  R$ {displayPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
+                              {lotInReservation?.agreed_price && selectedLotForModal.price !== Number(lotInReservation.agreed_price) && (
+                                <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+                                  <span className="text-[var(--foreground)]/60 text-sm">Valor Base do Lote</span>
+                                  <span className="text-[var(--foreground)]/60 text-sm">
+                                    R$ {selectedLotForModal.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              )}
                               {reservation && (
                                 <div className="flex justify-between items-center py-2">
                                   <span className="text-[var(--foreground)]/60 text-sm">Comprador/Reservado por</span>

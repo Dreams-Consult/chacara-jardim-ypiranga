@@ -20,12 +20,12 @@ export async function GET(request: NextRequest) {
         'SELECT id, customer_name, seller_name, status, created_at FROM purchase_requests ORDER BY created_at DESC'
       );
 
-      // Para cada reserva, buscar apenas IDs dos lotes
+      // Para cada reserva, buscar IDs dos lotes e agreed_price
       const reservationsWithLots = await Promise.all(
         (reservations as any[]).map(async (reservation) => {
           try {
             const [lots] = await connection!.execute(
-              'SELECT lot_id as id FROM purchase_request_lots WHERE purchase_request_id = ?',
+              'SELECT lot_id as id, agreed_price FROM purchase_request_lots WHERE purchase_request_id = ?',
               [reservation.id]
             );
             
