@@ -108,10 +108,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return pathname === path;
-    }
-    return pathname?.startsWith(path);
+    if (!pathname) return false;
+    
+    // Comparação exata para rotas específicas
+    if (pathname === path) return true;
+    
+    // Para rotas com sub-páginas, verifica se começa com path seguido de /
+    // Isso garante que /dashboard não ative /dashboard-admin por exemplo
+    if (pathname.startsWith(path + '/')) return true;
+    
+    return false;
   };
 
   // Verificar se há ferramentas disponíveis para o usuário
@@ -230,10 +236,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <>
                     <Link
                       href="/admin/map-management"
-                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                        pathname === '/admin/map-management'
-                          ? 'bg-[var(--surface)] text-[var(--primary)]'
-                          : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                        isActive('/admin/map-management')
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,10 +249,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </Link>
                     <Link
                       href="/admin/import-map"
-                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                        pathname === '/admin/import-map'
-                          ? 'bg-[var(--surface)] text-[var(--primary)]'
-                          : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                        isActive('/admin/import-map')
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,10 +263,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {showLotManagement && (
                       <Link
                         href="/admin/lot-management"
-                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                          pathname?.startsWith('/admin/lot-management')
-                            ? 'bg-[var(--surface)] text-[var(--primary)]'
-                            : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                          isActive('/admin/lot-management')
+                            ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                            : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                         }`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,10 +280,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {canAccessUsers && (
                   <Link
                     href="/admin/users"
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                      pathname === '/admin/users'
-                        ? 'bg-[var(--surface)] text-[var(--primary)]'
-                        : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                      isActive('/admin/users')
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                        : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
