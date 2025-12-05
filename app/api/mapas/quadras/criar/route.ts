@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
       description: description || '',
     };
 
-    console.log('[API /mapas/quadras/criar] Quadra criada:', newBlock.id);
     return NextResponse.json(newBlock, { status: 201 });
   } catch (error) {
     console.error('[API /mapas/quadras/criar] Erro:', error);

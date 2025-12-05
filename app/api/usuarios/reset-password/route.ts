@@ -42,7 +42,6 @@ export async function POST(request: Request) {
       [hashedPassword, userId]
     );
 
-    console.log('[ResetPassword] ✅ Senha resetada para usuário:', users[0].name);
 
     return NextResponse.json({
       success: true,

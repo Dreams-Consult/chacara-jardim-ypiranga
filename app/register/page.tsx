@@ -154,7 +154,6 @@ export default function RegisterPage() {
         first_login: false
       };
 
-      console.log('[Register] Enviando dados do usuário:', userData);
 
       // Enviar para o backend
       const response = await axios.post(`${API_URL}/usuarios/criar`, userData, {
@@ -164,7 +163,6 @@ export default function RegisterPage() {
         timeout: 10000,
       });
 
-      console.log('[Register] ✅ Usuário criado com sucesso:', response.data);
 
       // Redirecionar para login com mensagem de aguardando aprovação
       router.push('/login?registered=pending');

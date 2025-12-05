@@ -159,14 +159,12 @@ export default function MapManagement() {
         description: editingMap.description || ''
       };
 
-      console.log('[MapManagement] Atualizando mapa:', { url, payload });
 
       const response = await axios.patch(url, payload, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });
 
-      console.log('[MapManagement] Resposta da API:', response.data);
 
       await loadMaps();
       setIsEditingDetails(false);

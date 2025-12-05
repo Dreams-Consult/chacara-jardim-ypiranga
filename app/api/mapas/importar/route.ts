@@ -79,7 +79,6 @@ export async function POST(request: NextRequest) {
         ]
       );
 
-      console.log(`[API /mapas/importar] ✅ Mapa criado: ${importData.name} (ID: ${mapId})`);
 
       let totalBlocks = 0;
       let totalLots = 0;
@@ -104,7 +103,6 @@ export async function POST(request: NextRequest) {
         const blockId = (blockResult as any).insertId;
         totalBlocks++;
 
-        console.log(`[API /mapas/importar]   📦 Quadra criada: ${blockData.name} (ID: ${blockId})`);
 
         // Criar lotes da quadra
         if (blockData.lots && Array.isArray(blockData.lots) && blockData.lots.length > 0) {
@@ -217,17 +215,14 @@ export async function POST(request: NextRequest) {
                 [purchaseRequestId, lotId]
               );
 
-              console.log(`[API /mapas/importar]       💰 Reserva criada para lote ${lotData.lotNumber} (Cliente: ${reservation.customer_name})`);
             }
           }
 
-          console.log(`[API /mapas/importar]     🏠 ${blockData.lots.length} lotes criados`);
         }
       }
 
       await connection.commit();
 
-      console.log(`[API /mapas/importar] 🎉 Importação concluída: ${totalBlocks} quadras, ${totalLots} lotes`);
 
       return NextResponse.json(
         {

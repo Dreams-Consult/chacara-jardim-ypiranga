@@ -65,7 +65,6 @@ export async function PATCH(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('[API /mapas/lotes PATCH] Lote atualizado:', id);
     return NextResponse.json(updatedLot, { status: 200 });
   } catch (error) {
     console.error('[API /mapas/lotes PATCH] Erro:', error);

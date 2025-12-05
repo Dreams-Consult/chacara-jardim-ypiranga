@@ -79,7 +79,6 @@ export default function UsersPage() {
 
   const loadUsers = async () => {
     try {
-      console.log('[UsersPage] Carregando usuários...');
       setIsLoading(true);
 
       const response = await axios.get(`${API_URL}/usuarios/`, {
@@ -89,7 +88,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log('[UsersPage] ✅ Usuários carregados:', response.data);
       // A API pode retornar os usuários diretamente ou em response.data.users
       const usersList = Array.isArray(response.data) ? response.data : (response.data.users || []);
       setUsers(usersList);
@@ -107,7 +105,6 @@ export default function UsersPage() {
     try {
       if (editingUser) {
         // Editar usuário existente
-        console.log('[UsersPage] Atualizando usuário:', editingUser.id);
 
         const params = new URLSearchParams({
           name: formData.name,
@@ -126,11 +123,9 @@ export default function UsersPage() {
           timeout: 10000,
         });
 
-        console.log('[UsersPage] ✅ Usuário atualizado');
         alert('Usuário atualizado com sucesso!');
       } else {
         // Criar novo usuário
-        console.log('[UsersPage] Criando novo usuário');
 
         const newUserData = {
           name: formData.name,
@@ -151,7 +146,6 @@ export default function UsersPage() {
           timeout: 10000,
         });
 
-        console.log('[UsersPage] ✅ Usuário criado');
         alert('Usuário criado com sucesso!');
       }
 
@@ -171,7 +165,6 @@ export default function UsersPage() {
 
   const handleApprove = async (userId: string) => {
     try {
-      console.log('[UsersPage] Aprovando usuário:', userId);
 
       await axios.put(`${API_URL}/usuarios/aprovar`,{
         idUsuario: userId,
@@ -183,7 +176,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log('[UsersPage] ✅ Usuário aprovado');
       alert('Usuário aprovado com sucesso!');
 
       // Recarregar lista de usuários
@@ -198,7 +190,6 @@ export default function UsersPage() {
     if (!confirm('Tem certeza que deseja rejeitar este usuário?')) return;
 
     try {
-      console.log('[UsersPage] Rejeitando usuário:', userId);
 
       await axios.put(`${API_URL}/usuarios/aprovar`, {
         idUsuario: userId,
@@ -210,7 +201,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log('[UsersPage] ✅ Usuário rejeitado');
       alert('Usuário rejeitado!');
 
       // Recarregar lista de usuários
@@ -225,7 +215,6 @@ export default function UsersPage() {
     if (!confirm(`Tem certeza que deseja resetar a senha de ${userName}?\n\nA senha será redefinida para: 123456\nO usuário precisará alterá-la no próximo login.`)) return;
 
     try {
-      console.log('[UsersPage] Resetando senha do usuário:', userId);
 
       await axios.post(`${API_URL}/usuarios/reset-password`, {
         userId,
@@ -236,7 +225,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log('[UsersPage] ✅ Senha resetada');
       alert('Senha resetada com sucesso!\n\nNova senha: 123456\nO usuário deverá alterá-la no próximo login.');
 
       // Recarregar lista de usuários
@@ -252,7 +240,6 @@ export default function UsersPage() {
     if (!confirm(`Tem certeza que deseja ${action} o usuário ${userName}?`)) return;
 
     try {
-      console.log(`[UsersPage] ${action} usuário:`, userId);
 
       await axios.put(`${API_URL}/usuarios/toggle-active`, {
         userId,
@@ -264,7 +251,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log(`[UsersPage] ✅ Usuário ${action}do`);
       alert(`Usuário ${action}do com sucesso!`);
 
       // Recarregar lista de usuários
@@ -284,7 +270,6 @@ export default function UsersPage() {
     if (!confirm(`⚠️ ATENÇÃO: Esta ação não pode ser desfeita!\n\nTem certeza que deseja EXCLUIR permanentemente o usuário ${userName}?`)) return;
 
     try {
-      console.log('[UsersPage] Excluindo usuário:', userId);
 
       await axios.delete(`${API_URL}/usuarios/excluir`, {
         data: { userId },
@@ -294,7 +279,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log('[UsersPage] ✅ Usuário excluído');
       alert('Usuário excluído com sucesso!');
 
       // Recarregar lista de usuários
@@ -312,7 +296,6 @@ export default function UsersPage() {
 
   const handleChangeRole = async (userId: string, newRole: UserRole) => {
     try {
-      console.log('[UsersPage] Alterando cargo do usuário:', userId, 'para:', newRole);
 
       await axios.put(`${API_URL}/usuarios/role`, {
         idUsuario: userId,
@@ -324,7 +307,6 @@ export default function UsersPage() {
         timeout: 10000,
       });
 
-      console.log('[UsersPage] ✅ Cargo alterado com sucesso');
       alert('Cargo do usuário alterado com sucesso!');
 
       // Fechar modal e recarregar lista

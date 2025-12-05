@@ -69,8 +69,6 @@ const initializeSampleData = (): void => {
   localStorage.setItem(STORAGE_KEYS.LOTS, serializeData(sampleLots));
   localStorage.setItem(STORAGE_KEYS.PURCHASES, serializeData([]));
   localStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
-
-  console.log('Dados de exemplo inicializados com sucesso!');
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
       features,
     };
 
-    console.log('[API /mapas/lotes/criar] Lote criado:', newLot.id);
     return NextResponse.json(newLot, { status: 201 });
   } catch (error: any) {
     console.error('[API /mapas/lotes/criar] Erro:', error);

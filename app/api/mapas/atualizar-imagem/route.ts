@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
       [imageUrl, imageType, width, height, mapId]
     );
 
-    console.log('[API /mapas/atualizar-imagem] Imagem atualizada para mapa:', mapId);
     
     return NextResponse.json({
       message: 'Imagem atualizada com sucesso',

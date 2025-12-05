@@ -43,7 +43,6 @@ export async function DELETE(request: NextRequest) {
       [mapId]
     );
 
-    console.log('[API /mapas/deletar] Mapa deletado:', mapId);
     return NextResponse.json(
       { message: 'Mapa deletado com sucesso' },
       { status: 200 }

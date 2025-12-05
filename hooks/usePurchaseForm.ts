@@ -109,7 +109,6 @@ export function usePurchaseForm(
 
     try {
       // 🔍 VERIFICAR SE TODOS OS LOTES ESTÃO DISPONÍVEIS ANTES DE RESERVAR
-      console.log(`[usePurchaseForm] 🔍 Verificando disponibilidade de ${lots.length} lote(s)...`);
 
       const unavailableLots: string[] = [];
       for (const lot of lots) {
@@ -122,11 +121,8 @@ export function usePurchaseForm(
       if (unavailableLots.length > 0) {
         setError(`Os seguintes lotes não estão mais disponíveis: ${unavailableLots.join(', ')}. Por favor, remova-os da seleção.`);
         setIsSubmitting(false);
-        console.log(`[usePurchaseForm] ❌ Lotes indisponíveis:`, unavailableLots);
         return;
       }
-
-      console.log(`[usePurchaseForm] ✅ Todos os ${lots.length} lote(s) estão disponíveis, prosseguindo com a reserva...`);
 
       // Preparar detalhes dos lotes com map_id, block_id, preço, firstPayment e installments
       const lotDetails = lots.map(lot => ({
@@ -161,16 +157,12 @@ export function usePurchaseForm(
         requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;
       }
 
-      console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s)`);
-
       await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
           'Content-Type': 'application/json',
         },
         timeout: 10000,
       });
-
-      console.log(`[usePurchaseForm] ✅ Reserva enviada com sucesso para ${lots.length} lote(s)`);
 
       onSuccess();
     } catch (err) {

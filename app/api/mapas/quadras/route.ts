@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
       updatedAt: block.updatedAt,
     })) : [];
 
-    console.log('[API /mapas/quadras GET] ✅ Quadras encontradas:', blocks.length);
     return NextResponse.json(blocks, { status: 200 });
   } catch (error) {
     console.error('[API /mapas/quadras GET] Erro:', error);

@@ -129,7 +129,6 @@ export default function DashboardPage() {
   // Redirecionar vendedores para a página de mapas
   useEffect(() => {
     if (user?.role === UserRole.VENDEDOR) {
-      console.log('⚠️ Vendedor não tem acesso ao dashboard - redirecionando');
       router.push('/maps');
       return;
     }
@@ -201,7 +200,6 @@ export default function DashboardPage() {
     );
   }
 
-  console.log(maps)
 
   return (
     <div className="p-6">

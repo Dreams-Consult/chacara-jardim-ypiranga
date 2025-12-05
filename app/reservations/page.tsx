@@ -67,13 +67,11 @@ export default function ReservationsPage() {
 
   const loadData = useCallback(async () => {
     try {
-      console.log('[Reservations] 🔄 Carregando reservas...');
 
       // Carregar todas as reservas do endpoint
       const response = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
       const allReservations: Reservation[] = Array.isArray(response.data) ? response.data : [];
 
-      console.log('[Reservations] 📦 Total de reservas recebidas:', allReservations.length);
 
       // DEV e ADMIN veem todas as reservas, outros perfis filtram por user_id
       let filteredReservations: Reservation[];
@@ -81,13 +79,11 @@ export default function ReservationsPage() {
       if (user?.role === UserRole.DEV || user?.role === UserRole.ADMIN) {
         // DEV e ADMIN veem tudo
         filteredReservations = allReservations;
-        console.log('[Reservations] ✅ Usuário DEV/ADMIN - exibindo todas as reservas:', allReservations.length);
       } else if (user?.id) {
         // Outros perfis filtram por user_id (vendedor que criou a reserva)
         filteredReservations = allReservations.filter((reservation: any) => {
           return reservation.user_id === user.id;
         });
-        console.log('[Reservations] ✅ Reservas filtradas por user_id:', filteredReservations.length, '(ID:', user.id, ')');
       } else {
         filteredReservations = [];
       }
@@ -116,7 +112,6 @@ export default function ReservationsPage() {
 
   // Polling automático removido - atualização manual apenas
   // useRealtimeUpdates(() => {
-  //   console.log('🔄 Auto-refresh de reservas');
   //   loadData();
   // }, 10000);
 
@@ -142,7 +137,6 @@ export default function ReservationsPage() {
         timeout: 10000,
       });
 
-      console.log('[Reservations] ✅ Reserva aprovada e lote marcado como vendido');
       loadData(); // Recarregar dados
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao aprovar reserva:', error);
@@ -168,7 +162,6 @@ export default function ReservationsPage() {
         lotStatus: 'available',
         userRole: user?.role
       });
-      console.log('[Reservations] ✅ Reserva rejeitada com sucesso');
       loadData(); // Recarregar dados
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao rejeitar reserva:', error);
@@ -287,7 +280,6 @@ export default function ReservationsPage() {
         timeout: 10000,
       });
 
-      console.log('[Reservations] ✅ Reserva editada com sucesso');
       setIsEditModalOpen(false);
       setEditingReservation(null);
       loadData();
@@ -326,7 +318,6 @@ export default function ReservationsPage() {
       // Se a reserva está cancelada, buscar outra reserva com o mesmo lote que não esteja cancelada
       let targetReservation: Reservation | undefined = reservation;
       if (!reservation || reservation.status === 'cancelled') {
-        console.log('[Reservations] ⚠️ Reserva cancelada ou não encontrada, buscando alternativa...');
         
         // Buscar o lote da reserva cancelada
         if (reservation?.lots && reservation.lots.length > 0) {
@@ -340,7 +331,6 @@ export default function ReservationsPage() {
           );
           
           if (targetReservation) {
-            console.log('[Reservations] ✅ Reserva alternativa encontrada:', targetReservation.id);
           }
         }
       }

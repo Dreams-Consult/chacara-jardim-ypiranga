@@ -58,7 +58,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.log(`[API /usuarios/role] ✅ Cargo atualizado:`, user.email, `- ${oldRole} → ${role}`);
     
     return NextResponse.json(
       {

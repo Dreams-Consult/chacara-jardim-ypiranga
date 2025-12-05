@@ -150,18 +150,20 @@ export default function AdminMapsLotsPage() {
 
       {maps.length > 1 && (
         <div className="mb-6">
-          <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Mapa</label>
-          <select
-            value={selectedMap?.id || ''}
-            onChange={(e) => selectMap(e.target.value)}
-            className="w-full sm:w-auto px-5 py-3 bg-white border-none rounded-xl text-[#1c1c1c] font-semibold shadow-[var(--shadow-md)] focus:ring-4 focus:ring-[var(--accent)]/30 transition-all cursor-pointer"
-          >
-            {maps.map((map) => (
-              <option key={map.id} value={map.id}>
-                {map.name}
-              </option>
-            ))}
-          </select>
+          <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">Mapa</label>
+          <div className="max-w-md">
+            <select
+              value={selectedMap?.id || ''}
+              onChange={(e) => selectMap(e.target.value)}
+              className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
+            >
+              {maps.map((map) => (
+                <option key={map.id} value={map.id}>
+                  {map.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 

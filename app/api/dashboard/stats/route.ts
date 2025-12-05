@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
   let connection;
   
   try {
-    console.log('[API /dashboard/stats GET] Buscando estatísticas...');
 
     connection = await mysql.createConnection(dbConfig);
 
@@ -129,7 +128,6 @@ export async function GET(request: NextRequest) {
       })),
     };
 
-    console.log('[API /dashboard/stats GET] ✅ Estatísticas calculadas');
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('[API /dashboard/stats GET] ❌ Erro:', error);

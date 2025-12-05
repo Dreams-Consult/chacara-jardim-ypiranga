@@ -13,7 +13,6 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { id, name, description } = body;
 
-    console.log('[PATCH /mapas/atualizar] Recebido:', { id, name, description });
 
     if (!id) {
       return NextResponse.json(
@@ -45,7 +44,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log('[PATCH /mapas/atualizar] Mapa encontrado:', maps[0]);
 
     // Atualizar o mapa
     const [result] = await connection.query(
@@ -53,7 +51,6 @@ export async function PATCH(request: NextRequest) {
       [name.trim(), description?.trim() || '', id]
     );
 
-    console.log('[PATCH /mapas/atualizar] Mapa atualizado com sucesso');
 
     return NextResponse.json({
       success: true,

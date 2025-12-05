@@ -51,14 +51,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isCheckingAuth) return;
     
     if (!isAuthenticated && pathname !== '/login') {
-      console.log('[AdminLayout] ⚠️ Usuário não autenticado - redirecionando para login');
       router.push('/login');
     }
   }, [isAuthenticated, pathname, router, isCheckingAuth]);
 
-  // Marcar como visitado quando entrar em map-management
+  // Marcar como visitado quando entrar em map-details
   useEffect(() => {
-    if (mounted && pathname === '/admin/map-management' && !showLotManagement) {
+    if (mounted && pathname === '/admin/map-details' && !showLotManagement) {
       localStorage.setItem('hasVisitedMapManagement', 'true');
       setShowLotManagement(true);
     }
@@ -235,9 +234,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {user.role !== UserRole.VENDEDOR && (
                   <>
                     <Link
-                      href="/admin/map-management"
+                      href="/admin/map-details"
                       className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
-                        isActive('/admin/map-management')
+                        isActive('/admin/map-details')
                           ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                           : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                       }`}

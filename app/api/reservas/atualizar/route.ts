@@ -117,12 +117,10 @@ export async function PUT(request: NextRequest) {
             );
           }
         }
-        console.log(`[API /reservas/atualizar] ✅ Preços e parcelas de ${lots.length} lote(s) atualizados`);
       }
 
       await connection.commit();
 
-      console.log('[API /reservas/atualizar] ✅ Reserva atualizada:', id);
       
       return NextResponse.json(
         { message: 'Reserva atualizada com sucesso' },

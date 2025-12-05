@@ -16,7 +16,6 @@ export function useBlockOperations() {
 
     setIsLoading(true);
     try {
-      console.log(`[useBlockOperations] 🔄 Carregando quadras do mapa ${mapId}...`);
       const response = await axios.get(`${API_URL}/mapas/quadras`, {
         params: { mapId },
         timeout: 10000,
@@ -32,7 +31,6 @@ export function useBlockOperations() {
         updatedAt: new Date(block.updatedAt),
       }));
 
-      console.log('[useBlockOperations] ✅ Quadras carregadas:', formattedBlocks.length);
       setBlocks(formattedBlocks);
     } catch (error) {
       console.error('[useBlockOperations] ❌ Erro ao carregar quadras:', error);
@@ -47,7 +45,6 @@ export function useBlockOperations() {
    */
   const createBlock = useCallback(async (block: Omit<Block, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      console.log('[useBlockOperations] 📤 Criando quadra:', block);
       const newBlock = {
         ...block,
         id: Date.now().toString(),
@@ -60,7 +57,6 @@ export function useBlockOperations() {
         timeout: 10000,
       });
 
-      console.log('[useBlockOperations] ✅ Quadra criada com sucesso');
       await loadBlocks(block.mapId);
     } catch (error) {
       console.error('[useBlockOperations] ❌ Erro ao criar quadra:', error);
@@ -73,7 +69,6 @@ export function useBlockOperations() {
    */
   const updateBlock = useCallback(async (block: Block) => {
     try {
-      console.log('[useBlockOperations] 📝 Atualizando quadra:', block);
       const updatedBlock = {
         ...block,
         updatedAt: new Date(),
@@ -84,7 +79,6 @@ export function useBlockOperations() {
         timeout: 10000,
       });
 
-      console.log('[useBlockOperations] ✅ Quadra atualizada com sucesso');
       await loadBlocks(block.mapId);
     } catch (error) {
       console.error('[useBlockOperations] ❌ Erro ao atualizar quadra:', error);
@@ -97,13 +91,11 @@ export function useBlockOperations() {
    */
   const deleteBlock = useCallback(async (blockId: string, mapId: string) => {
     try {
-      console.log(`[useBlockOperations] 🗑️ Deletando quadra ${blockId}...`);
       await axios.delete(`${API_URL}/mapas/quadras/deletar`, {
         params: { blockId },
         timeout: 10000,
       });
 
-      console.log('[useBlockOperations] ✅ Quadra deletada com sucesso');
       await loadBlocks(mapId);
     } catch (error: any) {
       console.error('[useBlockOperations] ❌ Erro ao deletar quadra:', error);

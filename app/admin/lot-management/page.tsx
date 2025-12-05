@@ -13,7 +13,6 @@ function LotManagementWrapper() {
   useEffect(() => {
     // Vendedores não têm acesso ao gerenciamento de lotes
     if (user?.role === UserRole.VENDEDOR) {
-      console.log('[LotManagement] ⚠️ Vendedor não tem permissão - redirecionando');
       router.push('/dashboard');
     }
   }, [user, router]);

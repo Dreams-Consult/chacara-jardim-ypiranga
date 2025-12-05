@@ -48,7 +48,6 @@ export async function DELETE(request: NextRequest) {
       [lotId]
     );
 
-    console.log('[API /mapas/lotes/deletar] Lote deletado:', lotId);
     return NextResponse.json(
       { message: 'Lote deletado com sucesso' },
       { status: 200 }

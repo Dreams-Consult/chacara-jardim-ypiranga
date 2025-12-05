@@ -19,6 +19,7 @@ export default function MapDetails() {
   const { user } = useAuth();
 
   const [map, setMap] = useState<Map | null>(null);
+  const [allMaps, setAllMaps] = useState<Map[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger para forçar refresh dos cards
   
@@ -59,7 +60,6 @@ export default function MapDetails() {
     if (!mapId) return [];
 
     try {
-      console.log(`[MapDetails] 🔄 Carregando lotes da quadra ${blockId}...`);
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId, blockId },
         timeout: 10000,
@@ -86,7 +86,6 @@ export default function MapDetails() {
     if (!mapId) return;
 
     try {
-      console.log('[MapDetails] 🔄 Carregando todos os lotes do mapa...');
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId }, // Sem blockId = todos os lotes
         timeout: 10000,
@@ -100,7 +99,6 @@ export default function MapDetails() {
           createdAt: new Date(lot.createdAt),
           updatedAt: new Date(lot.updatedAt),
         }));
-        console.log('[MapDetails] ✅ Total de lotes carregados:', lotsWithMapId.length);
         setAllLots(lotsWithMapId);
       }
     } catch (error) {
@@ -109,47 +107,54 @@ export default function MapDetails() {
   }, [mapId]);
 
   const loadMapData = useCallback(async () => {
-    if (!mapId) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log(`[MapDetails] 🔄 Carregando dados do mapa ${mapId}...`);
       const response = await axios.get(`${API_URL}/mapas`, {
         timeout: 10000,
       });
 
-      // Buscar o mapa específico pelo ID
-      const data = response.data.find((m: any) => m.mapId === mapId || m.id === mapId);
+      const mapsData = response.data;
+      const formattedMaps: Map[] = mapsData.map((m: any) => ({
+        id: m.mapId || m.id,
+        name: m.name || `Mapa ${m.mapId || m.id}`,
+        description: m.description || '',
+        imageUrl: m.imageUrl || '',
+        imageType: 'image',
+        width: m.width || 800,
+        height: m.height || 600,
+        createdAt: m.createdAt ? new Date(m.createdAt) : new Date(),
+        updatedAt: m.updatedAt ? new Date(m.updatedAt) : new Date(),
+      }));
       
-      if (data) {
-        const mapObj: Map = {
-          id: data.mapId || data.id || mapId,
-          name: data.name || `Mapa ${data.mapId || mapId}`,
-          description: data.description || '',
-          imageUrl: data.imageUrl || '',
-          imageType: 'image',
-          width: data.width || 800,
-          height: data.height || 600,
-          createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
-        };
-        setMap(mapObj);
+      setAllMaps(formattedMaps);
+
+      // Se tem mapId, buscar o mapa específico
+      if (mapId) {
+        const data = mapsData.find((m: any) => m.mapId === mapId || m.id === mapId);
+        
+        if (data) {
+          const mapObj: Map = {
+            id: data.mapId || data.id || mapId,
+            name: data.name || `Mapa ${data.mapId || mapId}`,
+            description: data.description || '',
+            imageUrl: data.imageUrl || '',
+            imageType: 'image',
+            width: data.width || 800,
+            height: data.height || 600,
+            createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+            updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
+          };
+          setMap(mapObj);
+        } else {
+          setMap(null);
+        }
       } else {
-        // Se não encontrou o mapa, cria um padrão
-        const defaultMap: Map = {
-          id: mapId,
-          name: `Mapa ${mapId}`,
-          description: '',
-          imageUrl: '',
-          imageType: 'image',
-          width: 800,
-          height: 600,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        setMap(defaultMap);
+        // Se não tem mapId, selecionar o primeiro mapa
+        if (formattedMaps.length > 0) {
+          const firstMap = formattedMaps[0];
+          router.push(`/admin/map-details?mapId=${firstMap.id}`);
+        } else {
+          setMap(null);
+        }
       }
     } catch (error) {
       console.error('[MapDetails] ❌ Erro ao buscar dados:', error);
@@ -169,15 +174,18 @@ export default function MapDetails() {
     } finally {
       setIsLoading(false);
     }
-  }, [mapId]);
+  }, [mapId, router]);
+
+  useEffect(() => {
+    loadMapData();
+  }, [loadMapData]);
 
   useEffect(() => {
     if (mapId) {
-      loadMapData();
       loadBlocks(mapId);
       loadAllLots(); // Carregar todos os lotes para o InteractiveMap
     }
-  }, [mapId, loadMapData, loadBlocks, loadAllLots]);
+  }, [mapId, loadBlocks, loadAllLots]);
 
   // Selecionar automaticamente a primeira quadra quando as quadras forem carregadas
   useEffect(() => {
@@ -275,7 +283,6 @@ export default function MapDetails() {
 
   const handleSaveLot = async (lot: Lot) => {
     try {
-      console.log('[MapDetails] 📤 Salvando lote:', lot);
       
       if (!lot.lotNumber || lot.lotNumber.trim() === '') {
         alert('❌ Número do lote é obrigatório');
@@ -306,14 +313,11 @@ export default function MapDetails() {
       };
 
       if (lot.id && lot.id !== '') {
-        console.log('[MapDetails] 🔄 Atualizando lote existente:', lotToSave);
         const response = await axios.patch(`${API_URL}/mapas/lotes/atualizar`, lotToSave, {
           headers: { 'Content-Type': 'application/json' },
           timeout: 10000,
         });
-        console.log('[MapDetails] ✅ Lote atualizado:', response.data);
       } else {
-        console.log('[MapDetails] ➕ Criando novo lote:', lotToSave);
         const response = await axios.post(`${API_URL}/mapas/lotes/criar`, {
           ...lotToSave,
           id: Date.now().toString(),
@@ -321,7 +325,6 @@ export default function MapDetails() {
           headers: { 'Content-Type': 'application/json' },
           timeout: 10000,
         });
-        console.log('[MapDetails] ✅ Lote criado:', response.data);
       }
 
       // Força refresh apenas dos cards de quadra
@@ -387,7 +390,6 @@ export default function MapDetails() {
 
   const handleDeleteLot = async (lotId: string) => {
     try {
-      console.log('[MapDetails] 🗑️ Excluindo lote:', lotId);
       
       // Buscar o lote em todas as quadras para verificar status
       let lot: Lot | undefined;
@@ -418,8 +420,6 @@ export default function MapDetails() {
         timeout: 10000,
       });
 
-      console.log('[MapDetails] ✅ Lote excluído:', response.data);
-      
       // Força refresh dos cards após excluir lote
       setRefreshTrigger(prev => prev + 1);
       // Recarregar todos os lotes para atualizar o InteractiveMap
@@ -496,7 +496,6 @@ export default function MapDetails() {
               timeout: 120000,
             });
 
-            console.log('[MapDetails] ✅ PDF atualizado');
             alert('✅ PDF atualizado com sucesso!');
             setIsEditingImage(false);
             setImageFile(null);
@@ -522,7 +521,6 @@ export default function MapDetails() {
                 timeout: 30000,
               });
 
-              console.log('[MapDetails] ✅ Imagem atualizada');
               alert('✅ Imagem atualizada com sucesso!');
               setIsEditingImage(false);
               setImageFile(null);
@@ -571,20 +569,34 @@ export default function MapDetails() {
 
   if (!map) {
     return (
-      <div className="min-h-screen bg-[var(--background)] p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4 shadow-md">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <p className="text-white font-semibold mb-2">Erro ao carregar mapa</p>
-          <button
-            onClick={() => router.push('/admin/map-management')}
-            className="px-4 py-2 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors"
-          >
-            Voltar para Gerência de Loteamentos
-          </button>
+      <div className="min-h-screen bg-[var(--background)] p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-[var(--foreground)] mb-6">Gerenciar Loteamentos</h1>
+          
+          {allMaps.length === 0 ? (
+            <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-[var(--accent)]/40 shadow-[var(--shadow-md)]">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
+                <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              <p className="text-[var(--foreground)] text-lg font-semibold mb-2">Nenhum loteamento cadastrado</p>
+              <p className="text-[var(--foreground)]/80 text-sm font-medium mb-4">Importe ou crie um novo loteamento para começar</p>
+              <button
+                onClick={() => router.push('/admin/import-map')}
+                className="px-6 py-3 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors inline-flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Importar Loteamento
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-md)]">
+              <p className="text-white font-semibold mb-2">Selecione um loteamento para gerenciar</p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -592,19 +604,31 @@ export default function MapDetails() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] p-6">
-      {/* Header */}
+      {/* Header com Seletor de Mapas */}
       <div className="mb-6">
-        <button
-          onClick={() => router.push('/admin/map-management')}
-          className="text-[var(--accent)] hover:text-[var(--accent-light)] font-medium hover:underline mb-4 transition-colors cursor-pointer"
-        >
-          ← Voltar para Gerência de Loteamentos
-        </button>
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 pr-0 lg:pr-20">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--foreground)] opacity-80">{map.name}</h1>
-            {map.description && <p className="text-white/70 mt-1">{map.description}</p>}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-[var(--foreground)] mb-4">Gerenciar Loteamentos</h1>
+            
+            {/* Seletor de Mapas */}
+            <div className="max-w-md">
+              <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">
+                Loteamento Selecionado
+              </label>
+              <select
+                value={mapId}
+                onChange={(e) => router.push(`/admin/map-details?mapId=${e.target.value}`)}
+                className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
+              >
+                {allMaps.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+          
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setIsEditingImage(true)}
@@ -623,6 +647,10 @@ export default function MapDetails() {
             </button>
           </div>
         </div>
+        
+        {map.description && (
+          <p className="text-[var(--foreground)]/70 mt-2">{map.description}</p>
+        )}
       </div>
 
       {/* Estatísticas de Status dos Lotes */}
@@ -811,7 +839,6 @@ export default function MapDetails() {
               imageUrl={map.imageUrl}
               lots={allLots}
               onLotClick={(lot) => {
-                console.log('[MapDetails] Lote clicado:', lot);
                 // Aqui você pode adicionar lógica adicional se necessário
               }}
               selectedLotIds={[]}

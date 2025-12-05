@@ -22,11 +22,9 @@ export const useMapSelection = () => {
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        console.log('📍 [Página Pública] Buscando mapas da API...');
         // Buscar apenas campos necessários (sem imageUrl para economizar dados)
         const response = await axios.get(`${API_URL}/mapas?minimal=true`);
         const mapsData = response.data;
-        console.log('✅ [Página Pública] Resposta da API /mapas:', mapsData);
 
         // Validar se mapsData é um array
         if (!Array.isArray(mapsData)) {
@@ -52,7 +50,6 @@ export const useMapSelection = () => {
               updatedAt: new Date(),
             }));
 
-          console.log(`✅ [Página Pública] ${allMaps.length} mapas carregados`);
           setMaps(allMaps);
 
           // Verificar se há um mapa selecionado válido
@@ -62,20 +59,17 @@ export const useMapSelection = () => {
 
           if (currentMapExists) {
             // Mapa selecionado ainda existe, manter seleção
-            console.log(`📌 [Página Pública] Mantendo mapa selecionado: ${currentMapId}`);
             // Carregar quadras do mapa selecionado
             loadBlocksForMap(currentMapId);
           } else if (allMaps.length > 0) {
             // Não há mapa selecionado OU o mapa não existe mais: selecionar o primeiro
             const firstMap = allMaps[0];
-            console.log(`🎯 [Página Pública] Selecionando primeiro mapa: ${firstMap.id} - ${firstMap.name}`);
             setSelectedMap(firstMap);
             selectedMapIdRef.current = firstMap.id;
             // Carregar quadras do primeiro mapa automaticamente
             loadBlocksForMap(firstMap.id);
           }
         } else {
-          console.log('📭 [Página Pública] Nenhum mapa retornado pela API');
           setMaps([]);
           setLots([]);
           setSelectedMap(null);
@@ -98,13 +92,10 @@ export const useMapSelection = () => {
   const loadBlocksForMap = async (mapId: string) => {
     setIsLoadingBlocks(true);
     try {
-      console.log(`📦 [Página Pública] Buscando quadras do mapa ${mapId}...`);
       const response = await axios.get(`${API_URL}/mapas/quadras`, {
         params: { mapId },
         timeout: 10000,
       });
-
-      console.log('📦 [Página Pública] Resposta da API /mapas/quadras:', response.data);
 
       if (Array.isArray(response.data) && response.data.length > 0) {
         const blocksData = response.data.map((block: any) => ({
@@ -116,7 +107,6 @@ export const useMapSelection = () => {
           updatedAt: new Date(block.updatedAt),
         }));
 
-        console.log(`✅ [Página Pública] ${blocksData.length} quadras carregadas para o mapa ${mapId}`);
         setBlocks(blocksData);
         
         // Selecionar primeira quadra automaticamente
@@ -126,7 +116,6 @@ export const useMapSelection = () => {
           await loadLotsForBlock(mapId, firstBlock.id, blocksData);
         }
       } else {
-        console.log('📭 [Página Pública] Nenhuma quadra encontrada para o mapa', mapId);
         setBlocks([]);
         setSelectedBlock(null);
         setLots([]);
@@ -145,13 +134,10 @@ export const useMapSelection = () => {
   const loadLotsForBlock = async (mapId: string, blockId: string, blocksData?: Block[]) => {
     setIsLoadingLots(true);
     try {
-      console.log(`📦 [Página Pública] Buscando lotes do mapa ${mapId}, quadra ${blockId}...`);
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId, blockId },
         timeout: 10000,
       });
-
-      console.log('📦 [Página Pública] Resposta da API /mapas/lotes:', response.data);
 
       // Validar se a resposta é válida
       if (!response.data) {
@@ -169,8 +155,6 @@ export const useMapSelection = () => {
         const blocksToSearch = blocksData || blocks;
         const selectedBlockData = blocksToSearch.find(b => b.id.toString() === blockId.toString());
         const blockName = selectedBlockData?.name || null;
-        console.log(`[useMapSelection] Buscando quadra ${blockId} em:`, blocksToSearch);
-        console.log(`[useMapSelection] Quadra encontrada:`, selectedBlockData);
         
         const lotsData = responseData.lots.map((lot: any) => ({
           id: lot.id?.toString() || '',
@@ -187,10 +171,8 @@ export const useMapSelection = () => {
           updatedAt: new Date(lot.updatedAt),
         }));
 
-        console.log(`✅ [Página Pública] ${lotsData.length} lotes carregados para a quadra ${blockId}`);
         setLots(lotsData);
       } else {
-        console.log('📭 [Página Pública] Nenhum lote encontrado para a quadra', blockId);
         setLots([]);
       }
     } catch (error) {
@@ -256,7 +238,6 @@ export const useMapSelection = () => {
 
   const selectMap = useCallback(
     async (mapId: string) => {
-      console.log(`Selecionando mapa ${mapId}...`);
       const map = maps.find((m) => m.id === mapId);
       
       // Se o mapa não tem imageUrl carregada, buscar dados completos
@@ -296,7 +277,6 @@ export const useMapSelection = () => {
 
   const selectBlock = useCallback(
     async (blockId: string) => {
-      console.log(`Selecionando quadra ${blockId}...`);
       const block = blocks.find((b: Block) => b.id === blockId);
       setSelectedBlock(block || null);
 
@@ -308,14 +288,6 @@ export const useMapSelection = () => {
     },
     [blocks, selectedMap]
   );
-
-  // Debug: log lots state changes
-  useEffect(() => {
-    console.log('🔍 [useMapSelection] Lots state updated:', lots.length, 'lotes');
-    if (lots.length > 0) {
-      console.log('🔍 [useMapSelection] Primeiro lote:', lots[0]);
-    }
-  }, [lots]);
 
   return {
     maps,

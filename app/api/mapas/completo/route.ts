@@ -89,7 +89,6 @@ export async function GET() {
       })
     );
 
-    console.log('[API /mapas/completo GET] ✅ Dados completos retornados:', mapsWithData.length, 'mapas');
     return NextResponse.json(mapsWithData, { status: 200 });
   } catch (error) {
     console.error('[API /mapas/completo GET] Erro:', error);

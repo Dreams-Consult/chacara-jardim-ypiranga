@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
   let connection;
   
   try {
-    console.log('[API /usuarios GET] Buscando usuários...');
 
     connection = await mysql.createConnection(dbConfig);
 

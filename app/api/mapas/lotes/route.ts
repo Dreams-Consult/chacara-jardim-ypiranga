@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[API /mapas/lotes GET] Buscando lotes - mapId:', mapId, 'blockId:', blockId);
 
     // Conectar ao banco de dados
     connection = await mysql.createConnection(dbConfig);
@@ -79,7 +78,6 @@ export async function GET(request: NextRequest) {
       }
     ];
 
-    console.log('[API /mapas/lotes GET] ✅ Lotes encontrados:', lots.length);
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('[API /mapas/lotes GET] ❌ Erro:', error);

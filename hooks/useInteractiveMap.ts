@@ -314,12 +314,6 @@ export function useInteractiveMap({
           { x: minX, y: maxY },
         ];
 
-        console.log('📐 Retângulo criado:', {
-          start: rectStart,
-          end: finalPosition,
-          points: rectanglePoints
-        });
-
         onAreaDrawn({ points: rectanglePoints });
       }
 

@@ -47,7 +47,6 @@ export async function DELETE(request: NextRequest) {
       [userId]
     );
 
-    console.log(`[API /usuarios/excluir] ✅ Usuário ${userId} (${user.name}) excluído`);
     
     return NextResponse.json(
       { 

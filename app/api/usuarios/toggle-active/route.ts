@@ -45,7 +45,6 @@ export async function PUT(request: NextRequest) {
     );
 
     const action = active ? 'ativado' : 'desativado';
-    console.log(`[API /usuarios/toggle-active] ✅ Usuário ${userId} ${action}`);
     
     return NextResponse.json(
       { 

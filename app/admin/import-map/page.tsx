@@ -270,7 +270,6 @@ export default function ImportMapPage() {
         timeout: 30000,
       });
 
-      console.log('[ImportMap] ✅ Importação bem-sucedida:', response.data);
       setSuccess(response.data);
       setJsonContent('');
     } catch (err: any) {
@@ -359,7 +358,6 @@ export default function ImportMapPage() {
               timeout: 120000,
             });
 
-            console.log('[ImportMap] ✅ PDF atualizado:', response.data);
             setImageUploaded(true);
             setIsUploadingImage(false);
           } else {
@@ -381,7 +379,6 @@ export default function ImportMapPage() {
                 timeout: 30000,
               });
 
-              console.log('[ImportMap] ✅ Imagem atualizada:', response.data);
               setImageUploaded(true);
               setIsUploadingImage(false);
             };

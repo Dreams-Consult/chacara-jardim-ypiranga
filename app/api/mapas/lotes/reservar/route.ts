@@ -48,18 +48,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log dos dados recebidos
-    console.log('[API /mapas/lotes/reservar] 📥 Dados recebidos:', {
-      lotIds,
-      customerName,
-      customerEmail,
-      sellerId,
-      sellerName,
-      sellerEmail,
-      sellerPhone,
-      sellerCPF
-    });
-
     connection = await mysql.createConnection(dbConfig);
     
     // Iniciar transação
@@ -118,14 +106,6 @@ export async function POST(request: NextRequest) {
           contract || null,
         ]
       );
-
-      console.log('[API /mapas/lotes/reservar] ✅ Dados do vendedor salvos:', {
-        seller_id: sellerId,
-        seller_name: sellerName,
-        seller_email: sellerEmail,
-        seller_phone: sellerPhone,
-        seller_cpf: sellerCPF
-      });
 
       const purchaseRequestId = (purchaseResult as any).insertId;
 

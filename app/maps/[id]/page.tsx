@@ -70,7 +70,6 @@ export default function MapViewPage() {
             createdAt: new Date(block.createdAt),
             updatedAt: new Date(block.updatedAt),
           }));
-          console.log('[MapViewPage] Quadras carregadas:', blocksData);
           setBlocks(blocksData);
 
           // Carregar TODOS os lotes do mapa de uma vez
@@ -79,7 +78,6 @@ export default function MapViewPage() {
             timeout: 10000,
           });
 
-          console.log('[MapViewPage] Resposta de lotes:', lotsResponse.data);
           const lotsData = lotsResponse.data[0];
           if (lotsData && lotsData.lots && Array.isArray(lotsData.lots)) {
             const lotsWithMapId = lotsData.lots.map((lot: any) => {
@@ -94,17 +92,13 @@ export default function MapViewPage() {
                 updatedAt: lot.updatedAt ? new Date(lot.updatedAt) : new Date(),
               };
             });
-            console.log('[MapViewPage] Lotes carregados:', lotsWithMapId.length, 'lotes');
-            console.log('[MapViewPage] Lotes completos:', lotsWithMapId);
             setAllLots(lotsWithMapId);
 
             // Se houver quadras, selecionar a primeira automaticamente e filtrar lotes
             if (blocksData.length > 0) {
               const firstBlockId = blocksData[0].id;
-              console.log('[MapViewPage] Primeira quadra ID:', firstBlockId, 'Nome:', blocksData[0].name);
               setSelectedBlockId(firstBlockId);
               const filteredLots = lotsWithMapId.filter((lot: Lot) => lot.blockId === firstBlockId);
-              console.log('[MapViewPage] Lotes filtrados para quadra', firstBlockId, ':', filteredLots.length);
               setLots(filteredLots);
             }
           }
@@ -124,13 +118,9 @@ export default function MapViewPage() {
       return;
     }
 
-    console.log('[MapViewPage] filterLotsByBlock - blockId:', blockId, 'tipo:', typeof blockId);
-    console.log('[MapViewPage] allLots:', allLots.length);
     const filteredLots = allLots.filter(lot => {
-      console.log('[MapViewPage] Comparando lot.blockId:', lot.blockId, 'tipo:', typeof lot.blockId, 'com blockId:', blockId);
       return lot.blockId === blockId;
     });
-    console.log('[MapViewPage] Filtrando lotes - blockId:', blockId, 'encontrados:', filteredLots.length);
     setLots(filteredLots);
   };
 

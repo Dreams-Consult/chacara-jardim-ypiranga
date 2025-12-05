@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('[API /usuarios/criar] ✅ Usuário criado:', email, '- ID:', userId);
     return NextResponse.json(
       { 
         message: 'Usuário criado com sucesso. Aguarde aprovação do administrador.',

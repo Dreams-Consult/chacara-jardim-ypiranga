@@ -42,7 +42,6 @@ export async function DELETE(request: NextRequest) {
       'DELETE FROM lots WHERE block_id = ?',
       [blockId]
     );
-    console.log(`[API /mapas/quadras/deletar] ${lotsResult.affectedRows} lotes deletados da quadra ${blockId}`);
 
     // Depois deletar a quadra
     await connection.execute(
@@ -50,7 +49,6 @@ export async function DELETE(request: NextRequest) {
       [blockId]
     );
 
-    console.log('[API /mapas/quadras/deletar] Quadra deletada:', blockId);
     return NextResponse.json(
       { message: 'Quadra deletada com sucesso' },
       { status: 200 }

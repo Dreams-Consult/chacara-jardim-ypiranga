@@ -88,10 +88,8 @@ function LoginForm() {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || "{}");
 
         if (!currentUser.first_login) {
-          console.log('[Login] ✅ Login bem-sucedido, redirecionando...');
           router.push('/dashboard');
         }else {
-          console.log('[Login] Primeiro login detectado, redirecionando para atualização de senha...');
           router.push(`/password?userId=${currentUser.id}`);
         }
       } else {

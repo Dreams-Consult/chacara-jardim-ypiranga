@@ -30,13 +30,10 @@ export default function LotManagement() {
     if (!mapId) return;
 
     try {
-      console.log(`[LotManagement] 🔄 Carregando dados do mapa ${mapId}...`);
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId },
         timeout: 10000,
       });
-      console.log('[LotManagement] ✅ Resposta recebida:', response.data);
-
       const data = response.data[0];
 
       if (data) {
@@ -62,7 +59,6 @@ export default function LotManagement() {
             updatedAt: new Date(lot.updatedAt),
           }));
 
-          console.log('[LotManagement] 📍 Lotes carregados:', lotsWithMapId.length);
           setLots(lotsWithMapId);
         } else {
           setLots([]);
@@ -105,7 +101,6 @@ export default function LotManagement() {
 
   const reloadLots = async () => {
     try {
-      console.log('[LotManagement] 🔄 Recarregando lotes...');
       const response = await axios.get(`${API_URL}/mapas/lotes`, {
         params: { mapId },
         timeout: 10000,
@@ -130,12 +125,10 @@ export default function LotManagement() {
 
   const saveLotToAPI = async (lot: Lot) => {
     try {
-      console.log('[LotManagement] 📤 Salvando lote:', lot);
       await axios.post(`${API_URL}/mapas/lotes/criar`, lot, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });
-      console.log('[LotManagement] ✅ Lote salvo com sucesso');
       await reloadLots();
     } catch (error) {
       console.error('[LotManagement] ❌ Erro ao salvar lote:', error);
@@ -145,12 +138,10 @@ export default function LotManagement() {
 
   const updateLotToAPI = async (lot: Lot) => {
     try {
-      console.log('[LotManagement] 📝 Atualizando lote:', lot);
       await axios.patch(`${API_URL}/mapas/lotes/atualizar`, lot, {
         headers: { 'Content-Type': 'application/json' },
         timeout: 10000,
       });
-      console.log('[LotManagement] ✅ Lote atualizado com sucesso');
       await reloadLots();
     } catch (error) {
       console.error('[LotManagement] ❌ Erro ao atualizar lote:', error);
@@ -160,12 +151,10 @@ export default function LotManagement() {
 
   const deleteLotFromAPI = async (lotId: string) => {
     try {
-      console.log(`[LotManagement] 🗑️ Deletando lote ${lotId}...`);
       await axios.delete(`${API_URL}/mapas/lotes/deletar`, {
         params: { lotId },
         timeout: 10000,
       });
-      console.log('[LotManagement] ✅ Lote deletado com sucesso');
       await reloadLots();
     } catch (error) {
       console.error('[LotManagement] ❌ Erro ao deletar lote:', error);
@@ -175,12 +164,10 @@ export default function LotManagement() {
 
   const validateLotNumber = async (lotNumber: string): Promise<boolean> => {
     try {
-      console.log(`🔍 Validando número do lote ${lotNumber} para o mapa ${mapId}...`);
       const response = await axios.get(`${API_URL}/mapas/lotes/numero-valido`, {
         params: { mapId, lotNumber },
       });
       const lotDoesNotExist = response.data.lotExists === 0;
-      console.log(`✅ Resultado da validação:`, lotDoesNotExist ? 'Número disponível' : 'Número já existe');
       return lotDoesNotExist;
     } catch (error) {
       console.error('❌ Erro ao validar número do lote:', error);

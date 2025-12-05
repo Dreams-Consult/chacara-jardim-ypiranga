@@ -35,7 +35,6 @@ export async function PATCH(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('[API /mapas/quadras PATCH] Quadra atualizada:', id);
     return NextResponse.json(updatedBlock, { status: 200 });
   } catch (error) {
     console.error('[API /mapas/quadras PATCH] Erro:', error);

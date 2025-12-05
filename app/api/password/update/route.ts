@@ -32,7 +32,6 @@ export async function PUT(request: NextRequest) {
       [hashedPassword, userId]
     );
 
-    console.log('[API /password/update] Senha atualizada:', userId);
     return NextResponse.json(
       { message: 'Senha atualizada com sucesso' },
       { status: 200 }

@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
   let connection;
   
   try {
-    console.log('[API /mapas GET] Buscando mapas...');
 
     // Conectar ao banco de dados
     connection = await mysql.createConnection(dbConfig);
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
       return base;
     });
 
-    console.log('[API /mapas GET] ✅ Mapas encontrados:', formattedMaps.length);
     return NextResponse.json(formattedMaps, { status: 200 });
   } catch (error) {
     console.error('[API /mapas GET] ❌ Erro:', error);

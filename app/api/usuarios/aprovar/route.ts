@@ -58,7 +58,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const statusMessage = status === 'approved' ? 'aprovado' : 'rejeitado';
-    console.log(`[API /usuarios/aprovar] ✅ Usuário ${statusMessage}:`, user.email, '- ID:', idUsuario);
     
     return NextResponse.json(
       {

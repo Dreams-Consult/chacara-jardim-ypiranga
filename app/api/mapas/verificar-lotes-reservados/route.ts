@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
 
     const count = results[0]?.count || 0;
 
-    console.log(`[API /mapas/verificar-lotes-reservados] Mapa ${mapId}: ${count} lote(s) reservado(s)/vendido(s)`);
     
     return NextResponse.json(
       { 

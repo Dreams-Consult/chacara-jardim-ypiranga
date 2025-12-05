@@ -53,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          console.log('[AuthContext] 🔄 Restaurando sessão do localStorage');
           setUser(parsedUser);
         } catch (e) {
           console.error('[AuthContext] Erro ao restaurar sessão:', e);
@@ -74,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (cpf: string, password: string): Promise<boolean> => {
     try {
-      console.log('[AuthContext] Tentando login...');
 
       // Normalizar o CPF removendo formatação
       const normalizedCpf = cpf.replace(/\D/g, '');
@@ -87,20 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         timeout: 10000,
       });
 
-      console.log('[AuthContext] ✅ Resposta do login:', response.data);
-
       // A API pode retornar os dados diretamente ou dentro de um objeto 'user'
       const foundUser = response.data.user || response.data;
 
       if (foundUser && foundUser.id) {
         // Verificar se o usuário está aprovado (apenas para vendedores)
         if (foundUser.status === UserStatus.PENDING && foundUser.role === UserRole.VENDEDOR) {
-          console.log('[AuthContext] ⚠️ Usuário PENDING');
           throw new Error('PENDING');
         }
 
         if (foundUser.status === UserStatus.REJECTED) {
-          console.log('[AuthContext] ❌ Usuário REJECTED');
           throw new Error('REJECTED');
         }
 
@@ -113,12 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
         localStorage.setItem('userData', JSON.stringify(userWithoutPassword));
 
-        console.log('[AuthContext] ✅ Login realizado com sucesso');
-        console.log('[AuthContext] 💾 Dados salvos no localStorage');
         return true;
       }
 
-      console.log('[AuthContext] ❌ Usuário não encontrado');
       return false;
     } catch (error) {
       if (error instanceof Error) {
@@ -132,7 +123,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Tratar erros da API
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.log('[AuthContext] ❌ Credenciais inválidas');
         return false;
       }
 
@@ -145,7 +135,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     localStorage.removeItem('currentUser');
     localStorage.removeItem('userData');
-    console.log('[AuthContext] 🚪 Logout realizado - dados removidos do localStorage');
   };
 
   const hasRole = (role: UserRole): boolean => {

@@ -82,7 +82,6 @@ export async function PUT(
       values
     );
 
-    console.log('[API /usuarios/atualizar] Usuário atualizado:', userId);
     return NextResponse.json(
       { message: 'Usuário atualizado com sucesso', userId },
       { status: 200 }

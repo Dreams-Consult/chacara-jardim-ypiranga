@@ -75,7 +75,6 @@ export async function PUT(request: NextRequest) {
 
       await connection.commit();
 
-      console.log(`[API /reserva/confirmacao] Reserva ${reservationId} atualizada: ${status}, ${lotIds.length} lote(s) -> ${lotStatus}`);
       return NextResponse.json(
         {
           message: 'Reserva atualizada com sucesso',

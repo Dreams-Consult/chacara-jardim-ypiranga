@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
       .update(password)
       .digest('hex');
 
-    console.log('[API /usuarios/login] Tentativa de login:', cleanCpf);
 
     // Conectar ao banco de dados
     connection = await mysql.createConnection(dbConfig);
@@ -48,7 +47,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      console.log('[API /usuarios/login] ❌ Credenciais inválidas');
       return NextResponse.json(
         { error: 'CPF ou senha inválidos' },
         { status: 401 }
@@ -59,7 +57,6 @@ export async function GET(request: NextRequest) {
 
     // Verificar se o usuário está aprovado
     if (user.status !== 'approved') {
-      console.log('[API /usuarios/login] ❌ Usuário não aprovado:', user.status);
       return NextResponse.json(
         { error: 'Usuário aguardando aprovação ou foi rejeitado' },
         { status: 403 }
@@ -68,7 +65,6 @@ export async function GET(request: NextRequest) {
 
     // Verificar se o usuário está ativo
     if (user.active === 0 || user.active === false) {
-      console.log('[API /usuarios/login] ❌ Usuário desativado:', cleanCpf);
       return NextResponse.json(
         { error: 'Sua conta foi desativada. Entre em contato com o administrador.' },
         { status: 403 }
@@ -91,7 +87,6 @@ export async function GET(request: NextRequest) {
       updated_at: user.updated_at,
     };
 
-    console.log('[API /usuarios/login] ✅ Login bem-sucedido:', cleanCpf);
     return NextResponse.json(userData, { status: 200 });
   } catch (error) {
     console.error('[API /usuarios/login] ❌ Erro:', error);
