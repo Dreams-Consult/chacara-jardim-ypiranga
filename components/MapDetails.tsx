@@ -21,8 +21,17 @@ export default function MapDetails() {
   const [map, setMap] = useState<Map | null>(null);
   const [allMaps, setAllMaps] = useState<Map[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger para forçar refresh dos cards
+  
+  // Estados para estatísticas
+  const [lotStats, setLotStats] = useState({
+    available: 0,
+    reserved: 0,
+    sold: 0,
+    blocked: 0
+  });
   
   // Estados para modais
   const [isAddingBlock, setIsAddingBlock] = useState(false);
@@ -38,8 +47,31 @@ export default function MapDetails() {
   const [selectedBlockId, setSelectedBlockId] = useState<string>('');
   const [reservations, setReservations] = useState<any[]>([]);
   const [allLots, setAllLots] = useState<Lot[]>([]); // Todos os lotes do mapa para InteractiveMap
+  
+  // Estados para criar novo mapa
+  const [isCreatingMap, setIsCreatingMap] = useState(false);
+  const [newMapName, setNewMapName] = useState('');
+  const [newMapDescription, setNewMapDescription] = useState('');
+  const [isSubmittingMap, setIsSubmittingMap] = useState(false);
+  
+  // Estados para deletar mapa
+  const [isDeletingMap, setIsDeletingMap] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
+
+  // Função para verificar se o mapa tem lotes reservados ou vendidos
+  const hasReservedOrSoldLots = () => {
+    return allLots.some(lot => lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD);
+  };
+
+  // Função para verificar se uma quadra tem lotes reservados ou vendidos
+  const blockHasReservedOrSoldLots = (blockId: string) => {
+    return allLots.some(lot => 
+      lot.blockId === blockId && 
+      (lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD)
+    );
+  };
 
   // Função para buscar reservas
   const fetchReservations = async () => {
@@ -101,9 +133,46 @@ export default function MapDetails() {
           updatedAt: new Date(lot.updatedAt),
         }));
         setAllLots(lotsWithMapId);
+      } else {
+        setAllLots([]);
       }
     } catch (error) {
       console.error('[MapDetails] ❌ Erro ao carregar todos os lotes:', error);
+      setAllLots([]);
+    }
+  }, [mapId]);
+
+  // Função para carregar apenas as estatísticas dos lotes (otimizada)
+  const loadLotStats = useCallback(async () => {
+    if (!mapId) return;
+
+    try {
+      setIsLoadingStats(true);
+      
+      const response = await axios.get(`${API_URL}/mapas/lotes/stats`, {
+        params: { mapId },
+        timeout: 10000,
+      });
+
+      if (response.data) {
+        setLotStats({
+          available: response.data.available || 0,
+          reserved: response.data.reserved || 0,
+          sold: response.data.sold || 0,
+          blocked: response.data.blocked || 0
+        });
+      }
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao carregar stats dos lotes:', error);
+      // Se falhar, reseta para 0
+      setLotStats({
+        available: 0,
+        reserved: 0,
+        sold: 0,
+        blocked: 0
+      });
+    } finally {
+      setIsLoadingStats(false);
     }
   }, [mapId]);
 
@@ -115,7 +184,7 @@ export default function MapDetails() {
     try {
       const response = await axios.get(`${API_URL}/mapas/imagem`, {
         params: { mapId: mapIdToLoad },
-        timeout: 15000, // Timeout maior para imagens
+        timeout: 30000, // Timeout maior para imagens (30 segundos)
       });
 
       const { imageUrl, width, height } = response.data;
@@ -228,9 +297,11 @@ export default function MapDetails() {
     if (mapId) {
       loadBlocks(mapId);
       loadAllLots(); // Carregar todos os lotes para o InteractiveMap
+      loadLotStats(); // Carregar estatísticas separadamente
       loadMapImage(mapId); // Carregar imagem de forma assíncrona
     }
-  }, [mapId, loadBlocks, loadAllLots, loadMapImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapId]);
 
   // Selecionar automaticamente a primeira quadra quando as quadras forem carregadas
   useEffect(() => {
@@ -238,6 +309,15 @@ export default function MapDetails() {
       setSelectedBlockId(blocks[0].id);
     }
   }, [blocks, selectedBlockId]);
+
+  // Recarregar estatísticas quando houver mudanças nos lotes
+  useEffect(() => {
+    if (mapId && refreshTrigger > 0) {
+      loadLotStats();
+      loadAllLots(); // Também recarregar lotes para manter sincronizado
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, mapId]);
 
   // Polling automático removido - atualização manual apenas
   // useRealtimeUpdates(() => {
@@ -597,22 +677,84 @@ export default function MapDetails() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[var(--background)] p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)] rounded-full mb-4 animate-pulse shadow-[var(--shadow-lg)]">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </div>
-          <p className="text-[var(--foreground)] text-lg font-semibold">Carregando dados do mapa...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleCreateMap = async () => {
+    if (!newMapName.trim()) {
+      alert('Por favor, informe o nome do loteamento');
+      return;
+    }
 
-  if (!map) {
+    setIsSubmittingMap(true);
+    try {
+      const response = await axios.post('/api/mapas/criar', {
+        name: newMapName,
+        description: newMapDescription,
+        imageUrl: '',
+        width: 800,
+        height: 600,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      });
+
+      const newMapId = response.data.mapId || response.data.id;
+      
+      alert('✅ Loteamento criado com sucesso!');
+      setIsCreatingMap(false);
+      setNewMapName('');
+      setNewMapDescription('');
+      
+      // Recarregar lista de mapas
+      await loadMapData();
+      
+      // Redirecionar para o novo mapa
+      router.push(`/admin/map-details?mapId=${newMapId}`);
+    } catch (error: any) {
+      console.error('Erro ao criar mapa:', error);
+      alert(error.response?.data?.error || '❌ Erro ao criar loteamento. Tente novamente.');
+    } finally {
+      setIsSubmittingMap(false);
+    }
+  };
+
+  const handleDeleteMap = async () => {
+    if (!mapId) return;
+    
+    setIsDeletingMap(true);
+    try {
+      await axios.delete(`${API_URL}/mapas/deletar?mapId=${mapId}`, {
+        timeout: 15000,
+      });
+
+      alert('✅ Loteamento excluído com sucesso!');
+      setShowDeleteConfirm(false);
+      
+      // Recarregar lista de mapas
+      await loadMapData();
+      
+      // Redirecionar para o primeiro mapa ou página inicial
+      if (allMaps.length > 1) {
+        const nextMap = allMaps.find(m => m.id !== mapId);
+        if (nextMap) {
+          router.push(`/admin/map-details?mapId=${nextMap.id}`);
+        } else {
+          router.push('/admin/map-details');
+        }
+      } else {
+        router.push('/admin/map-details');
+      }
+    } catch (error: any) {
+      console.error('Erro ao deletar mapa:', error);
+      const errorMsg = error.response?.data?.error || '❌ Erro ao excluir loteamento. Tente novamente.';
+      alert(errorMsg);
+    } finally {
+      setIsDeletingMap(false);
+    }
+  };
+
+  // Mostrar tela de "sem mapas" apenas quando não estiver carregando E realmente não houver mapas
+  if (!isLoading && !map && allMaps.length === 0) {
     return (
       <div className="min-h-screen bg-[var(--background)] p-6">
         <div className="mb-6">
@@ -647,53 +789,130 @@ export default function MapDetails() {
     );
   }
 
+  // Mostrar skeleton enquanto carrega o mapa inicial
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-[var(--foreground)] mb-4">Gerenciar Loteamentos</h1>
+          
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-6">
+            {/* Skeleton do Seletor de Mapas */}
+            <div className="w-full lg:w-96">
+              <div className="h-5 w-40 bg-[var(--surface)] rounded animate-pulse mb-2"></div>
+              <div className="h-12 w-full bg-[var(--surface)] rounded-xl animate-pulse"></div>
+            </div>
+            
+            {/* Skeleton dos Botões */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0 w-full lg:w-auto">
+              <div className="h-12 w-full lg:w-44 bg-[var(--primary)]/30 rounded-xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Skeleton das Estatísticas */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { color: 'from-green-500 to-green-600' },
+            { color: 'from-orange-500 to-orange-600' },
+            { color: 'from-red-500 to-red-600' },
+            { color: 'from-gray-500 to-gray-600' }
+          ].map((item, i) => (
+            <div key={i} className={`bg-gradient-to-br ${item.color} rounded-2xl p-6 shadow-[var(--shadow-lg)]`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-10 h-10 bg-white/20 rounded-xl animate-pulse"></div>
+              </div>
+              <div className="h-4 w-20 bg-white/20 rounded animate-pulse mb-1"></div>
+              <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Skeleton da seção de Quadras */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <div className="h-7 w-32 bg-[var(--surface)] rounded animate-pulse"></div>
+            <div className="h-11 w-40 bg-[var(--success)]/30 rounded-xl animate-pulse"></div>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] p-4">
+                <div className="h-3 w-16 bg-[var(--border)] rounded animate-pulse mb-2"></div>
+                <div className="h-6 w-20 bg-[var(--border)] rounded animate-pulse mb-1"></div>
+                <div className="h-3 w-full bg-[var(--border)] rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Skeleton do Mapa */}
+        <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden">
+          <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] px-6 py-4 flex items-center justify-between">
+            <div className="h-6 w-48 bg-white/20 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-white/20 rounded-lg animate-pulse"></div>
+          </div>
+          <div className="p-6">
+            <div className="w-full aspect-video bg-[var(--surface)] rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--background)] p-6">
       {/* Header com Seletor de Mapas */}
       <div className="mb-6">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-[var(--foreground)] mb-4">Gerenciar Loteamentos</h1>
-            
-            {/* Seletor de Mapas */}
-            <div className="max-w-md">
-              <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">
-                Loteamento Selecionado
-              </label>
-              <select
-                value={mapId}
-                onChange={(e) => router.push(`/admin/map-details?mapId=${e.target.value}`)}
-                className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
-              >
-                {allMaps.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <h1 className="text-3xl font-bold text-[var(--foreground)] mb-4">Gerenciar Loteamentos</h1>
+        
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-6">
+          {/* Seletor de Mapas */}
+          <div className="w-full lg:w-96">
+            <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">
+              Loteamento Selecionado
+            </label>
+            <select
+              value={mapId}
+              onChange={(e) => router.push(`/admin/map-details?mapId=${e.target.value}`)}
+              className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
+            >
+              {allMaps.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Botões */}
+          <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0 w-full lg:w-auto">
             <button
-              onClick={() => setIsEditingImage(true)}
-              className="px-5 py-2.5 bg-yellow-500 text-white font-semibold rounded-xl hover:bg-yellow-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+              onClick={() => setIsCreatingMap(true)}
+              className="w-full lg:w-auto px-5 py-3 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--primary-dark)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
               </svg>
-              {map.imageUrl ? 'Editar Imagem' : 'Adicionar Imagem'}
+              Novo Loteamento
             </button>
-            <button
-              onClick={handleAddBlock}
-              className="px-5 py-2.5 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-[var(--success-dark)] shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer"
-            >
-              + Adicionar Quadra
-            </button>
+            {mapId && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={hasReservedOrSoldLots()}
+                className="w-full lg:w-auto px-5 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] disabled:hover:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+                title={hasReservedOrSoldLots() ? 'Não é possível excluir. Existem lotes reservados ou vendidos.' : 'Excluir loteamento'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Excluir Loteamento
+              </button>
+            )}
           </div>
         </div>
         
-        {map.description && (
+        {map?.description && (
           <p className="text-[var(--foreground)]/70 mt-2">{map.description}</p>
         )}
       </div>
@@ -709,9 +928,13 @@ export default function MapDetails() {
             </div>
           </div>
           <p className="text-white text-sm font-medium mb-1">Disponível</p>
-          <p className="text-white text-4xl font-bold">
-            {allLots.filter(lot => lot.status === LotStatus.AVAILABLE).length}
-          </p>
+          {isLoadingStats ? (
+            <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">
+              {lotStats.available}
+            </p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -723,9 +946,13 @@ export default function MapDetails() {
             </div>
           </div>
           <p className="text-white text-sm font-medium mb-1">Reservado</p>
-          <p className="text-white text-4xl font-bold">
-            {allLots.filter(lot => lot.status === LotStatus.RESERVED).length}
-          </p>
+          {isLoadingStats ? (
+            <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">
+              {lotStats.reserved}
+            </p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -737,9 +964,13 @@ export default function MapDetails() {
             </div>
           </div>
           <p className="text-white text-sm font-medium mb-1">Vendido</p>
-          <p className="text-white text-4xl font-bold">
-            {allLots.filter(lot => lot.status === LotStatus.SOLD).length}
-          </p>
+          {isLoadingStats ? (
+            <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">
+              {lotStats.sold}
+            </p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -751,15 +982,42 @@ export default function MapDetails() {
             </div>
           </div>
           <p className="text-white text-sm font-medium mb-1">Bloqueado</p>
-          <p className="text-white text-4xl font-bold">
-            {allLots.filter(lot => lot.status === LotStatus.BLOCKED).length}
-          </p>
+          {isLoadingStats ? (
+            <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">
+              {lotStats.blocked}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Seleção de Quadras com Botões (estilo maps/page.tsx) */}
       <div className="mb-8">
-        {!blocks || blocks.length === 0 ? (
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-bold text-[var(--foreground)] opacity-80">Selecione uma Quadra</label>
+          <button
+            onClick={handleAddBlock}
+            className="px-4 py-2 bg-[var(--success)] text-white font-semibold rounded-xl hover:bg-green-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] cursor-pointer flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Adicionar Quadra
+          </button>
+        </div>
+        
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] p-4">
+                <div className="h-3 w-16 bg-[var(--border)] rounded animate-pulse mb-2"></div>
+                <div className="h-6 w-20 bg-[var(--border)] rounded animate-pulse mb-1"></div>
+                <div className="h-3 w-full bg-[var(--border)] rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        ) : !blocks || blocks.length === 0 ? (
           <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-[var(--accent)]/40 shadow-[var(--shadow-md)]">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
               <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -767,12 +1025,10 @@ export default function MapDetails() {
               </svg>
             </div>
             <p className="text-[var(--foreground)] text-lg font-semibold mb-2">Nenhuma quadra cadastrada</p>
-            <p className="text-[var(--foreground)]/80 text-sm font-medium">Clique em "Adicionar Quadra" para começar a organizar seus lotes</p>
+            <p className="text-[var(--foreground)]/80 text-sm font-medium mb-4">Clique em "Adicionar Quadra" acima para começar a organizar seus lotes</p>
           </div>
         ) : (
-          <>
-            <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">Selecione uma Quadra</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {blocks.map((block) => (
                 <div
                   key={block.id}
@@ -811,10 +1067,13 @@ export default function MapDetails() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteBlock(block.id);
+                        if (!blockHasReservedOrSoldLots(block.id)) {
+                          handleDeleteBlock(block.id);
+                        }
                       }}
-                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg cursor-pointer"
-                      title="Excluir quadra"
+                      disabled={blockHasReservedOrSoldLots(block.id)}
+                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500/80"
+                      title={blockHasReservedOrSoldLots(block.id) ? 'Não é possível excluir. Existem lotes reservados ou vendidos.' : 'Excluir quadra'}
                     >
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -824,7 +1083,6 @@ export default function MapDetails() {
                 </div>
               ))}
             </div>
-          </>
         )}
       </div>
 
@@ -871,15 +1129,27 @@ export default function MapDetails() {
       )}
 
       {/* Mapa Interativo */}
-      {map && map.imageUrl && map.imageUrl.trim() !== '' && (
-        <div className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] p-6 mb-8">
-          <h2 className="text-xl font-bold text-[var(--foreground)] opacity-80 mb-4 flex items-center gap-2">
-            <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-bold text-[var(--foreground)] opacity-80">Visualização do Mapa</label>
+          <button
+            onClick={() => setIsEditingImage(true)}
+            className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-xl hover:bg-yellow-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] cursor-pointer flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            Visualização do Mapa
-          </h2>
-          <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-4 relative">
+            {map?.imageUrl ? 'Editar Imagem' : 'Adicionar Imagem'}
+          </button>
+        </div>
+        
+        {isLoading ? (
+          <div className="bg-[var(--card-bg)] border-2 border-[var(--border)] rounded-2xl p-6">
+            <div className="aspect-video bg-[var(--surface)] rounded-xl animate-pulse"></div>
+          </div>
+        ) : map && map.imageUrl && map.imageUrl.trim() !== '' ? (
+          <div className="bg-[var(--card-bg)] border-2 border-[var(--primary)]/30 rounded-2xl overflow-hidden shadow-[var(--shadow-lg)] p-6">
+            <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-4 relative">
             {isLoadingImage && (
               <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
                 <div className="text-center">
@@ -897,8 +1167,19 @@ export default function MapDetails() {
               selectedLotIds={[]}
             />
           </div>
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-yellow-500/40 shadow-[var(--shadow-md)]">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-500/20 rounded-full mb-4 shadow-md">
+              <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-[var(--foreground)] text-lg font-semibold mb-2">Nenhuma imagem do mapa</p>
+            <p className="text-[var(--foreground)]/80 text-sm font-medium mb-4">Clique em "Adicionar Imagem" acima para fazer upload</p>
+          </div>
+        )}
+      </div>
 
       {/* Modal de Adicionar/Editar Quadra */}
       {isAddingBlock && editingBlock && (
@@ -1066,7 +1347,7 @@ export default function MapDetails() {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-lg sm:text-2xl font-bold">{map.imageUrl ? 'Editar Imagem do Mapa' : 'Adicionar Imagem do Mapa'}</h2>
+                    <h2 className="text-lg sm:text-2xl font-bold">{map?.imageUrl ? 'Editar Imagem do Mapa' : 'Adicionar Imagem do Mapa'}</h2>
                   </div>
                 </div>
                 <button
@@ -1158,6 +1439,182 @@ export default function MapDetails() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     Salvar Imagem
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-md shadow-[var(--shadow-xl)] border border-[var(--border)]">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Excluir Loteamento</h2>
+                  <p className="text-white/80 text-sm">Esta ação não pode ser desfeita</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <p className="text-[var(--foreground)] mb-2">
+                Tem certeza que deseja excluir o loteamento <strong>{map?.name}</strong>?
+              </p>
+              <p className="text-[var(--foreground)]/70 text-sm">
+                Todos os dados relacionados (quadras, lotes disponíveis) serão permanentemente removidos.
+              </p>
+              
+              <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    <strong>Atenção:</strong> Lotes reservados ou vendidos impedirão a exclusão do loteamento.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-[var(--border)]">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeletingMap}
+                className="flex-1 px-5 py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteMap}
+                disabled={isDeletingMap}
+                className="flex-1 px-5 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isDeletingMap ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Confirmar Exclusão
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criar Novo Loteamento */}
+      {isCreatingMap && (
+        <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Criar Novo Loteamento</h2>
+                    <p className="text-white/80 text-sm">Preencha as informações do loteamento</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsCreatingMap(false);
+                    setNewMapName('');
+                    setNewMapDescription('');
+                  }}
+                  disabled={isSubmittingMap}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
+                  Nome do Loteamento *
+                </label>
+                <input
+                  type="text"
+                  value={newMapName}
+                  onChange={(e) => setNewMapName(e.target.value)}
+                  placeholder="Ex: Chácara Jardim Ypiranga"
+                  disabled={isSubmittingMap}
+                  className="w-full px-4 py-3 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-[var(--foreground)]/40 disabled:opacity-50"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-[var(--foreground)] text-sm font-semibold mb-2">
+                  Descrição (Opcional)
+                </label>
+                <textarea
+                  value={newMapDescription}
+                  onChange={(e) => setNewMapDescription(e.target.value)}
+                  placeholder="Descreva características do loteamento"
+                  disabled={isSubmittingMap}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-[var(--foreground)]/40 resize-none disabled:opacity-50"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-[var(--border)]">
+              <button
+                onClick={() => {
+                  setIsCreatingMap(false);
+                  setNewMapName('');
+                  setNewMapDescription('');
+                }}
+                disabled={isSubmittingMap}
+                className="flex-1 px-5 py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateMap}
+                disabled={!newMapName.trim() || isSubmittingMap}
+                className="flex-1 px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSubmittingMap ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Criar Loteamento
                   </>
                 )}
               </button>

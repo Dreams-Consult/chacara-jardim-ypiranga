@@ -13,21 +13,50 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const minimal = searchParams.get('minimal') === 'true';
+    const mapId = searchParams.get('mapId');
+    const blockId = searchParams.get('blockId');
 
     if (minimal) {
       // Retornar apenas campos essenciais para tooltip em /maps/
-      const [reservations] = await connection.execute(
-        'SELECT id, customer_name, seller_name, status, created_at FROM purchase_requests ORDER BY created_at DESC'
-      );
+      let query = 'SELECT id, customer_name, seller_name, status, created_at FROM purchase_requests';
+      let params: any[] = [];
+
+      // Filtrar por quadra (mais específico) ou por mapa
+      if (blockId) {
+        query += ' WHERE id IN (SELECT DISTINCT purchase_request_id FROM purchase_request_lots prl INNER JOIN lots l ON prl.lot_id = l.id WHERE l.block_id = ?)';
+        params.push(blockId);
+      } else if (mapId) {
+        query += ' WHERE id IN (SELECT DISTINCT purchase_request_id FROM purchase_request_lots prl INNER JOIN lots l ON prl.lot_id = l.id WHERE l.map_id = ?)';
+        params.push(mapId);
+      }
+
+      query += ' ORDER BY created_at DESC';
+
+      const [reservations] = await connection.execute(query, params);
 
       // Para cada reserva, buscar IDs dos lotes e agreed_price
       const reservationsWithLots = await Promise.all(
         (reservations as any[]).map(async (reservation) => {
           try {
-            const [lots] = await connection!.execute(
-              'SELECT lot_id as id, agreed_price FROM purchase_request_lots WHERE purchase_request_id = ?',
-              [reservation.id]
-            );
+            // Filtrar lotes por quadra ou mapa
+            let lotQuery = 'SELECT lot_id as id, agreed_price FROM purchase_request_lots WHERE purchase_request_id = ?';
+            let lotParams: any[] = [reservation.id];
+
+            if (blockId) {
+              lotQuery = `SELECT prl.lot_id as id, prl.agreed_price 
+                          FROM purchase_request_lots prl 
+                          INNER JOIN lots l ON prl.lot_id = l.id 
+                          WHERE prl.purchase_request_id = ? AND l.block_id = ?`;
+              lotParams.push(blockId);
+            } else if (mapId) {
+              lotQuery = `SELECT prl.lot_id as id, prl.agreed_price 
+                          FROM purchase_request_lots prl 
+                          INNER JOIN lots l ON prl.lot_id = l.id 
+                          WHERE prl.purchase_request_id = ? AND l.map_id = ?`;
+              lotParams.push(mapId);
+            }
+
+            const [lots] = await connection!.execute(lotQuery, lotParams);
             
             return {
               id: reservation.id,

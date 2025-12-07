@@ -11,6 +11,7 @@ export const useMapSelection = () => {
   const [lots, setLots] = useState<Lot[]>([]);
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
   const selectedMapIdRef = useRef<string | null>(null);
+  const hasLoadedMapsRef = useRef(false); // Controla se já carregou mapas
   const [selectedLots, setSelectedLots] = useState<Lot[]>([]); // Mudado para array
   const [viewingLot, setViewingLot] = useState<Lot | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -22,6 +23,10 @@ export const useMapSelection = () => {
 
   // Buscar apenas informações dos mapas (sem lotes e sem imagens para lista)
   useEffect(() => {
+    // Evitar carregamento duplicado
+    if (hasLoadedMapsRef.current) return;
+    hasLoadedMapsRef.current = true;
+
     const fetchMaps = async () => {
       try {
         // Buscar apenas campos necessários (sem imageUrl para economizar dados)

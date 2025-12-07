@@ -31,12 +31,14 @@ export default function InteractiveMap({
   const [isPDF, setIsPDF] = useState(false);
   const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
   const [isConverting, setIsConverting] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Detectar se é PDF e converter para imagem
   useEffect(() => {
     if (imageUrl && imageUrl.startsWith('data:application/pdf')) {
       setIsPDF(true);
       setIsConverting(true);
+      setImageLoaded(false);
       
       // Converter PDF para canvas usando pdf.js
       const loadPDF = async () => {
@@ -71,6 +73,7 @@ export default function InteractiveMap({
             // Qualidade máxima no PNG
             const imageData = canvas.toDataURL('image/png', 1.0);
             setPdfImageUrl(imageData);
+            setImageLoaded(true);
           }
         } catch (error) {
           console.error('[InteractiveMap] Erro ao converter PDF:', error);
@@ -83,6 +86,7 @@ export default function InteractiveMap({
     } else {
       setIsPDF(false);
       setPdfImageUrl('');
+      setImageLoaded(false);
     }
   }, [imageUrl]);
 
@@ -120,6 +124,34 @@ export default function InteractiveMap({
     previewArea,
   });
 
+  // Detectar quando a imagem foi carregada pelo hook (observando o canvas)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const checkCanvasLoaded = () => {
+      if (canvas.width > 0 && canvas.height > 0 && !isConverting) {
+        setImageLoaded(true);
+      }
+    };
+
+    // Verificar imediatamente
+    checkCanvasLoaded();
+
+    // Observar mudanças no canvas
+    const observer = new MutationObserver(checkCanvasLoaded);
+    observer.observe(canvas, { attributes: true });
+
+    return () => observer.disconnect();
+  }, [canvasRef, isConverting]);
+
+  // Resetar imageLoaded quando mudar a URL da imagem
+  useEffect(() => {
+    if (imageUrl) {
+      setImageLoaded(false);
+    }
+  }, [imageUrl]);
+
   // Handler para prevenir scroll da página ao usar zoom no mapa
   const handleContainerWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -133,15 +165,34 @@ export default function InteractiveMap({
       onWheel={handleContainerWheel}
       style={{ touchAction: 'none' }}
     >
-      {isConverting ? (
-        <div className="border-2 border-gray-300 rounded-lg p-12 text-center bg-gray-50">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4">
-            <svg className="w-8 h-8 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+      {(isConverting || !imageLoaded) && effectiveImageUrl ? (
+        <div className="border-2 border-[var(--border)] rounded-lg bg-[var(--surface)] min-h-[500px] relative overflow-hidden">
+          {/* Skeleton animado de fundo */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--surface)] via-[var(--border)] to-[var(--surface)] animate-pulse"></div>
+          
+          {/* Padrão de grade simulando um mapa */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="grid grid-cols-8 grid-rows-6 h-full gap-4 p-8">
+              {Array.from({ length: 48 }).map((_, i) => (
+                <div key={i} className="bg-[var(--border)] rounded animate-pulse" style={{ animationDelay: `${i * 0.05}s` }}></div>
+              ))}
+            </div>
           </div>
-          <p className="text-gray-600 font-medium mb-2">Convertendo PDF...</p>
-          <p className="text-gray-500 text-sm">Por favor, aguarde</p>
+          
+          {/* Indicador de loading centralizado */}
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--background)]/60 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4">
+                <svg className="w-8 h-8 text-[var(--accent)] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <p className="text-[var(--foreground)] font-semibold mb-1">
+                {isConverting ? 'Convertendo PDF...' : 'Carregando mapa...'}
+              </p>
+              <p className="text-[var(--foreground)] opacity-60 text-sm">Por favor, aguarde</p>
+            </div>
+          </div>
         </div>
       ) : effectiveImageUrl && effectiveImageUrl.trim() !== '' ? (
         <>
@@ -177,7 +228,7 @@ export default function InteractiveMap({
         </div>
       )}
 
-      {!isConverting && (
+      {!isConverting && imageLoaded && (
         <>
           <div className="absolute top-4 right-4 flex flex-col gap-2">
             <button

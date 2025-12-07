@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { Map, Lot, LotStatus, UserRole } from '@/types';
@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasLoadedRef = useRef(false); // Controla se já carregou os dados
 
   const loadDashboardData = async () => {
     try {
@@ -66,12 +67,14 @@ export default function DashboardPage() {
     }
   }, [user, router]);
 
-  // Carregar dados do dashboard
+  // Carregar dados do dashboard apenas uma vez
   useEffect(() => {
-    if (user?.role !== UserRole.VENDEDOR) {
+    if (user?.role !== UserRole.VENDEDOR && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
       loadDashboardData();
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role]);
 
   // Não renderizar para vendedores
   if (user?.role === UserRole.VENDEDOR) {
@@ -95,23 +98,6 @@ export default function DashboardPage() {
 
   const maps = stats?.maps || [];
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)] rounded-full mb-4 animate-pulse shadow-[var(--shadow-lg)]">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <p className="text-[var(--foreground)] text-lg font-semibold">Carregando dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -130,7 +116,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Total de Loteamentos</p>
-          <p className="text-white text-4xl font-bold">{totalMaps}</p>
+          {isLoading ? (
+            <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">{totalMaps}</p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -142,7 +132,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Total de Lotes</p>
-          <p className="text-white text-4xl font-bold">{totalLots}</p>
+          {isLoading ? (
+            <div className="h-10 w-24 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">{totalLots}</p>
+          )}
         </div>
       </div>
 
@@ -156,7 +150,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-yellow-900/90 text-sm font-medium mb-1">Lotes Reservados</p>
-          <p className="text-yellow-900 text-4xl font-bold">{reservedLots}</p>
+          {isLoading ? (
+            <div className="h-10 w-20 bg-yellow-300/30 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-yellow-900 text-4xl font-bold">{reservedLots}</p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -168,7 +166,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Lotes Disponíveis</p>
-          <p className="text-white text-4xl font-bold">{availableLots}</p>
+          {isLoading ? (
+            <div className="h-10 w-24 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">{availableLots}</p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -180,7 +182,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Lotes Vendidos</p>
-          <p className="text-white text-4xl font-bold">{soldLots}</p>
+          {isLoading ? (
+            <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">{soldLots}</p>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -192,7 +198,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">Lotes Bloqueados</p>
-          <p className="text-white text-4xl font-bold">{blockedSlots}</p>
+          {isLoading ? (
+            <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+          ) : (
+            <p className="text-white text-4xl font-bold">{blockedSlots}</p>
+          )}
         </div>
       </div>
 
@@ -205,7 +215,25 @@ export default function DashboardPage() {
             </svg>
             Distribuição por Status
           </h2>
-          <div className="space-y-4">
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-[var(--surface)] rounded-full animate-pulse"></div>
+                      <div className="h-4 w-24 bg-[var(--surface)] rounded animate-pulse"></div>
+                    </div>
+                    <div className="h-4 w-20 bg-[var(--surface)] rounded animate-pulse"></div>
+                  </div>
+                  <div className="w-full bg-[var(--surface)] rounded-full h-3">
+                    <div className="bg-[var(--surface)] h-3 rounded-full animate-pulse" style={{ width: '50%' }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -272,6 +300,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         <div className="bg-[var(--card-bg)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -281,7 +310,17 @@ export default function DashboardPage() {
             </svg>
             Valores Financeiros
           </h2>
-          <div className="space-y-6">
+          {isLoading ? (
+            <div className="space-y-6">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="bg-[var(--surface)] rounded-xl p-4 shadow-md">
+                  <div className="h-4 w-32 bg-[var(--border)] rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-40 bg-[var(--border)] rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6">
             <div className="bg-gradient-to-r from-blue-500/30 to-purple-500/30 border-2 border-blue-400 rounded-xl p-4 shadow-lg">
               <p className="text-[var(--foreground)] text-sm font-semibold mb-1">Valor Total dos Lotes</p>
               <p className="text-[var(--foreground)] text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -312,6 +351,7 @@ export default function DashboardPage() {
               <p className="text-[var(--foreground)] text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
+          )}
         </div>
       </div>
 
@@ -324,7 +364,25 @@ export default function DashboardPage() {
           Mapas Cadastrados
         </h2>
 
-        {totalMaps === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-[var(--surface)] rounded-xl p-5 border-2 border-[var(--border)]">
+                <div className="h-6 w-3/4 bg-[var(--border)] rounded animate-pulse mb-3"></div>
+                <div className="h-4 w-full bg-[var(--border)] rounded animate-pulse mb-2"></div>
+                <div className="h-4 w-2/3 bg-[var(--border)] rounded animate-pulse mb-4"></div>
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5].map(j => (
+                    <div key={j} className="flex items-center justify-between">
+                      <div className="h-3 w-24 bg-[var(--border)] rounded animate-pulse"></div>
+                      <div className="h-3 w-12 bg-[var(--border)] rounded animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : totalMaps === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--surface)] rounded-full mb-4">
               <svg className="w-8 h-8 text-[var(--foreground)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">

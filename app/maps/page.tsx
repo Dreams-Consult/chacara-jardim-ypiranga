@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import InteractiveMap from '@/components/InteractiveMap';
 import LotSelector from '@/components/LotSelector';
@@ -49,15 +49,24 @@ export default function AdminMapsLotsPage() {
     total: 0,
   });
   const [isLoadingMapStats, setIsLoadingMapStats] = useState(false);
+  const loadedStatsForMapRef = useRef<string | null>(null);
+  const loadedReservationsForBlockRef = useRef<string | null>(null);
 
   // Carregar estatísticas do mapa selecionado de forma independente
   useEffect(() => {
     const loadMapStats = async () => {
       if (!selectedMap?.id) {
         setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
+        loadedStatsForMapRef.current = null;
         return;
       }
 
+      // Evitar carregar se já foi carregado para este mapa
+      if (loadedStatsForMapRef.current === selectedMap.id) {
+        return;
+      }
+
+      loadedStatsForMapRef.current = selectedMap.id;
       setIsLoadingMapStats(true);
       try {
         const response = await axios.get('/api/mapas/estatisticas', {
@@ -77,16 +86,20 @@ export default function AdminMapsLotsPage() {
     };
 
     loadMapStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMap?.id]);
 
   // Função para buscar reservas (apenas dados mínimos para redirecionamento)
   const fetchReservations = async () => {
+    if (!selectedBlock?.id) return;
+    
     try {
-      // Buscar apenas id e lot_ids para redirecionamento
+      // Buscar apenas reservas da quadra selecionada
       const response = await axios.get('/api/reservas', {
         params: {
           minimal: true,
-          redirectOnly: true, // Novo parâmetro para retornar apenas dados de redirecionamento
+          redirectOnly: true,
+          blockId: selectedBlock.id, // Filtrar apenas reservas desta quadra
         },
         timeout: 10000,
       });
@@ -96,17 +109,20 @@ export default function AdminMapsLotsPage() {
     }
   };
 
-  // Não carregar reservas automaticamente - apenas quando necessário
-  // useEffect(() => {
-  //   fetchReservations();
-  // }, []);
-
-  // Recarregar reservas quando os lotes mudarem (indica que houve uma alteração)
+  // Recarregar reservas quando a quadra mudar
   useEffect(() => {
-    if (lots.length > 0) {
-      fetchReservations();
+    if (selectedBlock?.id) {
+      // Evitar carregar se já foi carregado para esta quadra
+      if (loadedReservationsForBlockRef.current !== selectedBlock.id) {
+        loadedReservationsForBlockRef.current = selectedBlock.id;
+        fetchReservations();
+      }
+    } else {
+      setReservations([]);
+      loadedReservationsForBlockRef.current = null;
     }
-  }, [lots.length, reservedLotsCount, soldLotsCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBlock?.id]);
 
   // Função para bloquear/desbloquear lote
   const handleToggleLotStatus = async (lotId: string, currentStatus: LotStatus) => {
@@ -389,14 +405,6 @@ export default function AdminMapsLotsPage() {
                   Visualização do Mapa
                 </h2>
                 <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-2 relative">
-                  {isLoadingImage && (
-                    <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
-                      <div className="text-center">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)] mb-2"></div>
-                        <p className="text-[var(--foreground)] text-sm font-medium">Carregando imagem do mapa...</p>
-                      </div>
-                    </div>
-                  )}
                   <InteractiveMap
                     imageUrl={selectedMap.imageUrl}
                     lots={lots}

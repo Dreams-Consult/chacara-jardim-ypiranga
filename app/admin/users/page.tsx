@@ -381,23 +381,6 @@ export default function UsersPage() {
     return null;
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)] rounded-full mb-4 animate-pulse shadow-[var(--shadow-lg)]">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <p className="text-[var(--foreground)] text-lg font-semibold">Carregando usuários...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6 overflow-x-hidden">
       {/* Cabeçalho */}
@@ -555,25 +538,7 @@ export default function UsersPage() {
             ))}
           </div>
         </div>
-      ) : (
-        <div className="bg-gradient-to-r from-[var(--success)] to-[var(--success-dark)] rounded-xl border-2 border-[var(--success)] p-4 sm:p-6 md:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <div className="bg-white/20 text-white p-2 sm:p-3 rounded-full flex-shrink-0 backdrop-blur-sm">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="text-center sm:text-left">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
-                Nenhum usuário pendente
-              </h3>
-              <p className="text-sm sm:text-base text-white opacity-90">
-                Não há cadastros aguardando aprovação
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      ) : null}
 
       {/* Formulário de Criação/Edição */}
       {isCreating && (
@@ -732,9 +697,13 @@ export default function UsersPage() {
                 <h2 className="text-xl font-bold text-white">
                   Todos os Usuários
                 </h2>
-                <p className="text-white opacity-90 text-sm">
-                  {users.filter(u => u.status !== UserStatus.PENDING).length} usuário(s) no total
-                </p>
+                {isLoading ? (
+                  <div className="h-5 w-32 bg-white/20 rounded animate-pulse mt-1"></div>
+                ) : (
+                  <p className="text-white opacity-90 text-sm">
+                    {users.filter(u => u.status !== UserStatus.PENDING).length} usuário(s) no total
+                  </p>
+                )}
               </div>
             </div>
 
@@ -774,7 +743,92 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {users.filter(u => {
+        {isLoading ? (
+          <>
+            {/* Skeleton para Desktop */}
+            <div className="hidden xl:block overflow-visible">
+              <table className="w-full">
+                <thead className="bg-[var(--surface)] border-b border-[var(--border)]">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      Nome
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      CPF
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      Telefone
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      Perfil
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      Situação
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--foreground)] opacity-80 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <tr key={i} className="hover:bg-[var(--surface-hover)] transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-5 w-32 bg-[var(--surface)] rounded animate-pulse"></div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-5 w-28 bg-[var(--surface)] rounded animate-pulse"></div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-5 w-28 bg-[var(--surface)] rounded animate-pulse"></div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-6 w-24 bg-[var(--surface)] rounded-full animate-pulse"></div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-6 w-24 bg-[var(--surface)] rounded-full animate-pulse"></div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-6 w-20 bg-[var(--surface)] rounded-full animate-pulse"></div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-9 w-20 bg-[var(--surface)] rounded-lg animate-pulse"></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Skeleton para Mobile/Tablet */}
+            <div className="xl:hidden divide-y divide-[var(--border)]">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-6 w-48 bg-[var(--surface)] rounded animate-pulse"></div>
+                      <div className="h-4 w-64 bg-[var(--surface)] rounded animate-pulse"></div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <div className="h-6 w-20 bg-[var(--surface)] rounded-full animate-pulse"></div>
+                      <div className="h-6 w-16 bg-[var(--surface)] rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    <div className="h-4 w-full bg-[var(--surface)] rounded animate-pulse"></div>
+                    <div className="h-4 w-3/4 bg-[var(--surface)] rounded animate-pulse"></div>
+                    <div className="h-4 w-2/3 bg-[var(--surface)] rounded animate-pulse"></div>
+                    <div className="h-4 w-1/2 bg-[var(--surface)] rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-10 w-full bg-[var(--surface)] rounded-lg animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : users.filter(u => {
           if (u.status === UserStatus.PENDING) return false;
           if (statusFilter === 'approved') return u.status === UserStatus.APPROVED;
           if (statusFilter === 'rejected') return u.status === UserStatus.REJECTED;
