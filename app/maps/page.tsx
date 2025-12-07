@@ -157,60 +157,60 @@ export default function AdminMapsLotsPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)] rounded-full mb-4 animate-pulse shadow-[var(--shadow-lg)]">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <p className="text-[var(--foreground)] text-lg font-semibold">Carregando mapas...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-[var(--foreground)]">Loteamentos</h1>
       </div>
 
-      {maps.length > 1 && (
+      {!isLoading && maps.length === 0 && (
+        <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-[var(--accent)]/40 shadow-[var(--shadow-md)]">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--accent)]/20 rounded-full mb-4 shadow-md">
+            <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <p className="text-[var(--foreground)] text-lg font-semibold mb-2">Nenhum loteamento cadastrado</p>
+          <p className="text-[var(--foreground)]/80 text-sm font-medium mb-4">Importe ou crie um novo loteamento para começar</p>
+          <button
+            onClick={() => window.location.href = '/admin/import-map'}
+            className="px-6 py-3 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors inline-flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Importar Loteamento
+          </button>
+        </div>
+      )}
+
+      {(isLoading || maps.length > 0) && maps.length > 1 && (
         <div className="mb-6">
           <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">Mapa</label>
           <div className="max-w-md">
-            <select
-              value={selectedMap?.id || ''}
-              onChange={(e) => selectMap(e.target.value)}
-              className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
-            >
-              {maps.map((map) => (
-                <option key={map.id} value={map.id}>
-                  {map.name}
-                </option>
-              ))}
-            </select>
+            {isLoading ? (
+              <div className="h-12 w-full bg-[var(--surface)] rounded-xl animate-pulse"></div>
+            ) : (
+              <select
+                value={selectedMap?.id || ''}
+                onChange={(e) => selectMap(e.target.value)}
+                className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
+              >
+                {maps.map((map) => (
+                  <option key={map.id} value={map.id}>
+                    {map.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
       )}
 
-      {selectedMap && (
+      {(isLoading || selectedMap) && (
         <>
-          {!isLoadingBlocks && blocks.length === 0 && (
-            <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
-              <p className="text-yellow-500 font-semibold">
-                Nenhuma quadra cadastrada neste mapa.
-              </p>
-            </div>
-          )}
-
           {/* Estatísticas de Status dos Lotes - Sempre visíveis */}
-          {selectedMap && (
+          {(isLoading || selectedMap) && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
                 <div className="flex items-center justify-between mb-2">
@@ -221,7 +221,7 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Disponível</p>
-                {isLoadingMapStats ? (
+                {isLoading || isLoadingMapStats ? (
                   <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
                 ) : (
                   <p className="text-white text-4xl font-bold">{mapStats.available}</p>
@@ -237,7 +237,7 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Reservado</p>
-                {isLoadingMapStats ? (
+                {isLoading || isLoadingMapStats ? (
                   <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
                 ) : (
                   <p className="text-white text-4xl font-bold">{mapStats.reserved}</p>
@@ -253,7 +253,7 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Vendido</p>
-                {isLoadingMapStats ? (
+                {isLoading || isLoadingMapStats ? (
                   <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
                 ) : (
                   <p className="text-white text-4xl font-bold">{mapStats.sold}</p>
@@ -269,7 +269,7 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Bloqueado</p>
-                {isLoadingMapStats ? (
+                {isLoading || isLoadingMapStats ? (
                   <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
                 ) : (
                   <p className="text-white text-4xl font-bold">{mapStats.blocked}</p>
@@ -279,11 +279,11 @@ export default function AdminMapsLotsPage() {
           )}
 
           {/* Seleção de Quadras */}
-          {isLoadingBlocks ? (
+          {isLoading || isLoadingBlocks ? (
             <div className="mb-6">
               <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Quadra</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
                   <div
                     key={i}
                     className="p-4 rounded-xl bg-[var(--surface)] border-2 border-[var(--border)] animate-pulse"
@@ -294,6 +294,16 @@ export default function AdminMapsLotsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          ) : !isLoading && blocks.length === 0 ? (
+            <div className="mb-6 text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-yellow-500/40 shadow-[var(--shadow-md)]">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-500/20 rounded-full mb-4 shadow-md">
+                <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="text-yellow-500 text-lg font-semibold mb-2">Nenhuma quadra cadastrada</p>
+              <p className="text-[var(--foreground)]/80 text-sm font-medium">Cadastre quadras neste loteamento para começar</p>
             </div>
           ) : blocks.length > 0 ? (
             <div className="mb-6">
@@ -326,11 +336,17 @@ export default function AdminMapsLotsPage() {
               <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              Lotes
-              {selectedBlock && <span className="text-[var(--foreground)] opacity-60 text-base">- {selectedBlock.name}</span>}
+              {isLoading || isLoadingBlocks ? (
+                <div className="h-6 w-32 bg-[var(--border)] rounded animate-pulse"></div>
+              ) : (
+                <>
+                  Lotes
+                  {selectedBlock && <span className="text-[var(--foreground)] opacity-60 text-base">- {selectedBlock.name}</span>}
+                </>
+              )}
             </h2>
             
-            {isLoadingLots ? (
+            {isLoading || isLoadingLots ? (
               <div className="py-6">
                 <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-15 gap-2">
                   {Array.from({ length: 30 }).map((_, i) => (
@@ -358,16 +374,17 @@ export default function AdminMapsLotsPage() {
                 userRole={user?.role}
                 userId={user?.id}
               />
-            ) : selectedBlock ? (
-              <div className="text-center py-12 bg-[var(--surface)] rounded-xl border-2 border-dashed border-[var(--border)]">
-                <svg className="w-16 h-16 mx-auto mb-4 text-[var(--foreground)] opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-                <p className="text-[var(--foreground)] opacity-70 text-lg font-semibold">
-                  Nenhum lote nesta quadra
-                </p>
+            ) : !isLoading && selectedBlock && lots.length === 0 ? (
+              <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl border-2 border-dashed border-red-500/40 shadow-[var(--shadow-md)]">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4 shadow-md">
+                  <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                </div>
+                <p className="text-red-500 text-lg font-semibold mb-2">Nenhum lote cadastrado</p>
+                <p className="text-[var(--foreground)]/80 text-sm font-medium">Cadastre lotes nesta quadra para começar</p>
               </div>
-            ) : (
+            ) : !isLoading && !selectedBlock ? (
               <div className="text-center py-12 bg-emerald-500/10 rounded-xl border-2 border-dashed border-emerald-500/30">
                 <svg className="w-16 h-16 mx-auto mb-4 text-emerald-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -376,23 +393,12 @@ export default function AdminMapsLotsPage() {
                   Selecione uma quadra
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
         </>
       )}
 
-      {maps.length === 0 && (
-        <div className="text-center py-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--primary)]/20 rounded-full mb-4 shadow-md">
-            <svg className="w-10 h-10 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-          </div>
-          <p className="text-[var(--foreground)] text-lg font-semibold">Nenhum mapa disponível no momento.</p>
-        </div>
-      )}
-
-      {selectedMap && (
+      {(isLoading || selectedMap) && (
         <>
           {/* Mapa Interativo */}
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 relative mb-8">
@@ -405,12 +411,21 @@ export default function AdminMapsLotsPage() {
                   Visualização do Mapa
                 </h2>
                 <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-2 relative">
-                  <InteractiveMap
-                    imageUrl={selectedMap.imageUrl}
-                    lots={lots}
-                    onLotClick={handleLotClick}
-                    selectedLotIds={selectedLots.map(lot => lot.id)} // Passa IDs dos lotes selecionados
-                  />
+                  {isLoading || isLoadingImage ? (
+                    <div className="flex items-center justify-center py-32">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)] mb-4"></div>
+                        <p className="text-[var(--foreground)] text-sm font-medium">Carregando mapa...</p>
+                      </div>
+                    </div>
+                  ) : selectedMap ? (
+                    <InteractiveMap
+                      imageUrl={selectedMap?.imageUrl || ''}
+                      lots={lots}
+                      onLotClick={handleLotClick}
+                      selectedLotIds={selectedLots.map(lot => lot.id)} // Passa IDs dos lotes selecionados
+                    />
+                  ) : null}
                 </div>
               </div>
             </div>

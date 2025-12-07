@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, UserRole, UserStatus } from '@/types';
 import { useRouter } from 'next/navigation';
@@ -31,13 +31,20 @@ export default function UsersPage() {
     password: '',
   });
 
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
+    if (hasInitialized.current) return;
+    
     if (!canAccessUsers) {
       router.push('/dashboard');
-    } else {
-      loadUsers();
+      return;
     }
-  }, [canAccessUsers, router]);
+    
+    hasInitialized.current = true;
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fechar menu de ações ao clicar fora
   useEffect(() => {

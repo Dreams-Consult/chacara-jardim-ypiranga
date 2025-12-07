@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { Map, Block, Lot, LotStatus } from '@/types';
@@ -46,7 +46,8 @@ export default function MapDetails() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string>('');
   const [reservations, setReservations] = useState<any[]>([]);
-  const [allLots, setAllLots] = useState<Lot[]>([]); // Todos os lotes do mapa para InteractiveMap
+  const [selectedBlockLots, setSelectedBlockLots] = useState<Lot[]>([]); // Lotes da quadra selecionada
+  const [isLoadingBlockLots, setIsLoadingBlockLots] = useState(false);
   
   // Estados para criar novo mapa
   const [isCreatingMap, setIsCreatingMap] = useState(false);
@@ -60,32 +61,16 @@ export default function MapDetails() {
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
 
-  // Função para verificar se o mapa tem lotes reservados ou vendidos
-  const hasReservedOrSoldLots = () => {
-    return allLots.some(lot => lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD);
-  };
-
-  // Função para verificar se uma quadra tem lotes reservados ou vendidos
-  const blockHasReservedOrSoldLots = (blockId: string) => {
-    return allLots.some(lot => 
-      lot.blockId === blockId && 
-      (lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD)
-    );
-  };
-
-  // Função para buscar reservas
-  const fetchReservations = async () => {
+  // Função para buscar reservas de uma quadra específica
+  const fetchReservations = useCallback(async (blockId?: string) => {
     try {
-      const response = await axios.get('/api/reservas');
+      const params = blockId ? { blockId, minimal: true } : {};
+      const response = await axios.get('/api/reservas', { params });
       setReservations(response.data);
     } catch (error) {
       console.error('Erro ao buscar reservas:', error);
+      setReservations([]);
     }
-  };
-
-  // Buscar reservas para mostrar informações nos modais
-  useEffect(() => {
-    fetchReservations();
   }, []);
 
   // Função para carregar lotes de uma quadra específica
@@ -114,33 +99,24 @@ export default function MapDetails() {
     }
   }, [mapId]);
 
-  // Função para carregar TODOS os lotes do mapa
-  const loadAllLots = useCallback(async () => {
-    if (!mapId) return;
-
-    try {
-      const response = await axios.get(`${API_URL}/mapas/lotes`, {
-        params: { mapId }, // Sem blockId = todos os lotes
-        timeout: 10000,
-      });
-
-      const data = response.data[0];
-      if (data && data.lots && Array.isArray(data.lots)) {
-        const lotsWithMapId = data.lots.map((lot: Lot) => ({
-          ...lot,
-          mapId: data.mapId || mapId,
-          createdAt: new Date(lot.createdAt),
-          updatedAt: new Date(lot.updatedAt),
-        }));
-        setAllLots(lotsWithMapId);
-      } else {
-        setAllLots([]);
-      }
-    } catch (error) {
-      console.error('[MapDetails] ❌ Erro ao carregar todos os lotes:', error);
-      setAllLots([]);
+  // Função para carregar lotes apenas da quadra selecionada
+  const loadSelectedBlockLots = useCallback(async (blockId: string) => {
+    if (!mapId || !blockId) {
+      setSelectedBlockLots([]);
+      return;
     }
-  }, [mapId]);
+
+    setIsLoadingBlockLots(true);
+    try {
+      const lots = await loadLotsForBlock(blockId);
+      setSelectedBlockLots(lots);
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao carregar lotes da quadra:', error);
+      setSelectedBlockLots([]);
+    } finally {
+      setIsLoadingBlockLots(false);
+    }
+  }, [mapId, loadLotsForBlock]);
 
   // Função para carregar apenas as estatísticas dos lotes (otimizada)
   const loadLotStats = useCallback(async () => {
@@ -217,7 +193,8 @@ export default function MapDetails() {
     }
   }, []);
 
-  const loadMapData = useCallback(async () => {
+  const loadMapData = useCallback(async (currentMapId?: string) => {
+    const targetMapId = currentMapId || mapId;
     try {
       // Buscar mapas sem imagens (minimal=true)
       const response = await axios.get(`${API_URL}/mapas`, {
@@ -241,13 +218,13 @@ export default function MapDetails() {
       setAllMaps(formattedMaps);
 
       // Se tem mapId, buscar o mapa específico
-      if (mapId) {
-        const data = mapsData.find((m: any) => m.mapId === mapId || m.id === mapId);
+      if (targetMapId) {
+        const data = mapsData.find((m: any) => m.mapId === targetMapId || m.id === targetMapId);
         
         if (data) {
           const mapObj: Map = {
-            id: data.mapId || data.id || mapId,
-            name: data.name || `Mapa ${data.mapId || mapId}`,
+            id: data.mapId || data.id || targetMapId,
+            name: data.name || `Mapa ${data.mapId || targetMapId}`,
             description: data.description || '',
             imageUrl: '', // Será carregado depois
             imageType: 'image',
@@ -273,8 +250,8 @@ export default function MapDetails() {
       console.error('[MapDetails] ❌ Erro ao buscar dados:', error);
       // Em caso de erro, cria um mapa padrão
       const defaultMap: Map = {
-        id: mapId,
-        name: `Mapa ${mapId}`,
+        id: targetMapId,
+        name: `Mapa ${targetMapId}`,
         description: '',
         imageUrl: '',
         imageType: 'image',
@@ -287,19 +264,55 @@ export default function MapDetails() {
     } finally {
       setIsLoading(false);
     }
-  }, [mapId, router]);
+  }, [router]);
 
-  useEffect(() => {
-    loadMapData();
-  }, [loadMapData]);
+  // Flag para controlar se já inicializou
+  const hasInitialized = useRef(false);
 
+  // Carregar dados iniciais apenas uma vez quando o componente montar
   useEffect(() => {
-    if (mapId) {
-      loadBlocks(mapId);
-      loadAllLots(); // Carregar todos os lotes para o InteractiveMap
-      loadLotStats(); // Carregar estatísticas separadamente
-      loadMapImage(mapId); // Carregar imagem de forma assíncrona
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      
+      const initializeData = async () => {
+        await loadMapData(mapId);
+        
+        // Após carregar mapas, se tem mapId, carregar dados específicos
+        if (mapId) {
+          loadBlocks(mapId);
+          loadLotStats();
+          loadMapImage(mapId);
+        }
+      };
+      
+      initializeData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Detectar mudança de mapId (quando usuário troca de mapa via seletor)
+  const previousMapIdRef = useRef<string>('');
+  useEffect(() => {
+    // Ignorar a primeira execução (montagem inicial)
+    if (!hasInitialized.current) {
+      return;
+    }
+    
+    // Apenas executar se o mapId mudou
+    if (previousMapIdRef.current && previousMapIdRef.current !== mapId) {
+      // Limpar estado anterior
+      setSelectedBlockLots([]);
+      setSelectedBlockId('');
+      setReservations([]);
+      
+      // Carregar novos dados
+      if (mapId) {
+        loadBlocks(mapId);
+        loadLotStats();
+        loadMapImage(mapId);
+      }
+    }
+    previousMapIdRef.current = mapId;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapId]);
 
@@ -310,14 +323,32 @@ export default function MapDetails() {
     }
   }, [blocks, selectedBlockId]);
 
-  // Recarregar estatísticas quando houver mudanças nos lotes
+  // Carregar lotes e reservas quando a quadra selecionada mudar
+  useEffect(() => {
+    if (selectedBlockId && mapId) {
+      // Carregar apenas se não for um refresh trigger (evita duplicação)
+      if (refreshTrigger === 0) {
+        loadSelectedBlockLots(selectedBlockId);
+        fetchReservations(selectedBlockId);
+      }
+    } else {
+      setSelectedBlockLots([]);
+      setReservations([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBlockId, mapId]);
+
+  // Recarregar estatísticas e lotes da quadra quando houver mudanças (refresh manual)
   useEffect(() => {
     if (mapId && refreshTrigger > 0) {
       loadLotStats();
-      loadAllLots(); // Também recarregar lotes para manter sincronizado
+      if (selectedBlockId) {
+        loadSelectedBlockLots(selectedBlockId);
+        fetchReservations(selectedBlockId);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshTrigger, mapId]);
+  }, [refreshTrigger]);
 
   // Polling automático removido - atualização manual apenas
   // useRealtimeUpdates(() => {
@@ -454,8 +485,6 @@ export default function MapDetails() {
 
       // Força refresh apenas dos cards de quadra
       setRefreshTrigger(prev => prev + 1);
-      // Recarregar todos os lotes para atualizar o InteractiveMap
-      loadAllLots();
       setIsAddingLot(false);
       setSelectedBlockForLot('');
       alert('✅ Lote salvo com sucesso!');
@@ -470,19 +499,12 @@ export default function MapDetails() {
     await handleSaveLot(lot);
     // Força refresh dos cards após editar lote
     setRefreshTrigger(prev => prev + 1);
-    // Recarregar todos os lotes para atualizar o InteractiveMap
-    loadAllLots();
   };
 
   const handleToggleLotStatus = async (lotId: string, currentStatus: LotStatus) => {
     try {
-      // Buscar o lote em todas as quadras
-      let lot: Lot | undefined;
-      for (const block of blocks) {
-        const lotsInBlock = await loadLotsForBlock(block.id);
-        lot = lotsInBlock.find((l: Lot) => l.id === lotId);
-        if (lot) break;
-      }
+      // Buscar o lote apenas na quadra selecionada
+      const lot = selectedBlockLots.find((l: Lot) => l.id === lotId);
 
       if (!lot) {
         throw new Error('Lote não encontrado');
@@ -505,8 +527,6 @@ export default function MapDetails() {
 
       // Força refresh dos cards após alterar status
       setRefreshTrigger(prev => prev + 1);
-      // Recarregar todos os lotes para atualizar o InteractiveMap
-      loadAllLots();
     } catch (error) {
       console.error('Erro ao alterar status do lote:', error);
       throw error;
@@ -516,13 +536,8 @@ export default function MapDetails() {
   const handleDeleteLot = async (lotId: string) => {
     try {
       
-      // Buscar o lote em todas as quadras para verificar status
-      let lot: Lot | undefined;
-      for (const block of blocks) {
-        const lotsInBlock = await loadLotsForBlock(block.id);
-        lot = lotsInBlock.find((l: Lot) => l.id === lotId);
-        if (lot) break;
-      }
+      // Buscar o lote apenas na quadra selecionada
+      const lot = selectedBlockLots.find((l: Lot) => l.id === lotId);
 
       if (!lot) {
         throw new Error('Lote não encontrado.');
@@ -547,8 +562,6 @@ export default function MapDetails() {
 
       // Força refresh dos cards após excluir lote
       setRefreshTrigger(prev => prev + 1);
-      // Recarregar todos os lotes para atualizar o InteractiveMap
-      loadAllLots();
       alert('✅ Lote excluído com sucesso!');
     } catch (error: any) {
       console.error('[MapDetails] ❌ Erro ao excluir lote:', error);
@@ -836,7 +849,7 @@ export default function MapDetails() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
               <div key={i} className="bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] p-4">
                 <div className="h-3 w-16 bg-[var(--border)] rounded animate-pulse mb-2"></div>
                 <div className="h-6 w-20 bg-[var(--border)] rounded animate-pulse mb-1"></div>
@@ -899,9 +912,7 @@ export default function MapDetails() {
             {mapId && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={hasReservedOrSoldLots()}
-                className="w-full lg:w-auto px-5 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] disabled:hover:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
-                title={hasReservedOrSoldLots() ? 'Não é possível excluir. Existem lotes reservados ou vendidos.' : 'Excluir loteamento'}
+                className="w-full lg:w-auto px-5 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1067,13 +1078,10 @@ export default function MapDetails() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!blockHasReservedOrSoldLots(block.id)) {
-                          handleDeleteBlock(block.id);
-                        }
+                        handleDeleteBlock(block.id);
                       }}
-                      disabled={blockHasReservedOrSoldLots(block.id)}
-                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500/80"
-                      title={blockHasReservedOrSoldLots(block.id) ? 'Não é possível excluir. Existem lotes reservados ou vendidos.' : 'Excluir quadra'}
+                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg cursor-pointer"
+                      title="Excluir quadra"
                     >
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1111,7 +1119,8 @@ export default function MapDetails() {
               key={`${selectedBlockId}-${refreshTrigger}`}
               block={blocks.find(b => b.id === selectedBlockId)!}
               mapId={mapId}
-              loadLotsForBlock={loadLotsForBlock}
+              blockLots={selectedBlockLots}
+              isLoadingBlockLots={isLoadingBlockLots}
               handleAddLotToBlock={handleAddLotToBlock}
               handleEditLot={handleEditLot}
               handleDeleteLot={handleDeleteLot}
@@ -1120,7 +1129,6 @@ export default function MapDetails() {
               setEditingBlock={setEditingBlock}
               setIsAddingBlock={setIsAddingBlock}
               allBlocks={blocks}
-              refreshTrigger={refreshTrigger}
               reservations={reservations}
               userRole={user?.role}
             />
@@ -1160,7 +1168,7 @@ export default function MapDetails() {
             )}
             <InteractiveMap
               imageUrl={map.imageUrl}
-              lots={allLots}
+              lots={selectedBlockLots}
               onLotClick={(lot) => {
                 // Aqui você pode adicionar lógica adicional se necessário
               }}
@@ -1784,7 +1792,8 @@ function LotForm({ blockId, blockName, onSave, onCancel, onSubmitChange }: LotFo
 interface BlockCardProps {
   block: Block;
   mapId: string;
-  loadLotsForBlock: (blockId: string) => Promise<Lot[]>;
+  blockLots: Lot[];
+  isLoadingBlockLots: boolean;
   handleAddLotToBlock: (blockId: string) => void;
   handleEditLot: (lot: Lot) => Promise<void>;
   handleDeleteLot: (lotId: string) => Promise<void>;
@@ -1793,7 +1802,6 @@ interface BlockCardProps {
   setEditingBlock: (block: Block) => void;
   setIsAddingBlock: (isAdding: boolean) => void;
   allBlocks: Block[];
-  refreshTrigger: number;
   reservations: any[];
   userRole?: string;
 }
@@ -1801,7 +1809,8 @@ interface BlockCardProps {
 function BlockCard({
   block,
   mapId,
-  loadLotsForBlock,
+  blockLots,
+  isLoadingBlockLots,
   handleAddLotToBlock,
   handleEditLot,
   handleDeleteLot,
@@ -1810,12 +1819,9 @@ function BlockCard({
   setEditingBlock,
   setIsAddingBlock,
   allBlocks,
-  refreshTrigger,
   reservations,
   userRole,
 }: BlockCardProps) {
-  const [blockLots, setBlockLots] = useState<Lot[]>([]);
-  const [isLoadingLots, setIsLoadingLots] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   
   // Verificar se existem lotes reservados ou vendidos
@@ -1825,17 +1831,6 @@ function BlockCard({
   const reservedOrSoldCount = blockLots.filter(
     lot => lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD
   ).length;
-
-  useEffect(() => {
-    const fetchLots = async () => {
-      setIsLoadingLots(true);
-      const lots = await loadLotsForBlock(block.id);
-      setBlockLots(lots);
-      setIsLoadingLots(false);
-    };
-
-    fetchLots();
-  }, [block.id, loadLotsForBlock, refreshTrigger]);
 
   return (
     <div>
@@ -1858,14 +1853,16 @@ function BlockCard({
       )}
       
       {/* Lotes da Quadra */}
-        {isLoadingLots ? (
-          <div className="text-center py-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-full mb-3">
-              <svg className="w-6 h-6 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+        {isLoadingBlockLots ? (
+          <div className="py-6">
+            <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-15 gap-2">
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-square bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg animate-pulse"
+                ></div>
+              ))}
             </div>
-            <p className="text-gray-600 text-sm">Carregando lotes...</p>
           </div>
         ) : blockLots && blockLots.length > 0 ? (
           <LotSelector
