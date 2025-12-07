@@ -18,6 +18,7 @@ export const useMapSelection = () => {
   const [isLoadingBlocks, setIsLoadingBlocks] = useState(false);
   const [isLoadingLots, setIsLoadingLots] = useState(false);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   // Buscar apenas informações dos mapas (sem lotes e sem imagens para lista)
   useEffect(() => {
@@ -333,6 +334,7 @@ export const useMapSelection = () => {
     isLoadingBlocks,
     isLoadingLots,
     isLoadingImage,
+    isLoadingStats,
     availableLotsCount,
     reservedLotsCount,
     soldLotsCount,

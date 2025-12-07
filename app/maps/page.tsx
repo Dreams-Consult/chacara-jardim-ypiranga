@@ -24,6 +24,7 @@ export default function AdminMapsLotsPage() {
     isLoadingBlocks,
     isLoadingLots,
     isLoadingImage,
+    isLoadingStats,
     availableLotsCount,
     reservedLotsCount,
     soldLotsCount,
@@ -40,41 +41,55 @@ export default function AdminMapsLotsPage() {
   } = useMapSelection();
 
   const [reservations, setReservations] = useState<any[]>([]);
-  const [allMapLots, setAllMapLots] = useState<any[]>([]); // Todos os lotes do mapa selecionado
+  const [mapStats, setMapStats] = useState({
+    available: 0,
+    reserved: 0,
+    sold: 0,
+    blocked: 0,
+    total: 0,
+  });
+  const [isLoadingMapStats, setIsLoadingMapStats] = useState(false);
 
-  // Carregar todos os lotes do mapa selecionado
+  // Carregar estatísticas do mapa selecionado de forma independente
   useEffect(() => {
-    const loadAllMapLots = async () => {
+    const loadMapStats = async () => {
       if (!selectedMap?.id) {
-        setAllMapLots([]);
+        setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
         return;
       }
 
+      setIsLoadingMapStats(true);
       try {
-        const response = await axios.get('/api/mapas/lotes', {
+        const response = await axios.get('/api/mapas/estatisticas', {
           params: { mapId: selectedMap.id },
           timeout: 10000,
         });
 
-        const data = response.data[0];
-        if (data && data.lots && Array.isArray(data.lots)) {
-          setAllMapLots(data.lots);
-        } else {
-          setAllMapLots([]);
+        if (response.data) {
+          setMapStats(response.data);
         }
       } catch (error) {
-        console.error('Erro ao carregar todos os lotes do mapa:', error);
-        setAllMapLots([]);
+        console.error('Erro ao carregar estatísticas do mapa:', error);
+        setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
+      } finally {
+        setIsLoadingMapStats(false);
       }
     };
 
-    loadAllMapLots();
+    loadMapStats();
   }, [selectedMap?.id]);
 
-  // Função para buscar reservas (apenas dados mínimos para tooltip)
+  // Função para buscar reservas (apenas dados mínimos para redirecionamento)
   const fetchReservations = async () => {
     try {
-      const response = await axios.get('/api/reservas?minimal=true');
+      // Buscar apenas id e lot_ids para redirecionamento
+      const response = await axios.get('/api/reservas', {
+        params: {
+          minimal: true,
+          redirectOnly: true, // Novo parâmetro para retornar apenas dados de redirecionamento
+        },
+        timeout: 10000,
+      });
       setReservations(response.data);
     } catch (error) {
       console.error('Erro ao buscar reservas:', error);
@@ -170,13 +185,6 @@ export default function AdminMapsLotsPage() {
 
       {selectedMap && (
         <>
-          {isLoadingBlocks && (
-            <div className="mb-6 text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
-              <p className="text-[var(--foreground)] opacity-70">Carregando quadras...</p>
-            </div>
-          )}
-
           {!isLoadingBlocks && blocks.length === 0 && (
             <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
               <p className="text-yellow-500 font-semibold">
@@ -185,8 +193,8 @@ export default function AdminMapsLotsPage() {
             </div>
           )}
 
-          {/* Estatísticas de Status dos Lotes */}
-          {blocks.length > 0 && (
+          {/* Estatísticas de Status dos Lotes - Sempre visíveis */}
+          {selectedMap && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
                 <div className="flex items-center justify-between mb-2">
@@ -197,9 +205,11 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Disponível</p>
-                <p className="text-white text-4xl font-bold">
-                  {allMapLots.filter(lot => lot.status === 'available').length}
-                </p>
+                {isLoadingMapStats ? (
+                  <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+                ) : (
+                  <p className="text-white text-4xl font-bold">{mapStats.available}</p>
+                )}
               </div>
 
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -211,9 +221,11 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Reservado</p>
-                <p className="text-white text-4xl font-bold">
-                  {allMapLots.filter(lot => lot.status === 'reserved').length}
-                </p>
+                {isLoadingMapStats ? (
+                  <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+                ) : (
+                  <p className="text-white text-4xl font-bold">{mapStats.reserved}</p>
+                )}
               </div>
 
               <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -225,9 +237,11 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Vendido</p>
-                <p className="text-white text-4xl font-bold">
-                  {allMapLots.filter(lot => lot.status === 'sold').length}
-                </p>
+                {isLoadingMapStats ? (
+                  <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+                ) : (
+                  <p className="text-white text-4xl font-bold">{mapStats.sold}</p>
+                )}
               </div>
 
               <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl p-6 shadow-[var(--shadow-lg)]">
@@ -239,15 +253,33 @@ export default function AdminMapsLotsPage() {
                   </div>
                 </div>
                 <p className="text-white text-sm font-medium mb-1">Bloqueado</p>
-                <p className="text-white text-4xl font-bold">
-                  {allMapLots.filter(lot => lot.status === 'blocked').length}
-                </p>
+                {isLoadingMapStats ? (
+                  <div className="h-10 w-20 bg-white/20 rounded-lg animate-pulse"></div>
+                ) : (
+                  <p className="text-white text-4xl font-bold">{mapStats.blocked}</p>
+                )}
               </div>
             </div>
           )}
 
           {/* Seleção de Quadras */}
-          {blocks.length > 0 && (
+          {isLoadingBlocks ? (
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Quadra</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-xl bg-[var(--surface)] border-2 border-[var(--border)] animate-pulse"
+                  >
+                    <div className="h-3 w-12 bg-[var(--border)] rounded mb-2"></div>
+                    <div className="h-5 w-8 bg-[var(--border)] rounded mb-1"></div>
+                    <div className="h-3 w-16 bg-[var(--border)] rounded"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : blocks.length > 0 ? (
             <div className="mb-6">
               <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Quadra</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -270,7 +302,7 @@ export default function AdminMapsLotsPage() {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Seletor de Lotes */}
           <div className="mb-8">
@@ -283,9 +315,15 @@ export default function AdminMapsLotsPage() {
             </h2>
             
             {isLoadingLots ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--foreground)] mb-4"></div>
-                <p className="text-[var(--foreground)] opacity-70">Carregando lotes da quadra...</p>
+              <div className="py-6">
+                <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-15 gap-2">
+                  {Array.from({ length: 30 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg animate-pulse"
+                    ></div>
+                  ))}
+                </div>
               </div>
             ) : lots.length > 0 ? (
               <LotSelector
@@ -348,7 +386,7 @@ export default function AdminMapsLotsPage() {
                   <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  Mapa
+                  Visualização do Mapa
                 </h2>
                 <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-2 relative">
                   {isLoadingImage && (
