@@ -21,6 +21,7 @@ export default function MapDetails() {
   const [map, setMap] = useState<Map | null>(null);
   const [allMaps, setAllMaps] = useState<Map[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger para forçar refresh dos cards
   
   // Estados para modais
@@ -106,9 +107,52 @@ export default function MapDetails() {
     }
   }, [mapId]);
 
+  // Função para carregar a imagem de um mapa específico
+  const loadMapImage = useCallback(async (mapIdToLoad: string) => {
+    if (!mapIdToLoad) return;
+    
+    setIsLoadingImage(true);
+    try {
+      const response = await axios.get(`${API_URL}/mapas/imagem`, {
+        params: { mapId: mapIdToLoad },
+        timeout: 15000, // Timeout maior para imagens
+      });
+
+      const { imageUrl, width, height } = response.data;
+
+      // Atualizar o mapa atual se for o mesmo
+      setMap(prevMap => {
+        if (prevMap && prevMap.id === mapIdToLoad) {
+          return {
+            ...prevMap,
+            imageUrl: imageUrl || '',
+            width: width || prevMap.width,
+            height: height || prevMap.height,
+          };
+        }
+        return prevMap;
+      });
+
+      // Atualizar na lista de todos os mapas também
+      setAllMaps(prevMaps => 
+        prevMaps.map(m => 
+          m.id === mapIdToLoad 
+            ? { ...m, imageUrl: imageUrl || '', width: width || m.width, height: height || m.height }
+            : m
+        )
+      );
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao carregar imagem do mapa:', error);
+    } finally {
+      setIsLoadingImage(false);
+    }
+  }, []);
+
   const loadMapData = useCallback(async () => {
     try {
+      // Buscar mapas sem imagens (minimal=true)
       const response = await axios.get(`${API_URL}/mapas`, {
+        params: { minimal: 'true' },
         timeout: 10000,
       });
 
@@ -117,7 +161,7 @@ export default function MapDetails() {
         id: m.mapId || m.id,
         name: m.name || `Mapa ${m.mapId || m.id}`,
         description: m.description || '',
-        imageUrl: m.imageUrl || '',
+        imageUrl: '', // Será carregado depois
         imageType: 'image',
         width: m.width || 800,
         height: m.height || 600,
@@ -136,7 +180,7 @@ export default function MapDetails() {
             id: data.mapId || data.id || mapId,
             name: data.name || `Mapa ${data.mapId || mapId}`,
             description: data.description || '',
-            imageUrl: data.imageUrl || '',
+            imageUrl: '', // Será carregado depois
             imageType: 'image',
             width: data.width || 800,
             height: data.height || 600,
@@ -184,8 +228,9 @@ export default function MapDetails() {
     if (mapId) {
       loadBlocks(mapId);
       loadAllLots(); // Carregar todos os lotes para o InteractiveMap
+      loadMapImage(mapId); // Carregar imagem de forma assíncrona
     }
-  }, [mapId, loadBlocks, loadAllLots]);
+  }, [mapId, loadBlocks, loadAllLots, loadMapImage]);
 
   // Selecionar automaticamente a primeira quadra quando as quadras forem carregadas
   useEffect(() => {
@@ -501,7 +546,7 @@ export default function MapDetails() {
             setImageFile(null);
             setImagePreview('');
             setIsUploadingImage(false);
-            loadMapData();
+            loadMapImage(mapId); // Recarregar apenas a imagem
           } else {
             // Para imagem, obter dimensões
             const img = new Image();
@@ -526,7 +571,7 @@ export default function MapDetails() {
               setImageFile(null);
               setImagePreview('');
               setIsUploadingImage(false);
-              loadMapData();
+              loadMapImage(mapId); // Recarregar apenas a imagem
             };
             img.onerror = () => {
               alert('Erro ao processar imagem');
@@ -834,7 +879,15 @@ export default function MapDetails() {
             </svg>
             Visualização do Mapa
           </h2>
-          <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-4">
+          <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-4 relative">
+            {isLoadingImage && (
+              <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)] mb-2"></div>
+                  <p className="text-[var(--foreground)] text-sm font-medium">Carregando imagem...</p>
+                </div>
+              </div>
+            )}
             <InteractiveMap
               imageUrl={map.imageUrl}
               lots={allLots}

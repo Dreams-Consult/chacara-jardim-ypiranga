@@ -23,6 +23,7 @@ export default function AdminMapsLotsPage() {
     isLoading,
     isLoadingBlocks,
     isLoadingLots,
+    isLoadingImage,
     availableLotsCount,
     reservedLotsCount,
     soldLotsCount,
@@ -349,7 +350,15 @@ export default function AdminMapsLotsPage() {
                   </svg>
                   Mapa
                 </h2>
-                <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-2">
+                <div className="bg-gradient-to-br from-[var(--surface)] to-[var(--background)] rounded-xl p-2 relative">
+                  {isLoadingImage && (
+                    <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)] mb-2"></div>
+                        <p className="text-[var(--foreground)] text-sm font-medium">Carregando imagem do mapa...</p>
+                      </div>
+                    </div>
+                  )}
                   <InteractiveMap
                     imageUrl={selectedMap.imageUrl}
                     lots={lots}

@@ -17,6 +17,7 @@ export const useMapSelection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingBlocks, setIsLoadingBlocks] = useState(false);
   const [isLoadingLots, setIsLoadingLots] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   // Buscar apenas informações dos mapas (sem lotes e sem imagens para lista)
   useEffect(() => {
@@ -57,17 +58,41 @@ export const useMapSelection = () => {
           const currentMapExists = currentMapId &&
             allMaps.some(m => m.id === currentMapId);
 
-          if (currentMapExists) {
-            // Mapa selecionado ainda existe, manter seleção
-            // Carregar quadras do mapa selecionado
-            loadBlocksForMap(currentMapId);
-          } else if (allMaps.length > 0) {
+          if (!currentMapExists && allMaps.length > 0) {
             // Não há mapa selecionado OU o mapa não existe mais: selecionar o primeiro
             const firstMap = allMaps[0];
-            setSelectedMap(firstMap);
             selectedMapIdRef.current = firstMap.id;
-            // Carregar quadras do primeiro mapa automaticamente
+            
+            // Definir mapa sem imagem primeiro
+            setSelectedMap({ ...firstMap, imageUrl: '' });
+            
+            // Carregar quadras primeiro
             loadBlocksForMap(firstMap.id);
+            
+            // Carregar imagem separadamente
+            setIsLoadingImage(true);
+            axios.get(`${API_URL}/mapas/imagem`, {
+              params: { mapId: firstMap.id },
+              timeout: 15000,
+            })
+              .then(response => {
+                const { imageUrl, width, height } = response.data;
+                setSelectedMap({
+                  ...firstMap,
+                  imageUrl: imageUrl || '',
+                  width: width || firstMap.width,
+                  height: height || firstMap.height,
+                });
+              })
+              .catch(error => {
+                console.error('Erro ao carregar imagem do mapa:', error);
+              })
+              .finally(() => {
+                setIsLoadingImage(false);
+              });
+          } else if (currentMapExists) {
+            // Mapa selecionado ainda existe, carregar apenas quadras
+            loadBlocksForMap(currentMapId);
           }
         } else {
           setMaps([]);
@@ -240,36 +265,42 @@ export const useMapSelection = () => {
     async (mapId: string) => {
       const map = maps.find((m) => m.id === mapId);
       
-      // Se o mapa não tem imageUrl carregada, buscar dados completos
-      if (map && !map.imageUrl) {
-        try {
-          const response = await axios.get(`${API_URL}/mapas`);
-          const fullMapData = response.data.find((m: any) => m.mapId === mapId);
-          if (fullMapData) {
-            const fullMap: Map = {
-              ...map,
-              imageUrl: fullMapData.imageUrl || '',
-              description: fullMapData.description || '',
-            };
-            setSelectedMap(fullMap);
-            selectedMapIdRef.current = mapId;
-            await loadBlocksForMap(mapId);
-            return;
-          }
-        } catch (error) {
-          console.error('Erro ao carregar dados completos do mapa:', error);
-        }
-      }
-      
-      setSelectedMap(map || null);
-      selectedMapIdRef.current = map ? mapId : null;
-
-      if (map) {
-        await loadBlocksForMap(mapId);
-      } else {
+      if (!map) {
+        setSelectedMap(null);
+        selectedMapIdRef.current = null;
         setBlocks([]);
         setSelectedBlock(null);
         setLots([]);
+        return;
+      }
+      
+      // Definir mapa sem imagem primeiro
+      setSelectedMap({ ...map, imageUrl: '' });
+      selectedMapIdRef.current = mapId;
+      
+      // Carregar quadras primeiro
+      loadBlocksForMap(mapId);
+      
+      // Carregar imagem separadamente de forma assíncrona
+      setIsLoadingImage(true);
+      try {
+        const response = await axios.get(`${API_URL}/mapas/imagem`, {
+          params: { mapId },
+          timeout: 15000,
+        });
+        const { imageUrl, width, height } = response.data;
+        const fullMap: Map = {
+          ...map,
+          imageUrl: imageUrl || '',
+          width: width || map.width,
+          height: height || map.height,
+        };
+        setSelectedMap(fullMap);
+      } catch (error) {
+        console.error('Erro ao carregar imagem do mapa:', error);
+        // Manter o mapa selecionado mesmo sem imagem
+      } finally {
+        setIsLoadingImage(false);
       }
     },
     [maps]
@@ -301,6 +332,7 @@ export const useMapSelection = () => {
     isLoading,
     isLoadingBlocks,
     isLoadingLots,
+    isLoadingImage,
     availableLotsCount,
     reservedLotsCount,
     soldLotsCount,
