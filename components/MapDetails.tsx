@@ -301,6 +301,16 @@ export default function MapDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Carregar quadras quando o mapId da URL estiver disponível após o carregamento inicial
+  useEffect(() => {
+    if (hasInitialized.current && mapId && mapId.trim() !== '' && blocks.length === 0) {
+      // Carregar quadras se ainda não foram carregadas
+      loadBlocks(mapId);
+      loadLotStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapId, blocks.length]);
+
   // Detectar mudança de mapId (quando usuário troca de mapa via seletor)
   const previousMapIdRef = useRef<string>('');
   useEffect(() => {
@@ -394,18 +404,20 @@ export default function MapDetails() {
     try {
       if (editingBlock.id) {
         await updateBlock(editingBlock);
+        alert('✅ Quadra atualizada com sucesso!');
       } else {
         await createBlock({
           mapId: editingBlock.mapId,
           name: editingBlock.name,
           description: editingBlock.description,
         });
+        alert('✅ Quadra criada com sucesso!');
       }
       setIsAddingBlock(false);
       setEditingBlock(null);
     } catch (error) {
       console.error('Erro ao salvar quadra:', error);
-      alert('Erro ao salvar quadra. Tente novamente.');
+      alert('❌ Erro ao salvar quadra. Tente novamente.');
     }
   };
 
@@ -885,7 +897,7 @@ export default function MapDetails() {
                   <button
                     onClick={handleCreateMap}
                     disabled={isSubmittingMap || !newMapName.trim()}
-                    className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isSubmittingMap ? (
                       <>
@@ -893,7 +905,12 @@ export default function MapDetails() {
                         Criando...
                       </>
                     ) : (
-                      'Criar Loteamento'
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Criar Loteamento
+                      </>
                     )}
                   </button>
                 </div>
@@ -1710,7 +1727,7 @@ export default function MapDetails() {
               <button
                 onClick={handleCreateMap}
                 disabled={!newMapName.trim() || isSubmittingMap}
-                className="flex-1 px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="flex-1 px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSubmittingMap ? (
                   <>
@@ -1723,7 +1740,7 @@ export default function MapDetails() {
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Criar Loteamento
                   </>
