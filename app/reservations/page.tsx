@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
@@ -51,7 +52,10 @@ const parseCurrency = (value: string): number => {
 
 export default function ReservationsPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
@@ -60,55 +64,201 @@ export default function ReservationsPage() {
   const [lotFirstPayments, setLotFirstPayments] = useState<{ [lotId: number]: string }>({});
   const [lotInstallments, setLotInstallments] = useState<{ [lotId: number]: number | null }>({});
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
+  const [processedReservationId, setProcessedReservationId] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    completed: 0,
+    cancelled: 0,
+  });
   
   // Paginação
-  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(() => {
+    const pageParam = searchParams.get('page');
+    return pageParam ? parseInt(pageParam) : 1;
+  });
 
   const loadData = useCallback(async () => {
     try {
+      // Carregar apenas a página atual com filtros
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+      };
 
-      // Carregar todas as reservas do endpoint
-      const response = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
-      const allReservations: Reservation[] = Array.isArray(response.data) ? response.data : [];
-
-
-      // DEV e ADMIN veem todas as reservas, outros perfis filtram por user_id
-      let filteredReservations: Reservation[];
-
-      if (user?.role === UserRole.DEV || user?.role === UserRole.ADMIN) {
-        // DEV e ADMIN veem tudo
-        filteredReservations = allReservations;
-      } else if (user?.id) {
-        // Outros perfis filtram por user_id (vendedor que criou a reserva)
-        filteredReservations = allReservations.filter((reservation: any) => {
-          return reservation.user_id === user.id;
-        });
-      } else {
-        filteredReservations = [];
+      // Filtrar por user_id se não for DEV ou ADMIN
+      if (user?.role !== UserRole.DEV && user?.role !== UserRole.ADMIN && user?.id) {
+        params.userId = user.id;
       }
 
-      // Ordenar reservas: pendentes primeiro, depois por ID decrescente
-      filteredReservations.sort((a, b) => {
-        // Priorizar status pendente
-        if (a.status === 'pending' && b.status !== 'pending') return -1;
-        if (a.status !== 'pending' && b.status === 'pending') return 1;
-        
-        // Se ambos têm o mesmo status, ordenar por ID decrescente (mais recente primeiro)
-        return b.id - a.id;
+      const response = await axios.get(`${API_URL}/reservas`, { 
+        params,
+        timeout: 10000 
       });
 
-      setReservations(filteredReservations);
+      if (response.data) {
+        // Atualizar para o novo formato de resposta
+        if (typeof response.data === 'object' && 'reservations' in response.data) {
+          // Novo formato com paginação
+          setReservations(response.data.reservations || []);
+          setTotalCount(response.data.totalCount || 0);
+        } else if (Array.isArray(response.data.data)) {
+          // Formato intermediário
+          setReservations(response.data.data);
+          setTotalCount(response.data.total || response.data.data.length);
+        } else if (Array.isArray(response.data)) {
+          // Formato antigo (array direto)
+          setReservations(response.data);
+          setTotalCount(response.data.length);
+        } else {
+          setReservations([]);
+          setTotalCount(0);
+        }
+      }
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao carregar reservas:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.cpf, user?.role]);
+  }, [user?.id, user?.role, currentPage, statusFilter]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Sincronizar currentPage com URL
+  useEffect(() => {
+    const pageParam = searchParams.get('page');
+    const pageFromUrl = pageParam ? parseInt(pageParam) : 1;
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+      // Resetar processedReservationId quando a página mudar
+      setProcessedReservationId(null);
+    }
+  }, [searchParams, currentPage]);
+
+  // Carregar estatísticas
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const params: any = {};
+
+        if (user?.role !== UserRole.DEV && user?.role !== UserRole.ADMIN && user?.id) {
+          params.userId = user.id;
+        }
+
+        const response = await axios.get(`${API_URL}/reservas/stats`, { 
+          params,
+          timeout: 5000 
+        });
+
+        if (response.data) {
+          setStats(response.data);
+        }
+      } catch (error) {
+        console.error('[Reservations] Erro ao carregar estatísticas:', error);
+      }
+    };
+
+    if (user) {
+      loadStats();
+    }
+  }, [user?.id, user?.role]);
+
+  // Expandir automaticamente a reserva se vier da URL
+  useEffect(() => {
+    const reservationId = searchParams.get('reservationId');
+    
+    // Evitar processar a mesma reserva múltiplas vezes
+    if (!reservationId || reservationId === processedReservationId) {
+      return;
+    }
+    
+    // Esperar os dados carregarem
+    if (isLoading) {
+      return;
+    }
+    
+    const id = parseInt(reservationId);
+    
+    // Verificar se a reserva está na página atual
+    const reservation = reservations.find(r => r.id === id);
+    
+    if (reservation) {
+      // Reserva encontrada na página atual
+      setExpandedReservation(id);
+      setProcessedReservationId(reservationId);
+      
+      // Limpar reservationId da URL
+      const urlParams = new URLSearchParams(searchParams.toString());
+      urlParams.delete('reservationId');
+      router.replace(`/reservations?${urlParams.toString()}`);
+      
+      // Scroll suave até a reserva após um pequeno delay
+      setTimeout(() => {
+        const element = document.getElementById(`reservation-${id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    } else if (reservations.length > 0) {
+      // Reserva não está na página atual e já terminou de carregar
+      // Buscar em qual página ela está usando o novo endpoint
+      const findReservationPage = async () => {
+        try {
+          const params: any = {
+            reservationId: id,
+            limit: itemsPerPage,
+          };
+
+          if (statusFilter !== 'all') {
+            params.status = statusFilter;
+          }
+
+          if (user?.role !== UserRole.DEV && user?.role !== UserRole.ADMIN && user?.id) {
+            params.userId = user.id;
+          }
+
+          const response = await axios.get(`${API_URL}/reservas/find-page`, { 
+            params,
+            timeout: 5000 
+          });
+
+          if (response.data && response.data.page) {
+            const pageNumber = response.data.page;
+            
+            // Navegar para a página correta se for diferente da atual
+            if (pageNumber !== currentPage) {
+              const urlParams = new URLSearchParams(searchParams.toString());
+              urlParams.set('page', pageNumber.toString());
+              // Manter reservationId para processar na nova página
+              router.push(`/reservations?${urlParams.toString()}`);
+            } else {
+              // Mesma página, mas não encontrou - marcar como processado
+              setProcessedReservationId(reservationId);
+            }
+          } else {
+            // Não encontrou a reserva - marcar como processado e limpar URL
+            setProcessedReservationId(reservationId);
+            const urlParams = new URLSearchParams(searchParams.toString());
+            urlParams.delete('reservationId');
+            router.replace(`/reservations?${urlParams.toString()}`);
+          }
+        } catch (error) {
+          console.error('[Reservations] Erro ao buscar página da reserva:', error);
+          // Limpar reservationId e marcar como processado em caso de erro
+          setProcessedReservationId(reservationId);
+          const urlParams = new URLSearchParams(searchParams.toString());
+          urlParams.delete('reservationId');
+          router.replace(`/reservations?${urlParams.toString()}`);
+        }
+      };
+
+      findReservationPage();
+    }
+  }, [searchParams, reservations, isLoading, processedReservationId, currentPage, statusFilter, user?.id, user?.role, router, itemsPerPage]);
 
   // Polling automático removido - atualização manual apenas
   // useRealtimeUpdates(() => {
@@ -290,16 +440,27 @@ export default function ReservationsPage() {
     }
   };
 
-  // Filtrar reservas por status
-  const filteredReservations = statusFilter === 'all' 
-    ? reservations 
-    : reservations.filter(r => r.status === statusFilter);
-
   // Calcular paginação
-  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedReservations = filteredReservations.slice(startIndex, endIndex);
+
+  // Função para mudar página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Atualizar URL
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    router.push(`/reservations?${params.toString()}`);
+  };
+
+  // Atualizar filtro de status
+  const handleStatusFilterChange = (status: typeof statusFilter) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    router.push(`/reservations?${params.toString()}`);
+  };
 
   // Reset para página 1 quando mudar o filtro
   useEffect(() => {
@@ -309,11 +470,11 @@ export default function ReservationsPage() {
   // Verificar se há uma reserva para expandir automaticamente
   useEffect(() => {
     const reservationIdToExpand = sessionStorage.getItem('expandReservationId');
-    if (reservationIdToExpand && filteredReservations.length > 0) {
+    if (reservationIdToExpand && reservations.length > 0) {
       const reservationId = parseInt(reservationIdToExpand);
       
       // Buscar a reserva pelo ID e verificar se não está cancelada
-      const reservation = filteredReservations.find(r => r.id === reservationId);
+      const reservation = reservations.find(r => r.id === reservationId);
       
       // Se a reserva está cancelada, buscar outra reserva com o mesmo lote que não esteja cancelada
       let targetReservation: Reservation | undefined = reservation;
@@ -324,7 +485,7 @@ export default function ReservationsPage() {
           const lotIds = reservation.lots.map((l: any) => l.id);
           
           // Buscar outra reserva com pelo menos um dos mesmos lotes e que não esteja cancelada
-          targetReservation = filteredReservations.find(r => 
+          targetReservation = reservations.find(r => 
             r.id !== reservationId &&
             r.status !== 'cancelled' &&
             r.lots?.some((l: any) => lotIds.includes(l.id))
@@ -336,7 +497,7 @@ export default function ReservationsPage() {
       }
       
       if (targetReservation) {
-        const reservationIndex = filteredReservations.findIndex(r => r.id === targetReservation.id);
+        const reservationIndex = reservations.findIndex(r => r.id === targetReservation.id);
         
         if (reservationIndex !== -1) {
           // Calcular a página onde a reserva está
@@ -361,7 +522,7 @@ export default function ReservationsPage() {
       // Limpar o sessionStorage
       sessionStorage.removeItem('expandReservationId');
     }
-  }, [filteredReservations, itemsPerPage]);
+  }, [reservations, itemsPerPage]);
 
   return (
     <div className="p-6">
@@ -390,7 +551,7 @@ export default function ReservationsPage() {
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div 
-          onClick={() => setStatusFilter(statusFilter === 'all' ? 'all' : 'all')}
+          onClick={() => handleStatusFilterChange(statusFilter === 'all' ? 'all' : 'all')}
           className={`bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'all' ? 'ring-4 ring-blue-300' : ''
           }`}
@@ -406,12 +567,12 @@ export default function ReservationsPage() {
           {isLoading ? (
             <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
           ) : (
-            <p className="text-white text-4xl font-bold">{reservations.length}</p>
+            <p className="text-white text-4xl font-bold">{stats.total}</p>
           )}
         </div>
 
         <div 
-          onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
+          onClick={() => handleStatusFilterChange(statusFilter === 'pending' ? 'all' : 'pending')}
           className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'pending' ? 'ring-4 ring-yellow-300' : ''
           }`}
@@ -427,14 +588,12 @@ export default function ReservationsPage() {
           {isLoading ? (
             <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
           ) : (
-            <p className="text-white text-4xl font-bold">
-              {reservations.filter(r => r.status === 'pending').length}
-            </p>
+            <p className="text-white text-4xl font-bold">{stats.pending}</p>
           )}
         </div>
 
         <div 
-          onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
+          onClick={() => handleStatusFilterChange(statusFilter === 'completed' ? 'all' : 'completed')}
           className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'completed' ? 'ring-4 ring-green-300' : ''
           }`}
@@ -450,14 +609,12 @@ export default function ReservationsPage() {
           {isLoading ? (
             <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
           ) : (
-            <p className="text-white text-4xl font-bold">
-              {reservations.filter(r => r.status === 'completed').length}
-            </p>
+            <p className="text-white text-4xl font-bold">{stats.completed}</p>
           )}
         </div>
 
         <div 
-          onClick={() => setStatusFilter(statusFilter === 'cancelled' ? 'all' : 'cancelled')}
+          onClick={() => handleStatusFilterChange(statusFilter === 'cancelled' ? 'all' : 'cancelled')}
           className={`bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-[var(--shadow-lg)] cursor-pointer transition-all duration-300 hover:scale-105 ${
         statusFilter === 'cancelled' ? 'ring-4 ring-red-300' : ''
           }`}
@@ -473,9 +630,7 @@ export default function ReservationsPage() {
           {isLoading ? (
             <div className="h-10 w-16 bg-white/20 rounded-lg animate-pulse"></div>
           ) : (
-            <p className="text-white text-4xl font-bold">
-              {reservations.filter(r => r.status === 'cancelled').length}
-            </p>
+            <p className="text-white text-4xl font-bold">{stats.cancelled}</p>
           )}
         </div>
       </div>
@@ -520,7 +675,7 @@ export default function ReservationsPage() {
               </div>
             ))}
           </div>
-        ) : filteredReservations.length === 0 ? (
+        ) : reservations.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--surface)] rounded-full mb-4">
               <svg className="w-8 h-8 text-[var(--foreground)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -543,7 +698,7 @@ export default function ReservationsPage() {
         ) : (
           <>
             <div className="space-y-4">
-              {paginatedReservations.map((reservation) => (
+              {reservations.map((reservation) => (
               <div
                 key={reservation.id}
                 id={`reservation-${reservation.id}`}
@@ -820,11 +975,11 @@ export default function ReservationsPage() {
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-6">
                 <div className="text-sm text-[var(--foreground)] opacity-70">
-                  Mostrando {startIndex + 1} a {Math.min(endIndex, filteredReservations.length)} de {filteredReservations.length} reservas
+                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, totalCount)} de {totalCount} reservas
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--foreground)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
@@ -844,7 +999,7 @@ export default function ReservationsPage() {
                         return (
                           <button
                             key={page}
-                            onClick={() => setCurrentPage(page)}
+                            onClick={() => handlePageChange(page)}
                             className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                               currentPage === page
                                 ? 'bg-[var(--primary)] text-[var(--foreground)]'
@@ -865,7 +1020,7 @@ export default function ReservationsPage() {
                   </div>
 
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--foreground)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >

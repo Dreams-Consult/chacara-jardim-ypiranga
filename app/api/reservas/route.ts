@@ -15,6 +15,14 @@ export async function GET(request: NextRequest) {
     const minimal = searchParams.get('minimal') === 'true';
     const mapId = searchParams.get('mapId');
     const blockId = searchParams.get('blockId');
+    
+    // Parâmetros de paginação
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const status = searchParams.get('status');
+    const userId = searchParams.get('userId');
+
+    console.log('[API /reservas GET] Params:', { page, limit, status, userId, minimal, mapId, blockId });
 
     if (minimal) {
       // Retornar apenas campos essenciais para tooltip em /maps/
@@ -83,10 +91,52 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(reservationsWithLots || [], { status: 200 });
     }
 
-    // Buscar todas as reservas (modo completo)
-    const [reservations] = await connection.execute(
-      'SELECT * FROM purchase_requests ORDER BY created_at DESC'
-    );
+    // Buscar todas as reservas (modo completo) com paginação
+    let query = 'SELECT * FROM purchase_requests';
+    let countQuery = 'SELECT COUNT(*) as total FROM purchase_requests';
+    let whereConditions: string[] = [];
+    let filterParams: any[] = [];
+
+    // Aplicar filtros (verificar se não é null/undefined)
+    if (status && status !== 'all' && status !== 'undefined' && status !== 'null') {
+      whereConditions.push('status = ?');
+      filterParams.push(status);
+    }
+
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+      whereConditions.push('user_id = ?');
+      filterParams.push(parseInt(userId));
+    }
+
+    console.log('[API /reservas GET] Filters:', { whereConditions, filterParams });
+
+    // Adicionar WHERE clause se houver condições
+    if (whereConditions.length > 0) {
+      const whereClause = ' WHERE ' + whereConditions.join(' AND ');
+      query += whereClause;
+      countQuery += whereClause;
+    }
+
+    // Obter contagem total
+    const [countResult] = await connection.execute(countQuery, filterParams);
+    const totalCount = (countResult as any[])[0].total;
+
+    console.log('[API /reservas GET] Total count:', totalCount);
+
+    // Adicionar ordenação e paginação
+    query += ' ORDER BY created_at DESC';
+    
+    // Calcular offset - garantir que são números inteiros
+    const limitInt = parseInt(limit.toString());
+    const offsetInt = parseInt(((page - 1) * limit).toString());
+    
+    // Usar interpolação direta para LIMIT e OFFSET (seguro pois são inteiros validados)
+    query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`;
+
+    console.log('[API /reservas GET] Query:', query);
+    console.log('[API /reservas GET] Filter params:', filterParams);
+
+    const [reservations] = await connection.execute(query, filterParams);
 
     // Para cada reserva, buscar os lotes associados com agreed_price, first_payment e installments
     const reservationsWithLots = await Promise.all(
@@ -133,7 +183,10 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json(reservationsWithLots || [], { status: 200 });
+    return NextResponse.json({ 
+      reservations: reservationsWithLots || [], 
+      totalCount 
+    }, { status: 200 });
   } catch (error) {
     console.error('[API /reservas GET] Erro:', error);
     return NextResponse.json(

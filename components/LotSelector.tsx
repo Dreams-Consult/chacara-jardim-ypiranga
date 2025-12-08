@@ -175,10 +175,8 @@ export default function LotSelector({
 
   const handleReservationClick = (reservation: any) => {
     if (reservation) {
-      // Salvar ID da reserva no sessionStorage para expansão automática
-      sessionStorage.setItem('expandReservationId', reservation.id.toString());
-      // Redirecionar para a página de reservas
-      router.push('/reservations');
+      // Redirecionar para a página de reservas com o ID da reserva na URL
+      router.push(`/reservations?reservationId=${reservation.id}`);
     }
   };
 
