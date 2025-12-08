@@ -163,6 +163,12 @@ export default function MapDetails() {
         timeout: 30000, // Timeout maior para imagens (30 segundos)
       });
 
+      if (!response?.data) {
+        console.warn('[MapDetails] Resposta vazia ao carregar imagem');
+        setIsLoadingImage(false);
+        return;
+      }
+
       const { imageUrl, width, height } = response.data;
 
       // Atualizar o mapa atual se for o mesmo
@@ -186,8 +192,12 @@ export default function MapDetails() {
             : m
         )
       );
-    } catch (error) {
-      console.error('[MapDetails] ❌ Erro ao carregar imagem do mapa:', error);
+    } catch (error: any) {
+      // Silenciar erro 404 - endpoint pode não existir em alguns ambientes
+      if (error.response?.status !== 404) {
+        console.error('[MapDetails] ❌ Erro ao carregar imagem do mapa:', error);
+      }
+      // Não mostra erro ao usuário, apenas loga (imagem é opcional)
     } finally {
       setIsLoadingImage(false);
     }
@@ -278,10 +288,11 @@ export default function MapDetails() {
         await loadMapData(mapId);
         
         // Após carregar mapas, se tem mapId, carregar dados específicos
-        if (mapId) {
+        if (mapId && mapId.trim() !== '') {
           loadBlocks(mapId);
           loadLotStats();
-          loadMapImage(mapId);
+          // Comentado temporariamente - endpoint pode não existir
+          // loadMapImage(mapId);
         }
       };
       
@@ -306,10 +317,11 @@ export default function MapDetails() {
       setReservations([]);
       
       // Carregar novos dados
-      if (mapId) {
+      if (mapId && mapId.trim() !== '') {
         loadBlocks(mapId);
         loadLotStats();
-        loadMapImage(mapId);
+        // Comentado temporariamente - endpoint pode não existir
+        // loadMapImage(mapId);
       }
     }
     previousMapIdRef.current = mapId;
@@ -782,15 +794,26 @@ export default function MapDetails() {
               </div>
               <p className="text-[var(--foreground)] text-lg font-semibold mb-2">Nenhum loteamento cadastrado</p>
               <p className="text-[var(--foreground)]/80 text-sm font-medium mb-4">Importe ou crie um novo loteamento para começar</p>
-              <button
-                onClick={() => router.push('/admin/import-map')}
-                className="px-6 py-3 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors inline-flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Importar Loteamento
-              </button>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => router.push('/admin/import-map')}
+                  className="px-6 py-3 bg-[var(--accent)] text-[#1c1c1c] font-semibold rounded-lg hover:bg-[var(--accent-light)] transition-colors inline-flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Importar Loteamento
+                </button>
+                <button
+                  onClick={() => setIsCreatingMap(true)}
+                  className="px-6 py-3 bg-[var(--primary)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors inline-flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Novo Loteamento
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center py-12 bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-md)]">
@@ -798,6 +821,86 @@ export default function MapDetails() {
             </div>
           )}
         </div>
+
+        {/* Modal de Criar Novo Loteamento */}
+        {isCreatingMap && (
+          <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-[var(--foreground)]">Criar Novo Loteamento</h2>
+                <button
+                  onClick={() => {
+                    setIsCreatingMap(false);
+                    setNewMapName('');
+                    setNewMapDescription('');
+                  }}
+                  className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                    Nome do Loteamento *
+                  </label>
+                  <input
+                    type="text"
+                    value={newMapName}
+                    onChange={(e) => setNewMapName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
+                    placeholder="Ex: Chácara Jardim Ypiranga"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                    Descrição (opcional)
+                  </label>
+                  <textarea
+                    value={newMapDescription}
+                    onChange={(e) => setNewMapDescription(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder-[var(--foreground)]/40"
+                    placeholder="Breve descrição do loteamento"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setIsCreatingMap(false);
+                      setNewMapName('');
+                      setNewMapDescription('');
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-[var(--surface)] text-[var(--foreground)] font-semibold rounded-lg hover:bg-[var(--border)] transition-colors"
+                    disabled={isSubmittingMap}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCreateMap}
+                    disabled={isSubmittingMap || !newMapName.trim()}
+                    className="flex-1 px-4 py-2.5 bg-[var(--primary)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isSubmittingMap ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Criando...
+                      </>
+                    ) : (
+                      'Criar Loteamento'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
