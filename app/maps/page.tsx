@@ -6,7 +6,7 @@ import InteractiveMap from '@/components/InteractiveMap';
 import LotSelector from '@/components/LotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
 import { useMapSelection } from '@/hooks/useMapSelection';
-import { LotStatus } from '@/types';
+import { Lot, LotStatus } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminMapsLotsPage() {
@@ -51,6 +51,8 @@ export default function AdminMapsLotsPage() {
   const [isLoadingMapStats, setIsLoadingMapStats] = useState(false);
   const loadedStatsForMapRef = useRef<string | null>(null);
   const loadedReservationsForBlockRef = useRef<string | null>(null);
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  const [singleLotPurchase, setSingleLotPurchase] = useState<Lot | null>(null);
 
   // Carregar estatísticas do mapa selecionado de forma independente
   useEffect(() => {
@@ -123,6 +125,24 @@ export default function AdminMapsLotsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlock?.id]);
+
+  // Função para quando clicar em um único lote (sem multi-select)
+  const handleSingleLotClick = (lot: Lot) => {
+    if (lot.status === LotStatus.AVAILABLE) {
+      setSingleLotPurchase(lot);
+    }
+  };
+
+  // Função para fechar modal de compra única
+  const handleSinglePurchaseClose = () => {
+    setSingleLotPurchase(null);
+  };
+
+  // Função para sucesso na compra única
+  const handleSinglePurchaseSuccess = () => {
+    setSingleLotPurchase(null);
+    handlePurchaseSuccess();
+  };
 
   // Função para bloquear/desbloquear lote
   const handleToggleLotStatus = async (lotId: string, currentStatus: LotStatus) => {
@@ -333,19 +353,42 @@ export default function AdminMapsLotsPage() {
 
           {/* Seletor de Lotes */}
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              {isLoading || isLoadingBlocks ? (
-                <div className="h-6 w-32 bg-[var(--border)] rounded animate-pulse"></div>
-              ) : (
-                <>
-                  Lotes
-                  {selectedBlock && <span className="text-[var(--foreground)] opacity-60 text-base">- {selectedBlock.name}</span>}
-                </>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[var(--foreground)] flex items-center gap-2">
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                {isLoading || isLoadingBlocks ? (
+                  <div className="h-6 w-32 bg-[var(--border)] rounded animate-pulse"></div>
+                ) : (
+                  <>
+                    Lotes
+                    {selectedBlock && <span className="text-[var(--foreground)] opacity-60 text-base">- {selectedBlock.name}</span>}
+                  </>
+                )}
+              </h2>
+              
+              {/* Checkbox para ativar seleção múltipla */}
+              {!isLoading && lots.length > 0 && (
+                <label className="flex items-center gap-3 px-4 py-2 bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] hover:border-[var(--accent)] transition-colors cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={multiSelectMode}
+                    onChange={(e) => {
+                      setMultiSelectMode(e.target.checked);
+                      if (!e.target.checked) {
+                        // Limpar seleção ao desativar modo múltiplo
+                        handleClearSelection();
+                      }
+                    }}
+                    className="w-5 h-5 rounded border-2 border-[var(--border)] text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-0 cursor-pointer"
+                  />
+                  <span className="text-sm font-semibold text-[var(--foreground)]">
+                    Selecionar múltiplos lotes
+                  </span>
+                </label>
               )}
-            </h2>
+            </div>
             
             {isLoading || isLoadingLots ? (
               <div className="py-6">
@@ -361,15 +404,16 @@ export default function AdminMapsLotsPage() {
             ) : lots.length > 0 ? (
               <LotSelector
                 lots={lots}
-                onMultipleSelect={(lots) => {
+                onMultipleSelect={multiSelectMode ? (lots) => {
                   // Recebe um array com um único lote para fazer toggle
                   if (lots.length === 1) {
                     handleToggleLotSelection(lots[0]);
                   }
-                }}
+                } : undefined}
+                onSingleLotClick={!multiSelectMode ? handleSingleLotClick : undefined}
                 onToggleLotStatus={user?.role === 'admin' || user?.role === 'dev' ? handleToggleLotStatus : undefined}
                 selectedLotIds={selectedLots.map(l => l.id)}
-                allowMultipleSelection={true}
+                allowMultipleSelection={multiSelectMode}
                 lotsPerRow={15}
                 reservations={reservations}
                 userRole={user?.role}
@@ -486,6 +530,15 @@ export default function AdminMapsLotsPage() {
           lots={selectedLots} // Mudado de lot para lots
           onClose={handlePurchaseClose}
           onSuccess={handlePurchaseSuccess}
+        />
+      )}
+
+      {/* Modal para compra de lote único (sem multi-select) */}
+      {singleLotPurchase && (
+        <PurchaseModal
+          lots={[singleLotPurchase]}
+          onClose={handleSinglePurchaseClose}
+          onSuccess={handleSinglePurchaseSuccess}
         />
       )}
 

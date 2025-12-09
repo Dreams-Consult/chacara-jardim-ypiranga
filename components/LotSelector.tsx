@@ -9,6 +9,7 @@ interface LotSelectorProps {
   blocks?: Block[];
   onLotSelect?: (lot: Lot) => void;
   onMultipleSelect?: (lots: Lot[]) => void;
+  onSingleLotClick?: (lot: Lot) => void;
   onLotEdit?: (lot: Lot) => void;
   onLotDelete?: (lotId: string) => void;
   onToggleLotStatus?: (lotId: string, currentStatus: LotStatus) => Promise<void>;
@@ -25,6 +26,7 @@ export default function LotSelector({
   blocks = [],
   onLotSelect,
   onMultipleSelect,
+  onSingleLotClick,
   onLotEdit,
   onLotDelete,
   onToggleLotStatus,
@@ -89,8 +91,31 @@ export default function LotSelector({
   });
 
   const handleLotClick = (lot: Lot) => {
-    // Permite clicar em qualquer lote para visualizar informações
-    // Admin pode editar, usuário comum só visualiza
+    // Vendedores NUNCA podem clicar em lotes bloqueados
+    if (lot.status === LotStatus.BLOCKED && userRole === 'vendedor') {
+      return;
+    }
+
+    // Se está em modo single click (não multi-select) e tem handler específico
+    if (!allowMultipleSelection && onSingleLotClick && lot.status === LotStatus.AVAILABLE) {
+      onSingleLotClick(lot);
+      return;
+    }
+
+    // Se está em modo multi-select, só permite clicar em lotes disponíveis
+    if (allowMultipleSelection) {
+      if (lot.status !== LotStatus.AVAILABLE) {
+        return; // Não faz nada para lotes não disponíveis em modo multi-select
+      }
+      // Notifica seleção múltipla
+      if (onMultipleSelect) {
+        onMultipleSelect([lot]);
+      }
+      return;
+    }
+
+    // Comportamento padrão: abrir modal para visualizar
+    // Admin pode editar, usuário comum só visualiza reservados/vendidos
     
     // Abre o modal para mostrar detalhes do lote
     setSelectedLotForModal(lot);
@@ -185,13 +210,29 @@ export default function LotSelector({
   };
 
   const isLotClickable = (lot: Lot): boolean => {
-    // Admin/Dev podem clicar em qualquer lote
+    // Vendedores NUNCA podem clicar em lotes bloqueados
+    if (lot.status === LotStatus.BLOCKED && userRole === 'vendedor') {
+      return false;
+    }
+    
+    // Em modo multi-select, apenas lotes disponíveis são clicáveis
+    if (allowMultipleSelection) {
+      return lot.status === LotStatus.AVAILABLE;
+    }
+    
+    // Em modo single-click, vendedores podem clicar em disponíveis, reservados e vendidos
+    // (disponíveis para comprar, reservados/vendidos para ver detalhes)
+    if (userRole === 'vendedor') {
+      return lot.status === LotStatus.AVAILABLE || 
+             lot.status === LotStatus.RESERVED || 
+             lot.status === LotStatus.SOLD;
+    }
+    
+    // Admin/Dev podem clicar em qualquer lote (para editar/visualizar)
     if (onLotEdit || onToggleLotStatus) return true;
     
-    // Usuários comuns não podem clicar em lotes bloqueados
+    // Fallback: lotes bloqueados não são clicáveis
     if (lot.status === LotStatus.BLOCKED) return false;
-    
-    // Usuários comuns podem clicar em disponível, reservado e vendido
     return true;
   };
 
@@ -271,6 +312,15 @@ export default function LotSelector({
                 <span className="text-white font-bold text-xs sm:text-sm select-none">
                   {lot.lotNumber}
                 </span>
+                
+                {/* Checkbox visual indicator when selected in multi-select mode */}
+                {isSelected && allowMultipleSelection && (
+                  <div className="absolute top-0 right-0 -mt-1 -mr-1 bg-blue-500 rounded-full p-0.5 shadow-lg">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
             );
           })}
