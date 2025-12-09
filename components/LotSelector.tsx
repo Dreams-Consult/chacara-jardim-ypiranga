@@ -45,6 +45,42 @@ export default function LotSelector({
   const [priceDisplay, setPriceDisplay] = useState<string>('');
   const [hoveredLot, setHoveredLot] = useState<Lot | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [lotReservation, setLotReservation] = useState<any | null>(null);
+
+  // Buscar reserva específica do lote via API
+  const fetchLotReservation = async (lotId: string) => {
+    try {
+      const response = await fetch(`/api/reservas?lotId=${lotId}`);
+      const data = await response.json();
+      
+      console.log('API response for lotId', lotId, ':', data);
+      
+      // A API retorna: { reservations: [...], totalCount: N }
+      let reservation = null;
+      
+      if (data.reservations && Array.isArray(data.reservations)) {
+        // Formato: { reservations: [...], totalCount: N }
+        reservation = data.reservations.find((r: any) => 
+          r.status !== 'cancelled' &&
+          r.lots?.some((l: any) => String(l.id) === String(lotId))
+        );
+      } else if (Array.isArray(data)) {
+        // Formato alternativo: array direto
+        reservation = data.find((r: any) => 
+          r.status !== 'cancelled' &&
+          r.lots?.some((l: any) => String(l.id) === String(lotId))
+        );
+      }
+      
+      console.log('Reservation found:', reservation);
+      console.log('user_id from reservation:', reservation?.user_id);
+      
+      setLotReservation(reservation || null);
+    } catch (error) {
+      console.error('Erro ao buscar reserva do lote:', error);
+      setLotReservation(null);
+    }
+  };
 
   const sortedLots = [...lots].sort((a, b) => {
     const numA = parseInt(a.lotNumber) || 0;
@@ -58,6 +94,13 @@ export default function LotSelector({
     
     // Abre o modal para mostrar detalhes do lote
     setSelectedLotForModal(lot);
+
+    // Se o lote está reservado ou vendido, buscar informações da reserva
+    if (lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD) {
+      fetchLotReservation(lot.id);
+    } else {
+      setLotReservation(null);
+    }
 
     // Garante que pricePerM2 está calculado se não existir
     const lotWithCalculatedPrice = {
@@ -672,16 +715,31 @@ export default function LotSelector({
               {/* Modal para lotes reservados/vendidos: apenas botão de redirecionar */}
               {(selectedLotForModal.status === LotStatus.RESERVED || selectedLotForModal.status === LotStatus.SOLD) ? (
                 (() => {
-                  const reservation = getReservationForLot(selectedLotForModal.id);
+                  const reservation = lotReservation; // Usar lotReservation buscado via API
+                  
                   // Verificar se o usuário pode ver o botão de redirecionamento
-                  const canViewReservation = userRole === 'admin' || userRole === 'dev' || 
-                    (reservation && userId && reservation.user_id == userId); // Usar == para comparar string e number
+                  const isAdmin = userRole === 'admin' || userRole === 'dev';
+                  const isResponsibleSeller = reservation && userId && String(reservation.user_id) === String(userId);
+                  const canViewReservation = isAdmin || isResponsibleSeller;
+                  
+                  // Logs de debug
+                  console.log('=== DEBUG BOTÃO RESERVA ===');
+                  console.log('Reservation:', reservation);
+                  console.log('userRole:', userRole);
+                  console.log('userId:', userId);
+                  console.log('reservation.user_id:', reservation?.user_id);
+                  console.log('isAdmin:', isAdmin);
+                  console.log('isResponsibleSeller:', isResponsibleSeller);
+                  console.log('canViewReservation:', canViewReservation);
+                  console.log('Will show button:', !!(reservation && canViewReservation));
+                  console.log('========================');
                   
                   return reservation && canViewReservation ? (
                     <button
                       onClick={() => {
                         handleReservationClick(reservation);
                         setSelectedLotForModal(null);
+                        setLotReservation(null);
                       }}
                       className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation flex items-center justify-center gap-2 cursor-pointer"
                     >
@@ -696,6 +754,7 @@ export default function LotSelector({
                         setSelectedLotForModal(null);
                         setIsEditing(false);
                         setEditedLot(null);
+                        setLotReservation(null);
                       }}
                       className="flex-1 px-4 sm:px-6 py-3 text-base bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white font-semibold rounded-xl transition-colors touch-manipulation"
                     >
