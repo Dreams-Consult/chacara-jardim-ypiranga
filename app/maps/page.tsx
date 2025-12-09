@@ -54,39 +54,40 @@ export default function AdminMapsLotsPage() {
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [singleLotPurchase, setSingleLotPurchase] = useState<Lot | null>(null);
 
-  // Carregar estatísticas do mapa selecionado de forma independente
+  // Função para carregar estatísticas do mapa
+  const loadMapStats = async (forceReload = false) => {
+    if (!selectedMap?.id) {
+      setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
+      loadedStatsForMapRef.current = null;
+      return;
+    }
+
+    // Evitar carregar se já foi carregado para este mapa (a menos que seja forceReload)
+    if (!forceReload && loadedStatsForMapRef.current === selectedMap.id) {
+      return;
+    }
+
+    loadedStatsForMapRef.current = selectedMap.id;
+    setIsLoadingMapStats(true);
+    try {
+      const response = await axios.get('/api/mapas/estatisticas', {
+        params: { mapId: selectedMap.id },
+        timeout: 10000,
+      });
+
+      if (response.data) {
+        setMapStats(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas do mapa:', error);
+      setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
+    } finally {
+      setIsLoadingMapStats(false);
+    }
+  };
+
+  // Carregar estatísticas quando o mapa muda
   useEffect(() => {
-    const loadMapStats = async () => {
-      if (!selectedMap?.id) {
-        setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
-        loadedStatsForMapRef.current = null;
-        return;
-      }
-
-      // Evitar carregar se já foi carregado para este mapa
-      if (loadedStatsForMapRef.current === selectedMap.id) {
-        return;
-      }
-
-      loadedStatsForMapRef.current = selectedMap.id;
-      setIsLoadingMapStats(true);
-      try {
-        const response = await axios.get('/api/mapas/estatisticas', {
-          params: { mapId: selectedMap.id },
-          timeout: 10000,
-        });
-
-        if (response.data) {
-          setMapStats(response.data);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar estatísticas do mapa:', error);
-        setMapStats({ available: 0, reserved: 0, sold: 0, blocked: 0, total: 0 });
-      } finally {
-        setIsLoadingMapStats(false);
-      }
-    };
-
     loadMapStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMap?.id]);
@@ -126,6 +127,30 @@ export default function AdminMapsLotsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlock?.id]);
 
+  // Recarregar dados quando a página recebe foco (usuário volta de outra aba/página)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Recarregar lotes, reservas e estatísticas quando voltar para a página
+      if (selectedBlock?.id) {
+        fetchReservations();
+        selectBlock(selectedBlock.id);
+        loadMapStats(true);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBlock?.id]);
+
+  // Recarregar estatísticas sempre que os lotes mudarem
+  useEffect(() => {
+    if (selectedMap?.id && lots.length > 0) {
+      loadMapStats(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lots.length, lots]);
+
   // Função para quando clicar em um único lote (sem multi-select)
   const handleSingleLotClick = (lot: Lot) => {
     if (lot.status === LotStatus.AVAILABLE) {
@@ -142,6 +167,11 @@ export default function AdminMapsLotsPage() {
   const handleSinglePurchaseSuccess = () => {
     setSingleLotPurchase(null);
     handlePurchaseSuccess();
+    // Recarregar reservas e estatísticas após sucesso
+    setTimeout(() => {
+      fetchReservations();
+      loadMapStats(true);
+    }, 500);
   };
 
   // Função para bloquear/desbloquear lote
@@ -529,7 +559,13 @@ export default function AdminMapsLotsPage() {
         <PurchaseModal
           lots={selectedLots} // Mudado de lot para lots
           onClose={handlePurchaseClose}
-          onSuccess={handlePurchaseSuccess}
+          onSuccess={() => {
+            handlePurchaseSuccess();
+            setTimeout(() => {
+              fetchReservations();
+              loadMapStats(true);
+            }, 500);
+          }}
         />
       )}
 

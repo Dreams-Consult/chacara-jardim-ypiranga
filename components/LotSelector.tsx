@@ -19,6 +19,7 @@ interface LotSelectorProps {
   reservations?: any[]; // Array de reservas para mostrar no tooltip
   userRole?: string; // Role do usuário para verificar permissões
   userId?: number | string; // ID do usuário para verificar se é responsável pela reserva
+  isAdminContext?: boolean; // True quando usado na página /admin/map-details para permitir edição de lotes bloqueados
 }
 
 export default function LotSelector({
@@ -36,6 +37,7 @@ export default function LotSelector({
   reservations = [],
   userRole,
   userId,
+  isAdminContext = false,
 }: LotSelectorProps) {
   const router = useRouter();
   const [selectedLotForModal, setSelectedLotForModal] = useState<Lot | null>(null);
@@ -48,6 +50,8 @@ export default function LotSelector({
   const [hoveredLot, setHoveredLot] = useState<Lot | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [lotReservation, setLotReservation] = useState<any | null>(null);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
+  const [lotToUnblock, setLotToUnblock] = useState<Lot | null>(null);
 
   // Buscar reserva específica do lote via API
   const fetchLotReservation = async (lotId: string) => {
@@ -101,6 +105,14 @@ export default function LotSelector({
   const handleLotClick = (lot: Lot) => {
     // Vendedores NUNCA podem clicar em lotes bloqueados
     if (lot.status === LotStatus.BLOCKED && userRole === 'vendedor') {
+      return;
+    }
+
+    // Admin/Dev clicando em lote bloqueado na página de seleção (/maps): abrir modal de confirmação
+    // Na página de admin (/admin/map-details), permite abrir modal de edição normalmente
+    if (lot.status === LotStatus.BLOCKED && (userRole === 'admin' || userRole === 'dev') && !isAdminContext) {
+      setLotToUnblock(lot);
+      setShowUnblockConfirm(true);
       return;
     }
 
@@ -427,10 +439,117 @@ export default function LotSelector({
               })()}
 
               {hoveredLot.status === LotStatus.BLOCKED && (
-                <div className="text-sm">
-                  <p className="text-gray-400">Este lote está bloqueado e não pode ser reservado no momento.</p>
+                <div className="text-sm space-y-2">
+                  {(userRole === 'admin' || userRole === 'dev') ? (
+                    // Admin/Dev: mostrar informações do lote
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-gray-400">Área</p>
+                          <p className="text-white font-semibold">{hoveredLot.size} m²</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Preço</p>
+                          <p className="text-white font-semibold">R$ {hoveredLot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                      </div>
+                      {hoveredLot.pricePerM2 && (
+                        <div>
+                          <p className="text-gray-400">Preço/m²</p>
+                          <p className="text-white font-semibold">R$ {hoveredLot.pricePerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                      )}
+                      {hoveredLot.description && (
+                        <div>
+                          <p className="text-gray-400">Descrição</p>
+                          <p className="text-white text-xs">{hoveredLot.description}</p>
+                        </div>
+                      )}
+                      {!isAdminContext && (
+                        <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-2 mt-2">
+                          <p className="text-blue-300 text-xs font-semibold flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            Clique para desbloquear
+                          </p>
+                        </div>
+                      )}
+                      {isAdminContext && (
+                        <div className="bg-gray-500/20 border border-gray-500/30 rounded-lg p-2 mt-2">
+                          <p className="text-gray-300 text-xs">Este lote está bloqueado</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Vendedor: apenas mensagem
+                    <p className="text-gray-400">Este lote está bloqueado.</p>
+                  )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação para desbloquear lote */}
+      {showUnblockConfirm && lotToUnblock && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--card-bg)] rounded-2xl max-w-md w-full shadow-2xl border border-[var(--border)] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-[var(--foreground)]">
+                  Desbloquear Lote
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Lote {lotToUnblock.lotNumber}
+                </p>
+              </div>
+            </div>
+            
+            <p className="text-[var(--foreground)] mb-6">
+              Tem certeza que deseja desbloquear este lote? Ele ficará disponível para reservas.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowUnblockConfirm(false);
+                  setLotToUnblock(null);
+                }}
+                className="flex-1 px-4 py-2 rounded-lg transition-colors bg-gray-500/20 text-gray-300 hover:bg-gray-500/30"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  if (!onToggleLotStatus || !lotToUnblock) return;
+                  
+                  setIsTogglingBlock(true);
+                  try {
+                    await onToggleLotStatus(lotToUnblock.id, lotToUnblock.status);
+                    setShowUnblockConfirm(false);
+                    setLotToUnblock(null);
+                    
+                    // Mostrar mensagem de sucesso
+                    alert(`Lote ${lotToUnblock.lotNumber} foi desbloqueado com sucesso!`);
+                  } catch (error) {
+                    console.error('Erro ao desbloquear lote:', error);
+                    alert('Erro ao desbloquear o lote. Tente novamente.');
+                  } finally {
+                    setIsTogglingBlock(false);
+                  }
+                }}
+                disabled={isTogglingBlock}
+                className="flex-1 px-4 py-2 rounded-lg transition-colors bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTogglingBlock ? 'Desbloqueando...' : 'Desbloquear'}
+              </button>
             </div>
           </div>
         </div>
@@ -843,7 +962,7 @@ export default function LotSelector({
                           setIsEditing(false);
                           setEditedLot(null);
                         }}
-                        className="flex-1 px-4 sm:px-6 py-3 text-base bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors touch-manipulation"
+                        className="flex-1 px-4 sm:px-6 py-3 text-base bg-[var(--success)] hover:bg-[var(--success)]/90 active:bg-[var(--success)]/80 text-white font-semibold rounded-xl transition-colors touch-manipulation"
                       >
                         Salvar Alterações
                       </button>

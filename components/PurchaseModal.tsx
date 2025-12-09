@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Lot } from '@/types';
+import { Lot, LotStatus } from '@/types';
 import { usePurchaseForm } from '@/hooks/usePurchaseForm';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -9,6 +9,7 @@ interface PurchaseModalProps {
   lots: Lot[]; // Mudado de lot: Lot para lots: Lot[]
   onClose: () => void;
   onSuccess: () => void;
+  onToggleLotStatus?: (lotId: string, currentStatus: LotStatus) => Promise<void>;
 }
 
 // Funções auxiliares para validação e máscara de CPF
@@ -87,8 +88,9 @@ const paymentOptions = [
   ) },
 ];
 
-export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
+export default function PurchaseModal({ lots, onClose, onSuccess, onToggleLotStatus }: PurchaseModalProps) {
   const { user } = useAuth();
+  const [isTogglingBlock, setIsTogglingBlock] = React.useState(false);
   
   // Estados simplificados - apenas preços dos lotes
   const [lotPrices] = React.useState<Record<string, number | null>>(
@@ -98,6 +100,30 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
   const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices, {}, {}, user?.id);
   const [cpfError, setCpfError] = React.useState<string>('');
   const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
+
+  // Função para bloquear/desbloquear lote
+  const handleToggleLotStatus = async (lot: Lot) => {
+    if (!onToggleLotStatus) return;
+    
+    const action = lot.status === LotStatus.BLOCKED ? 'desbloquear' : 'bloquear';
+    if (!confirm(`Deseja ${action} o lote ${lot.lotNumber}?`)) {
+      return;
+    }
+
+    setIsTogglingBlock(true);
+    try {
+      await onToggleLotStatus(lot.id, lot.status);
+      alert(`✅ Lote ${lot.lotNumber} ${lot.status === LotStatus.BLOCKED ? 'desbloqueado' : 'bloqueado'} com sucesso!`);
+      // Não chamar onSuccess() para evitar a mensagem de reserva
+      // Apenas fechar o modal e o componente pai irá recarregar os dados
+      onClose();
+    } catch (error) {
+      console.error('Erro ao alterar status do lote:', error);
+      alert('❌ Erro ao alterar status do lote. Tente novamente.');
+    } finally {
+      setIsTogglingBlock(false);
+    }
+  };
 
   // Calcular preço total e área
   const totalPrice = Object.values(lotPrices).reduce((sum: number, price) => sum + (price || 0), 0);
@@ -319,6 +345,40 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                   </span>
                 ) : 'Criar Reserva'}
               </button>
+              
+              {/* Botão de bloquear/desbloquear - apenas para admin/dev, um único lote, e status disponível ou bloqueado */}
+              {onToggleLotStatus && lots.length === 1 && (user?.role === 'admin' || user?.role === 'dev') && (lots[0].status === LotStatus.AVAILABLE || lots[0].status === LotStatus.BLOCKED) && (
+                <button
+                  type="button"
+                  onClick={() => handleToggleLotStatus(lots[0])}
+                  disabled={isTogglingBlock || isSubmitting}
+                  className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 ${
+                    lots[0].status === LotStatus.BLOCKED
+                      ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/40'
+                      : 'bg-gray-500/20 text-gray-600 dark:text-gray-400 hover:bg-gray-500/30 border border-gray-500/40'
+                  }`}
+                  title={lots[0].status === LotStatus.BLOCKED ? 'Desbloquear lote' : 'Bloquear lote'}
+                >
+                  {isTogglingBlock ? (
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        {lots[0].status === LotStatus.BLOCKED ? (
+                          <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+                        ) : (
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        )}
+                      </svg>
+                      {lots[0].status === LotStatus.BLOCKED ? 'Desbloquear' : 'Bloquear'}
+                    </>
+                  )}
+                </button>
+              )}
+              
               <button
                 type="button"
                 onClick={onClose}

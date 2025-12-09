@@ -58,6 +58,12 @@ export default function MapDetails() {
   // Estados para deletar mapa
   const [isDeletingMap, setIsDeletingMap] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Estados para editar mapa
+  const [isEditingMap, setIsEditingMap] = useState(false);
+  const [editMapName, setEditMapName] = useState('');
+  const [editMapDescription, setEditMapDescription] = useState('');
+  const [isSubmittingMapEdit, setIsSubmittingMapEdit] = useState(false);
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
 
@@ -206,9 +212,8 @@ export default function MapDetails() {
   const loadMapData = useCallback(async (currentMapId?: string) => {
     const targetMapId = currentMapId || mapId;
     try {
-      // Buscar mapas sem imagens (minimal=true)
+      // Buscar mapas completos
       const response = await axios.get(`${API_URL}/mapas`, {
-        params: { minimal: 'true' },
         timeout: 10000,
       });
 
@@ -217,7 +222,7 @@ export default function MapDetails() {
         id: m.mapId || m.id,
         name: m.name || `Mapa ${m.mapId || m.id}`,
         description: m.description || '',
-        imageUrl: '', // Será carregado depois
+        imageUrl: m.imageUrl || m.image_url || '',
         imageType: 'image',
         width: m.width || 800,
         height: m.height || 600,
@@ -236,7 +241,7 @@ export default function MapDetails() {
             id: data.mapId || data.id || targetMapId,
             name: data.name || `Mapa ${data.mapId || targetMapId}`,
             description: data.description || '',
-            imageUrl: '', // Será carregado depois
+            imageUrl: data.imageUrl || data.image_url || '',
             imageType: 'image',
             width: data.width || 800,
             height: data.height || 600,
@@ -291,8 +296,7 @@ export default function MapDetails() {
         if (mapId && mapId.trim() !== '') {
           loadBlocks(mapId);
           loadLotStats();
-          // Comentado temporariamente - endpoint pode não existir
-          // loadMapImage(mapId);
+          loadMapImage(mapId);
         }
       };
       
@@ -330,8 +334,7 @@ export default function MapDetails() {
       if (mapId && mapId.trim() !== '') {
         loadBlocks(mapId);
         loadLotStats();
-        // Comentado temporariamente - endpoint pode não existir
-        // loadMapImage(mapId);
+        loadMapImage(mapId);
       }
     }
     previousMapIdRef.current = mapId;
@@ -348,11 +351,8 @@ export default function MapDetails() {
   // Carregar lotes e reservas quando a quadra selecionada mudar
   useEffect(() => {
     if (selectedBlockId && mapId) {
-      // Carregar apenas se não for um refresh trigger (evita duplicação)
-      if (refreshTrigger === 0) {
-        loadSelectedBlockLots(selectedBlockId);
-        fetchReservations(selectedBlockId);
-      }
+      loadSelectedBlockLots(selectedBlockId);
+      fetchReservations(selectedBlockId);
     } else {
       setSelectedBlockLots([]);
       setReservations([]);
@@ -790,6 +790,34 @@ export default function MapDetails() {
     }
   };
 
+  const handleEditMap = async () => {
+    if (!mapId || !editMapName.trim()) {
+      alert('❌ O nome do loteamento é obrigatório');
+      return;
+    }
+    
+    setIsSubmittingMapEdit(true);
+    try {
+      await axios.put(`${API_URL}/mapas/editar`, {
+        mapId,
+        name: editMapName.trim(),
+        description: editMapDescription.trim()
+      });
+
+      alert('✅ Loteamento atualizado com sucesso!');
+      setIsEditingMap(false);
+      
+      // Recarregar dados do mapa
+      await loadMapData();
+    } catch (error: any) {
+      console.error('Erro ao editar mapa:', error);
+      const errorMsg = error.response?.data?.error || '❌ Erro ao atualizar loteamento. Tente novamente.';
+      alert(errorMsg);
+    } finally {
+      setIsSubmittingMapEdit(false);
+    }
+  };
+
   // Mostrar tela de "sem mapas" apenas quando não estiver carregando E realmente não houver mapas
   if (!isLoading && !map && allMaps.length === 0) {
     return (
@@ -1000,22 +1028,42 @@ export default function MapDetails() {
         <h1 className="text-3xl font-bold text-[var(--foreground)] mb-4">Gerenciar Loteamentos</h1>
         
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-6">
-          {/* Seletor de Mapas */}
-          <div className="w-full lg:w-96">
-            <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">
-              Loteamento Selecionado
-            </label>
-            <select
-              value={mapId}
-              onChange={(e) => router.push(`/admin/map-details?mapId=${e.target.value}`)}
-              className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
-            >
-              {allMaps.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+          {/* Seletor de Mapas e Botão Editar */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end w-full lg:flex-1">
+            <div className="w-full sm:flex-1">
+              <label className="block text-sm font-bold text-[var(--foreground)] opacity-80 mb-2">
+                Loteamento Selecionado
+              </label>
+              <select
+                value={mapId}
+                onChange={(e) => router.push(`/admin/map-details?mapId=${e.target.value}`)}
+                className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-semibold cursor-pointer"
+              >
+                {allMaps.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {mapId && (
+              <button
+                onClick={() => {
+                  // Buscar dados do mapa atual do estado map ou da lista allMaps
+                  const currentMap = map || allMaps.find(m => m.id === mapId);
+                  setEditMapName(currentMap?.name || '');
+                  setEditMapDescription(currentMap?.description || '');
+                  setIsEditingMap(true);
+                }}
+                className="w-full sm:w-auto px-5 py-3 bg-yellow-500 text-white font-semibold rounded-xl hover:bg-yellow-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Editar Loteamento
+              </button>
+            )}
           </div>
           
           {/* Botões */}
@@ -1262,7 +1310,11 @@ export default function MapDetails() {
           <label className="block text-sm font-bold text-[var(--foreground)] opacity-80">Visualização do Mapa</label>
           <button
             onClick={() => setIsEditingImage(true)}
-            className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-xl hover:bg-yellow-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] cursor-pointer flex items-center gap-2"
+            className={`px-4 py-2 text-white font-semibold rounded-xl shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] cursor-pointer flex items-center gap-2 ${
+              map?.imageUrl 
+                ? 'bg-yellow-500 hover:bg-yellow-600' 
+                : 'bg-[var(--primary)] hover:bg-[var(--primary-dark)]'
+            }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1637,6 +1689,98 @@ export default function MapDetails() {
         </div>
       )}
 
+      {/* Modal de Editar Loteamento */}
+      {isEditingMap && (
+        <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl shadow-[var(--shadow-xl)] border border-[var(--border)]">
+            <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Editar Loteamento</h2>
+                    <p className="text-white/80 text-sm">Atualize as informações do loteamento</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsEditingMap(false)}
+                  disabled={isSubmittingMapEdit}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                  Nome do Loteamento *
+                </label>
+                <input
+                  type="text"
+                  value={editMapName}
+                  onChange={(e) => setEditMapName(e.target.value)}
+                  placeholder="Ex: Jardim das Flores"
+                  className="w-full px-4 py-3 bg-[var(--surface)] border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--foreground)]/40 focus:border-[var(--accent)] focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                  Descrição (opcional)
+                </label>
+                <textarea
+                  value={editMapDescription}
+                  onChange={(e) => setEditMapDescription(e.target.value)}
+                  placeholder="Descrição do loteamento..."
+                  rows={4}
+                  className="w-full px-4 py-3 bg-[var(--surface)] border-2 border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--foreground)]/40 focus:border-[var(--accent)] focus:outline-none transition-colors resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-[var(--border)]">
+              <button
+                onClick={() => setIsEditingMap(false)}
+                disabled={isSubmittingMapEdit}
+                className="flex-1 px-5 py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEditMap}
+                disabled={isSubmittingMapEdit || !editMapName.trim()}
+                className="flex-1 px-5 py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSubmittingMapEdit ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar Alterações
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Criar Novo Loteamento */}
       {isCreatingMap && (
         <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
@@ -1985,6 +2129,7 @@ function BlockCard({
             lotsPerRow={15}
             reservations={reservations}
             userRole={userRole}
+            isAdminContext={true}
           />
         ) : (
           <div className="text-center py-8 bg-[var(--card-bg)] rounded-xl border-2 border-dashed border-[var(--accent)]/40">
