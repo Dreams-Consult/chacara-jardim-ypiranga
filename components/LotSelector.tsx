@@ -52,30 +52,38 @@ export default function LotSelector({
   // Buscar reserva específica do lote via API
   const fetchLotReservation = async (lotId: string) => {
     try {
-      const response = await fetch(`/api/reservas?lotId=${lotId}`);
+      // Buscar todas as reservas sem paginação para garantir que encontramos a do lote
+      const response = await fetch(`/api/reservas?limit=1000`);
       const data = await response.json();
       
-      console.log('API response for lotId', lotId, ':', data);
+      console.log('API response:', data);
       
       // A API retorna: { reservations: [...], totalCount: N }
       let reservation = null;
       
       if (data.reservations && Array.isArray(data.reservations)) {
-        // Formato: { reservations: [...], totalCount: N }
-        reservation = data.reservations.find((r: any) => 
-          r.status !== 'cancelled' &&
-          r.lots?.some((l: any) => String(l.id) === String(lotId))
-        );
+        // Buscar a reserva que contém este lote específico
+        reservation = data.reservations.find((r: any) => {
+          if (r.status === 'cancelled') return false;
+          
+          // Verificar se algum dos lotes desta reserva corresponde ao lotId
+          const hasLot = r.lots?.some((l: any) => {
+            return String(l.id) === String(lotId) || String(l.lot_id) === String(lotId);
+          });
+          
+          return hasLot;
+        });
       } else if (Array.isArray(data)) {
         // Formato alternativo: array direto
-        reservation = data.find((r: any) => 
-          r.status !== 'cancelled' &&
-          r.lots?.some((l: any) => String(l.id) === String(lotId))
-        );
+        reservation = data.find((r: any) => {
+          if (r.status === 'cancelled') return false;
+          return r.lots?.some((l: any) => 
+            String(l.id) === String(lotId) || String(l.lot_id) === String(lotId)
+          );
+        });
       }
       
-      console.log('Reservation found:', reservation);
-      console.log('user_id from reservation:', reservation?.user_id);
+      console.log('Reservation found for lot', lotId, ':', reservation);
       
       setLotReservation(reservation || null);
     } catch (error) {
@@ -772,17 +780,16 @@ export default function LotSelector({
                   const isResponsibleSeller = reservation && userId && String(reservation.user_id) === String(userId);
                   const canViewReservation = isAdmin || isResponsibleSeller;
                   
-                  // Logs de debug
-                  console.log('=== DEBUG BOTÃO RESERVA ===');
-                  console.log('Reservation:', reservation);
-                  console.log('userRole:', userRole);
-                  console.log('userId:', userId);
-                  console.log('reservation.user_id:', reservation?.user_id);
-                  console.log('isAdmin:', isAdmin);
-                  console.log('isResponsibleSeller:', isResponsibleSeller);
-                  console.log('canViewReservation:', canViewReservation);
-                  console.log('Will show button:', !!(reservation && canViewReservation));
-                  console.log('========================');
+                  // Debug temporário
+                  console.log('DEBUG PERMISSÃO:', {
+                    userRole,
+                    userId,
+                    reservationUserId: reservation?.user_id,
+                    isAdmin,
+                    isResponsibleSeller,
+                    canViewReservation,
+                    hasReservation: !!reservation
+                  });
                   
                   return reservation && canViewReservation ? (
                     <button
