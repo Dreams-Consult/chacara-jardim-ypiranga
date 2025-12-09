@@ -139,33 +139,34 @@ export default function ReservationsPage() {
     }
   }, [searchParams, currentPage]);
 
-  // Carregar estatísticas
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const params: any = {};
+  // Função para carregar estatísticas
+  const loadStats = useCallback(async () => {
+    try {
+      const params: any = {};
 
-        if (user?.role !== UserRole.DEV && user?.role !== UserRole.ADMIN && user?.id) {
-          params.userId = user.id;
-        }
-
-        const response = await axios.get(`${API_URL}/reservas/stats`, { 
-          params,
-          timeout: 5000 
-        });
-
-        if (response.data) {
-          setStats(response.data);
-        }
-      } catch (error) {
-        console.error('[Reservations] Erro ao carregar estatísticas:', error);
+      if (user?.role !== UserRole.DEV && user?.role !== UserRole.ADMIN && user?.id) {
+        params.userId = user.id;
       }
-    };
 
+      const response = await axios.get(`${API_URL}/reservas/stats`, { 
+        params,
+        timeout: 5000 
+      });
+
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('[Reservations] Erro ao carregar estatísticas:', error);
+    }
+  }, [user?.id, user?.role]);
+
+  // Carregar estatísticas ao montar o componente
+  useEffect(() => {
     if (user) {
       loadStats();
     }
-  }, [user?.id, user?.role]);
+  }, [user, loadStats]);
 
   // Expandir automaticamente a reserva se vier da URL
   useEffect(() => {
@@ -288,6 +289,7 @@ export default function ReservationsPage() {
       });
 
       loadData(); // Recarregar dados
+      loadStats(); // Recarregar estatísticas
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao aprovar reserva:', error);
       alert('Erro ao aprovar reserva. Tente novamente.');
@@ -313,6 +315,7 @@ export default function ReservationsPage() {
         userRole: user?.role
       });
       loadData(); // Recarregar dados
+      loadStats(); // Recarregar estatísticas
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao rejeitar reserva:', error);
       alert('Erro ao rejeitar reserva. Tente novamente.');
