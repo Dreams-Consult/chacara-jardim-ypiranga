@@ -99,6 +99,7 @@ export interface User {
   status: UserStatus;
   active?: boolean;
   password?: string;
+  theme_preference?: 'light' | 'dark';
   createdAt: Date;
   updatedAt: Date;
 }

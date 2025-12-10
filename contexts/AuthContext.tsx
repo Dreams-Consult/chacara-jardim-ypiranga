@@ -13,6 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasRole: (role: UserRole) => boolean;
   canAccessUsers: boolean;
+  updateUserTheme: (theme: 'light' | 'dark') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,11 +102,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Remover senha antes de armazenar
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword as User);
+        
+        // Verificar se já existe preferência de tema salva localmente
+        const storedUser = localStorage.getItem('currentUser');
+        let finalUser = userWithoutPassword;
+        
+        if (storedUser) {
+          try {
+            const parsedStoredUser = JSON.parse(storedUser);
+            // Se o usuário já tem uma preferência local E é o mesmo usuário, manter a preferência local
+            if (parsedStoredUser.id === userWithoutPassword.id && parsedStoredUser.theme_preference) {
+              finalUser = { ...userWithoutPassword, theme_preference: parsedStoredUser.theme_preference };
+            }
+          } catch (e) {
+            console.error('[AuthContext] Erro ao verificar tema local:', e);
+          }
+        }
+        
+        setUser(finalUser as User);
 
         // Salvar no localStorage para persistir sessão após reload
-        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-        localStorage.setItem('userData', JSON.stringify(userWithoutPassword));
+        localStorage.setItem('currentUser', JSON.stringify(finalUser));
+        localStorage.setItem('userData', JSON.stringify(finalUser));
 
         return true;
       }
@@ -145,6 +163,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canAccessUsers = user?.role === UserRole.DEV || user?.role === UserRole.ADMIN;
 
+  // Função para atualizar tema do usuário
+  const updateUserTheme = (theme: 'light' | 'dark') => {
+    if (user) {
+      const updatedUser = { ...user, theme_preference: theme };
+      setUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -154,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         hasRole,
         canAccessUsers,
+        updateUserTheme,
       }}
     >
       {children}

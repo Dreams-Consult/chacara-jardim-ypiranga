@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     // Buscar usuário no banco
     const [rows] = await connection.execute(
-      `SELECT id, cpf, name, email, phone, first_login, creci, role, status, active, created_at, updated_at 
+      `SELECT id, cpf, name, email, phone, first_login, creci, role, status, active, theme_preference, created_at, updated_at 
        FROM users 
        WHERE cpf = ? AND password = ?`,
       [cleanCpf, hashedPassword]
@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
       status: user.status,
       active: user.active !== 0, // Converte TINYINT(1) para booleano
       first_login: Boolean(user.first_login), // Converte TINYINT(1) para booleano
+      theme_preference: user.theme_preference || 'light', // Preferência de tema
       created_at: user.created_at,
       updated_at: user.updated_at,
     };

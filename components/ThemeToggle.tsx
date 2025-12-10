@@ -1,6 +1,8 @@
 'use client';
 
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
 
 interface ThemeToggleProps {
   variant?: 'floating' | 'inline';
@@ -8,11 +10,30 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ variant = 'floating' }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
+  const { user, updateUserTheme } = useAuth();
+
+  const handleToggle = () => {
+    // Alternar tema imediatamente (síncrono)
+    const newTheme = toggleTheme();
+    
+    // Atualizar AuthContext imediatamente
+    if (user?.id) {
+      updateUserTheme(newTheme);
+      
+      // Salvar no banco de dados em background (não bloqueia UI)
+      axios.put('/api/usuarios/theme', {
+        userId: user.id,
+        theme: newTheme
+      }).catch(error => {
+        console.error('[ThemeToggle] Erro ao salvar preferência de tema:', error);
+      });
+    }
+  };
 
   if (variant === 'inline') {
     return (
       <button
-        onClick={toggleTheme}
+        onClick={handleToggle}
         className="p-2 bg-[var(--surface)]/50 hover:bg-[var(--surface)] rounded-lg transition-all"
         aria-label="Alternar tema"
       >
@@ -31,7 +52,7 @@ export default function ThemeToggle({ variant = 'floating' }: ThemeToggleProps) 
 
   return (
     <button
-      onClick={toggleTheme}
+      onClick={handleToggle}
       className="fixed top-4 right-4 z-50 p-3 bg-[var(--card-bg)] border-2 border-[var(--border)] rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 hidden lg:flex"
       aria-label="Alternar tema"
     >
