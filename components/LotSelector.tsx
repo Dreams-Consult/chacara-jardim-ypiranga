@@ -108,9 +108,9 @@ export default function LotSelector({
       return;
     }
 
-    // Admin/Dev clicando em lote bloqueado na página de seleção (/maps): abrir modal de confirmação
-    // Na página de admin (/admin/map-details), permite abrir modal de edição normalmente
-    if (lot.status === LotStatus.BLOCKED && (userRole === 'admin' || userRole === 'dev') && !isAdminContext) {
+    // Admin/Dev clicando em lote bloqueado na página /maps
+    // Só abre modal de confirmação se NÃO estiver em modo multi-select
+    if (lot.status === LotStatus.BLOCKED && (userRole === 'admin' || userRole === 'dev') && !isAdminContext && !allowMultipleSelection) {
       setLotToUnblock(lot);
       setShowUnblockConfirm(true);
       return;
@@ -122,10 +122,18 @@ export default function LotSelector({
       return;
     }
 
-    // Se está em modo multi-select, só permite clicar em lotes disponíveis
+    // Se está em modo multi-select
     if (allowMultipleSelection) {
-      if (lot.status !== LotStatus.AVAILABLE) {
-        return; // Não faz nada para lotes não disponíveis em modo multi-select
+      // No contexto admin, permite selecionar lotes disponíveis E bloqueados
+      if (isAdminContext) {
+        if (lot.status !== LotStatus.AVAILABLE && lot.status !== LotStatus.BLOCKED) {
+          return; // Não permite selecionar lotes reservados ou vendidos
+        }
+      } else {
+        // Na página /maps, só permite selecionar lotes disponíveis
+        if (lot.status !== LotStatus.AVAILABLE) {
+          return; // Não faz nada para lotes não disponíveis em modo multi-select
+        }
       }
       // Notifica seleção múltipla
       if (onMultipleSelect) {
@@ -232,8 +240,13 @@ export default function LotSelector({
       return false;
     }
     
-    // Em modo multi-select, apenas lotes disponíveis são clicáveis
+    // Em modo multi-select
     if (allowMultipleSelection) {
+      // No contexto admin, permite clicar em disponíveis E bloqueados
+      if (isAdminContext) {
+        return lot.status === LotStatus.AVAILABLE || lot.status === LotStatus.BLOCKED;
+      }
+      // Na página /maps, apenas lotes disponíveis
       return lot.status === LotStatus.AVAILABLE;
     }
     
@@ -330,7 +343,11 @@ export default function LotSelector({
                 </span>
                 
                 {/* Círculo de seleção - apenas em modo multi-select */}
-                {allowMultipleSelection && lot.status === LotStatus.AVAILABLE && (
+                {allowMultipleSelection && (
+                  isAdminContext 
+                    ? (lot.status === LotStatus.AVAILABLE || lot.status === LotStatus.BLOCKED)
+                    : lot.status === LotStatus.AVAILABLE
+                ) && (
                   <div className={`absolute top-0.5 right-0.5 w-4 h-4 rounded-full border-2 border-white shadow-md transition-all duration-200 ${
                     isSelected 
                       ? 'bg-blue-500 border-blue-500' 

@@ -49,6 +49,11 @@ export default function MapDetails() {
   const [selectedBlockLots, setSelectedBlockLots] = useState<Lot[]>([]); // Lotes da quadra selecionada
   const [isLoadingBlockLots, setIsLoadingBlockLots] = useState(false);
   
+  // Estados para seleção múltipla
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  const [selectedLots, setSelectedLots] = useState<Lot[]>([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  
   // Estados para criar novo mapa
   const [isCreatingMap, setIsCreatingMap] = useState(false);
   const [newMapName, setNewMapName] = useState('');
@@ -66,6 +71,39 @@ export default function MapDetails() {
   const [isSubmittingMapEdit, setIsSubmittingMapEdit] = useState(false);
 
   const { blocks, loadBlocks, createBlock, updateBlock, deleteBlock } = useBlockOperations();
+
+  // Função para alternar seleção de lote
+  const handleToggleLotSelection = (lot: Lot) => {
+    setSelectedLots(prev => {
+      const isSelected = prev.some(l => l.id === lot.id);
+      if (isSelected) {
+        return prev.filter(l => l.id !== lot.id);
+      } else {
+        return [...prev, lot];
+      }
+    });
+  };
+
+  // Função para verificar se lote está selecionado
+  const isLotSelected = (lotId: string) => {
+    return selectedLots.some(l => l.id === lotId);
+  };
+
+  // Função para limpar seleção
+  const handleClearSelection = () => {
+    setSelectedLots([]);
+  };
+
+  // Limpar seleção ao mudar de quadra ou desativar multi-select
+  useEffect(() => {
+    if (!multiSelectMode) {
+      setSelectedLots([]);
+    }
+  }, [multiSelectMode]);
+
+  useEffect(() => {
+    setSelectedLots([]);
+  }, [selectedBlockId]);
 
   // Função para buscar reservas de uma quadra específica
   const fetchReservations = useCallback(async (blockId?: string) => {
@@ -818,6 +856,177 @@ export default function MapDetails() {
     }
   };
 
+  // Funções para ações em lote
+  const handleBulkBlock = async () => {
+    if (selectedLots.length === 0) return;
+    
+    if (!mapId) {
+      alert('❌ Erro: ID do mapa não encontrado');
+      return;
+    }
+    
+    const availableLots = selectedLots.filter(lot => lot.status === LotStatus.AVAILABLE);
+    
+    if (availableLots.length === 0) {
+      alert('❌ Nenhum lote disponível para bloquear');
+      return;
+    }
+
+    if (!confirm(`Deseja bloquear ${availableLots.length} lote(s)?`)) return;
+
+    try {
+      console.log('Bloqueando lotes:', availableLots.map(lot => ({
+        id: lot.id,
+        mapId: lot.mapId || mapId,
+        blockId: lot.blockId,
+        lotNumber: lot.lotNumber
+      })));
+      
+      await Promise.all(availableLots.map(lot =>
+        axios.patch('/api/mapas/lotes/atualizar', {
+          id: lot.id,
+          mapId: lot.mapId || mapId,
+          blockId: lot.blockId,
+          lotNumber: lot.lotNumber,
+          status: LotStatus.BLOCKED,
+          price: lot.price,
+          size: lot.size,
+          description: lot.description,
+          features: lot.features,
+        })
+      ));
+
+      alert(`✅ ${availableLots.length} lote(s) bloqueado(s) com sucesso!`);
+      setSelectedLots([]);
+      setMultiSelectMode(false);
+      
+      // Recarregar lotes da quadra
+      if (selectedBlockId) {
+        const lots = await loadLotsForBlock(selectedBlockId);
+        setSelectedBlockLots(lots);
+      }
+      
+      // Recarregar estatísticas
+      loadLotStats();
+    } catch (error) {
+      console.error('Erro ao bloquear lotes:', error);
+      alert('❌ Erro ao bloquear lotes. Tente novamente.');
+    }
+  };
+
+  const handleBulkUnblock = async () => {
+    if (selectedLots.length === 0) return;
+    
+    if (!mapId) {
+      alert('❌ Erro: ID do mapa não encontrado');
+      return;
+    }
+    
+    const blockedLots = selectedLots.filter(lot => lot.status === LotStatus.BLOCKED);
+    
+    if (blockedLots.length === 0) {
+      alert('❌ Nenhum lote bloqueado para desbloquear');
+      return;
+    }
+
+    if (!confirm(`Deseja desbloquear ${blockedLots.length} lote(s)?`)) return;
+
+    try {
+      console.log('Desbloqueando lotes:', blockedLots.map(lot => ({
+        id: lot.id,
+        mapId: lot.mapId || mapId,
+        blockId: lot.blockId,
+        lotNumber: lot.lotNumber
+      })));
+      
+      await Promise.all(blockedLots.map(lot =>
+        axios.patch('/api/mapas/lotes/atualizar', {
+          id: lot.id,
+          mapId: lot.mapId || mapId,
+          blockId: lot.blockId,
+          lotNumber: lot.lotNumber,
+          status: LotStatus.AVAILABLE,
+          price: lot.price,
+          size: lot.size,
+          description: lot.description,
+          features: lot.features,
+        })
+      ));
+
+      alert(`✅ ${blockedLots.length} lote(s) desbloqueado(s) com sucesso!`);
+      setSelectedLots([]);
+      setMultiSelectMode(false);
+      
+      // Recarregar lotes da quadra
+      if (selectedBlockId) {
+        const lots = await loadLotsForBlock(selectedBlockId);
+        setSelectedBlockLots(lots);
+      }
+      
+      // Recarregar estatísticas
+      loadLotStats();
+    } catch (error) {
+      console.error('Erro ao desbloquear lotes:', error);
+      alert('❌ Erro ao desbloquear lotes. Tente novamente.');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedLots.length === 0) return;
+    
+    if (!mapId) {
+      alert('❌ Erro: ID do mapa não encontrado');
+      return;
+    }
+    
+    const deletableLots = selectedLots.filter(lot => 
+      lot.status !== LotStatus.RESERVED && lot.status !== LotStatus.SOLD
+    );
+    
+    if (deletableLots.length === 0) {
+      alert('❌ Nenhum lote pode ser excluído. Lotes reservados ou vendidos não podem ser excluídos.');
+      return;
+    }
+
+    if (deletableLots.length < selectedLots.length) {
+      alert(`⚠️ ${selectedLots.length - deletableLots.length} lote(s) não pode(m) ser excluído(s) por estar(em) reservado(s) ou vendido(s).`);
+    }
+
+    if (!confirm(`Deseja EXCLUIR ${deletableLots.length} lote(s)? Esta ação não pode ser desfeita!`)) return;
+
+    try {
+      console.log('Excluindo lotes:', deletableLots.map(lot => ({
+        id: lot.id,
+        lotNumber: lot.lotNumber,
+        status: lot.status
+      })));
+      
+      await Promise.all(deletableLots.map(lot =>
+        axios.delete(`${API_URL}/mapas/lotes/deletar`, {
+          params: {
+            lotId: lot.id
+          }
+        })
+      ));
+
+      alert(`✅ ${deletableLots.length} lote(s) excluído(s) com sucesso!`);
+      setSelectedLots([]);
+      setMultiSelectMode(false);
+      
+      // Recarregar lotes da quadra
+      if (selectedBlockId) {
+        const lots = await loadLotsForBlock(selectedBlockId);
+        setSelectedBlockLots(lots);
+      }
+      
+      // Recarregar estatísticas
+      loadLotStats();
+    } catch (error) {
+      console.error('Erro ao excluir lotes:', error);
+      alert('❌ Erro ao excluir lotes. Tente novamente.');
+    }
+  };
+
   // Mostrar tela de "sem mapas" apenas quando não estiver carregando E realmente não houver mapas
   if (!isLoading && !map && allMaps.length === 0) {
     return (
@@ -1273,15 +1482,38 @@ export default function MapDetails() {
                 </svg>
                 Lotes - {blocks.find(b => b.id === selectedBlockId)?.name}
               </h2>
-              <button
-                onClick={() => handleAddLotToBlock(selectedBlockId)}
-                className="px-5 py-2.5 bg-[var(--success)] hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                </svg>
-                Adicionar Lote
-              </button>
+              
+              <div className="flex items-center gap-3">
+                {/* Checkbox para ativar seleção múltipla */}
+                {!isLoadingBlockLots && selectedBlockLots.length > 0 && (
+                  <label className="flex items-center gap-3 px-4 py-2 bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] hover:border-[var(--accent)] transition-colors cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={multiSelectMode}
+                      onChange={(e) => {
+                        setMultiSelectMode(e.target.checked);
+                        if (!e.target.checked) {
+                          handleClearSelection();
+                        }
+                      }}
+                      className="w-5 h-5 rounded border-2 border-[var(--border)] text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold text-[var(--foreground)]">
+                      Selecionar múltiplos lotes
+                    </span>
+                  </label>
+                )}
+                
+                <button
+                  onClick={() => handleAddLotToBlock(selectedBlockId)}
+                  className="px-5 py-2.5 bg-[var(--success)] hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Adicionar Lote
+                </button>
+              </div>
             </div>
             <BlockCard
               key={`${selectedBlockId}-${refreshTrigger}`}
@@ -1299,6 +1531,9 @@ export default function MapDetails() {
               allBlocks={blocks}
               reservations={reservations}
               userRole={user?.role}
+              multiSelectMode={multiSelectMode}
+              selectedLots={selectedLots}
+              onToggleLotSelection={handleToggleLotSelection}
             />
           </div>
         </div>
@@ -1883,6 +2118,84 @@ export default function MapDetails() {
           </div>
         </div>
       )}
+
+      {/* Barra de Ação Flutuante para Seleção Múltipla */}
+      {selectedLots.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 min-w-[300px] sm:min-w-[500px] border-2 border-blue-400/30">
+            {/* Contador de Lotes */}
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">{selectedLots.length}</span>
+              </div>
+              <div className="text-white">
+                <p className="font-bold text-lg leading-tight">
+                  {selectedLots.length === 1 ? '1 Lote' : `${selectedLots.length} Lotes`}
+                </p>
+                <p className="text-white opacity-80 text-xs">
+                  {(() => {
+                    const available = selectedLots.filter(l => l.status === LotStatus.AVAILABLE).length;
+                    const blocked = selectedLots.filter(l => l.status === LotStatus.BLOCKED).length;
+                    const parts = [];
+                    if (available > 0) parts.push(`${available} disponível${available > 1 ? 'is' : ''}`);
+                    if (blocked > 0) parts.push(`${blocked} bloqueado${blocked > 1 ? 's' : ''}`);
+                    return parts.join(', ');
+                  })()}
+                </p>
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="hidden sm:block w-px h-12 bg-white/20"></div>
+
+            {/* Botões de Ação */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleClearSelection}
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 backdrop-blur-sm border border-white/20 text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Limpar
+              </button>
+
+              <button
+                onClick={handleBulkBlock}
+                disabled={!selectedLots.some(l => l.status === LotStatus.AVAILABLE)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                Bloquear
+              </button>
+
+              <button
+                onClick={handleBulkUnblock}
+                disabled={!selectedLots.some(l => l.status === LotStatus.BLOCKED)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Desbloquear
+              </button>
+
+              <button
+                onClick={handleBulkDelete}
+                disabled={!selectedLots.some(l => l.status !== LotStatus.RESERVED && l.status !== LotStatus.SOLD)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2057,6 +2370,9 @@ interface BlockCardProps {
   allBlocks: Block[];
   reservations: any[];
   userRole?: string;
+  multiSelectMode?: boolean;
+  selectedLots?: Lot[];
+  onToggleLotSelection?: (lot: Lot) => void;
 }
 
 function BlockCard({
@@ -2074,6 +2390,9 @@ function BlockCard({
   allBlocks,
   reservations,
   userRole,
+  multiSelectMode = false,
+  selectedLots = [],
+  onToggleLotSelection,
 }: BlockCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -2124,8 +2443,14 @@ function BlockCard({
             onLotEdit={handleEditLot}
             onLotDelete={handleDeleteLot}
             onToggleLotStatus={handleToggleLotStatus}
-            selectedLotIds={[]}
-            allowMultipleSelection={false}
+            selectedLotIds={selectedLots.map(l => l.id)}
+            allowMultipleSelection={multiSelectMode}
+            onMultipleSelect={multiSelectMode && onToggleLotSelection ? (lots) => {
+              // Recebe um array com um único lote para fazer toggle
+              if (lots.length === 1) {
+                onToggleLotSelection(lots[0]);
+              }
+            } : undefined}
             lotsPerRow={15}
             reservations={reservations}
             userRole={userRole}
