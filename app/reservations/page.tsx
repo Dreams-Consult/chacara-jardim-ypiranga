@@ -50,6 +50,24 @@ const parseCurrency = (value: string): number => {
   return parseFloat(cleaned) || 0;
 };
 
+// Funções de máscara
+const formatPhone = (value: string): string => {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 10) {
+    return cleaned.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+  }
+  return cleaned.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+};
+
+const formatCPF = (value: string): string => {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 11) {
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+  }
+  // CNPJ
+  return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+};
+
 export default function ReservationsPage() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -329,7 +347,16 @@ export default function ReservationsPage() {
       return;
     }
 
-    setEditingReservation({ ...reservation });
+    // Formatar telefones e CPFs antes de carregar no formulário
+    const formattedReservation = {
+      ...reservation,
+      customer_phone: reservation.customer_phone ? formatPhone(reservation.customer_phone) : '',
+      customer_cpf: reservation.customer_cpf ? formatCPF(reservation.customer_cpf) : '',
+      seller_phone: reservation.seller_phone ? formatPhone(reservation.seller_phone) : '',
+      seller_cpf: reservation.seller_cpf ? formatCPF(reservation.seller_cpf) : ''
+    };
+
+    setEditingReservation(formattedReservation);
     
     // Inicializar preços, first_payments e installments dos lotes
     const prices: { [lotId: number]: string } = {};
@@ -415,15 +442,15 @@ export default function ReservationsPage() {
         id: editingReservation.id,
         customer_name: editingReservation.customer_name,
         customer_email: editingReservation.customer_email,
-        customer_phone: editingReservation.customer_phone,
-        customer_cpf: editingReservation.customer_cpf,
+        customer_phone: editingReservation.customer_phone?.replace(/\D/g, ''),
+        customer_cpf: editingReservation.customer_cpf?.replace(/\D/g, ''),
         payment_method: editingReservation.payment_method,
         contract: editingReservation.contract,
         message: editingReservation.message,
         seller_name: editingReservation.seller_name,
         seller_email: editingReservation.seller_email,
-        seller_phone: editingReservation.seller_phone,
-        seller_cpf: editingReservation.seller_cpf,
+        seller_phone: editingReservation.seller_phone?.replace(/\D/g, ''),
+        seller_cpf: editingReservation.seller_cpf?.replace(/\D/g, ''),
         created_at: editingReservation.created_at,
         status: editingReservation.status,
         userRole: user?.role,
@@ -778,11 +805,11 @@ export default function ReservationsPage() {
                         </div>
                         <div>
                           <p className="text-[var(--foreground)] opacity-50 text-xs font-medium mb-1">Telefone</p>
-                          <p className="text-[var(--foreground)] text-sm">{reservation.customer_phone || 'Não Informado'}</p>
+                          <p className="text-[var(--foreground)] text-sm">{reservation.customer_phone ? formatPhone(reservation.customer_phone) : 'Não Informado'}</p>
                         </div>
                         <div>
                           <p className="text-[var(--foreground)] opacity-50 text-xs font-medium mb-1">CPF/CNPJ</p>
-                          <p className="text-[var(--foreground)] font-mono text-sm">{reservation.customer_cpf || 'Não informado'}</p>
+                          <p className="text-[var(--foreground)] font-mono text-sm">{reservation.customer_cpf ? formatCPF(reservation.customer_cpf) : 'Não informado'}</p>
                         </div>
                       </div>
                     </div>
@@ -806,11 +833,11 @@ export default function ReservationsPage() {
                         </div>
                         <div>
                           <p className="text-[var(--foreground)] opacity-50 text-xs font-medium mb-1">Telefone</p>
-                          <p className="text-[var(--foreground)] text-sm">{reservation.seller_phone || 'Não Informado'}</p>
+                          <p className="text-[var(--foreground)] text-sm">{reservation.seller_phone ? formatPhone(reservation.seller_phone) : 'Não Informado'}</p>
                         </div>
                         <div>
                           <p className="text-[var(--foreground)] opacity-50 text-xs font-medium mb-1">CPF</p>
-                          <p className="text-[var(--foreground)] font-mono text-sm">{reservation.seller_cpf || 'Não Informado'}</p>
+                          <p className="text-[var(--foreground)] font-mono text-sm">{reservation.seller_cpf ? formatCPF(reservation.seller_cpf) : 'Não Informado'}</p>
                         </div>
                       </div>
                     </div>
@@ -1105,9 +1132,13 @@ export default function ReservationsPage() {
                     <input
                       type="tel"
                       value={editingReservation.customer_phone || ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, customer_phone: e.target.value })}
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value);
+                        setEditingReservation({ ...editingReservation, customer_phone: formatted });
+                      }}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       placeholder="(11) 98765-4321"
+                      maxLength={15}
                     />
                   </div>
                   <div>
@@ -1115,9 +1146,13 @@ export default function ReservationsPage() {
                     <input
                       type="text"
                       value={editingReservation.customer_cpf || ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, customer_cpf: e.target.value })}
+                      onChange={(e) => {
+                        const formatted = formatCPF(e.target.value);
+                        setEditingReservation({ ...editingReservation, customer_cpf: formatted });
+                      }}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] font-mono"
                       placeholder="000.000.000-00"
+                      maxLength={18}
                     />
                   </div>
                 </div>
@@ -1157,9 +1192,13 @@ export default function ReservationsPage() {
                     <input
                       type="tel"
                       value={editingReservation.seller_phone || ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, seller_phone: e.target.value })}
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value);
+                        setEditingReservation({ ...editingReservation, seller_phone: formatted });
+                      }}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       placeholder="(11) 98765-4321"
+                      maxLength={15}
                     />
                   </div>
                   <div>
@@ -1167,9 +1206,13 @@ export default function ReservationsPage() {
                     <input
                       type="text"
                       value={editingReservation.seller_cpf || ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, seller_cpf: e.target.value })}
+                      onChange={(e) => {
+                        const formatted = formatCPF(e.target.value);
+                        setEditingReservation({ ...editingReservation, seller_cpf: formatted });
+                      }}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] font-mono"
-                      placeholder="00000000000"
+                      placeholder="000.000.000-00"
+                      maxLength={14}
                     />
                   </div>
                 </div>
