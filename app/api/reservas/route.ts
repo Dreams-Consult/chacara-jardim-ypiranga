@@ -5,6 +5,25 @@ import { dbConfig } from '@/lib/db';
 // Forçar rota dinâmica
 export const dynamic = 'force-dynamic';
 
+// Função auxiliar para formatar datetime sem timezone
+function formatDateTime(date: any): string {
+  if (!date) return '';
+  if (typeof date === 'string') return date;
+  
+  // Se for Date object, formatar para YYYY-MM-DD HH:MM:SS (hora local do servidor)
+  if (date instanceof Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+  
+  return String(date);
+}
+
 export async function GET(request: NextRequest) {
   let connection;
   
@@ -71,7 +90,7 @@ export async function GET(request: NextRequest) {
               customer_name: reservation.customer_name,
               seller_name: reservation.seller_name,
               status: reservation.status,
-              created_at: reservation.created_at,
+              created_at: formatDateTime(reservation.created_at),
               lots: lots || [],
             };
           } catch (error) {
@@ -81,7 +100,7 @@ export async function GET(request: NextRequest) {
               customer_name: reservation.customer_name,
               seller_name: reservation.seller_name,
               status: reservation.status,
-              created_at: reservation.created_at,
+              created_at: formatDateTime(reservation.created_at),
               lots: [],
             };
           }
@@ -171,12 +190,14 @@ export async function GET(request: NextRequest) {
 
           return {
             ...reservation,
+            created_at: formatDateTime(reservation.created_at),
             lots: lots || [],
           };
         } catch (lotError) {
           console.error(`[API /reservas GET] Erro ao buscar lotes da reserva ${reservation.id}:`, lotError);
           return {
             ...reservation,
+            created_at: formatDateTime(reservation.created_at),
             lots: [],
           };
         }

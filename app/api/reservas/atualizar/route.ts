@@ -59,12 +59,9 @@ export async function PUT(request: NextRequest) {
     await connection.beginTransaction();
 
     try {
-      // Converter created_at para formato MySQL se fornecido
-      let mysqlCreatedAt = null;
-      if (created_at) {
-        const date = new Date(created_at);
-        mysqlCreatedAt = date.toISOString().slice(0, 19).replace('T', ' ');
-      }
+      // created_at já vem no formato correto (YYYY-MM-DD HH:MM:SS) do frontend
+      // Não converter para Date para evitar problemas de timezone
+      const mysqlCreatedAt = created_at || null;
 
       // Atualizar reserva (sem first_payment e installments)
       await connection.execute(

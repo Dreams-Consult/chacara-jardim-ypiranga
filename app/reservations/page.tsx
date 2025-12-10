@@ -118,22 +118,36 @@ export default function ReservationsPage() {
 
       if (response.data) {
         // Atualizar para o novo formato de resposta
+        let reservationsData: Reservation[] = [];
+        
         if (typeof response.data === 'object' && 'reservations' in response.data) {
           // Novo formato com paginação
-          setReservations(response.data.reservations || []);
+          reservationsData = response.data.reservations || [];
           setTotalCount(response.data.totalCount || 0);
         } else if (Array.isArray(response.data.data)) {
           // Formato intermediário
-          setReservations(response.data.data);
+          reservationsData = response.data.data;
           setTotalCount(response.data.total || response.data.data.length);
         } else if (Array.isArray(response.data)) {
           // Formato antigo (array direto)
-          setReservations(response.data);
+          reservationsData = response.data;
           setTotalCount(response.data.length);
         } else {
-          setReservations([]);
+          reservationsData = [];
           setTotalCount(0);
         }
+        
+        // Ordenar: pendentes primeiro, depois por data (mais recente primeiro)
+        const sortedReservations = reservationsData.sort((a, b) => {
+          // Se um é pendente e o outro não, pendente vem primeiro
+          if (a.status === 'pending' && b.status !== 'pending') return -1;
+          if (a.status !== 'pending' && b.status === 'pending') return 1;
+          
+          // Se ambos têm o mesmo status, ordena por data (mais recente primeiro)
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        
+        setReservations(sortedReservations);
       }
     } catch (error) {
       console.error('[Reservations] ❌ Erro ao carregar reservas:', error);
@@ -353,7 +367,9 @@ export default function ReservationsPage() {
       customer_phone: reservation.customer_phone ? formatPhone(reservation.customer_phone) : '',
       customer_cpf: reservation.customer_cpf ? formatCPF(reservation.customer_cpf) : '',
       seller_phone: reservation.seller_phone ? formatPhone(reservation.seller_phone) : '',
-      seller_cpf: reservation.seller_cpf ? formatCPF(reservation.seller_cpf) : ''
+      seller_cpf: reservation.seller_cpf ? formatCPF(reservation.seller_cpf) : '',
+      // Manter created_at no formato correto para datetime-local (YYYY-MM-DDTHH:MM:SS)
+      created_at: reservation.created_at ? reservation.created_at.replace(' ', 'T') : ''
     };
 
     setEditingReservation(formattedReservation);
@@ -438,6 +454,8 @@ export default function ReservationsPage() {
         installments: lotInstallments[lot.id] || null
       })) || [];
 
+      console.log(editingReservation.created_at ? editingReservation.created_at.replace('T', ' ') : editingReservation.created_at)
+
       await axios.put(`${API_URL}/reservas/atualizar`, {
         id: editingReservation.id,
         customer_name: editingReservation.customer_name,
@@ -451,7 +469,8 @@ export default function ReservationsPage() {
         seller_email: editingReservation.seller_email,
         seller_phone: editingReservation.seller_phone?.replace(/\D/g, ''),
         seller_cpf: editingReservation.seller_cpf?.replace(/\D/g, ''),
-        created_at: editingReservation.created_at,
+        // Converter formato de volta para MySQL (T -> espaço)
+        created_at: editingReservation.created_at ? editingReservation.created_at.replace('T', ' ') : editingReservation.created_at,
         status: editingReservation.status,
         userRole: user?.role,
         lots: lotsWithDetails
@@ -1350,8 +1369,12 @@ export default function ReservationsPage() {
                     <label className="block text-[var(--foreground)] opacity-80 text-sm font-semibold mb-2">Data da Reserva</label>
                     <input
                       type="datetime-local"
-                      value={editingReservation.created_at ? new Date(editingReservation.created_at).toISOString().slice(0, 16) : ''}
-                      onChange={(e) => setEditingReservation({ ...editingReservation, created_at: new Date(e.target.value).toISOString() })}
+                      value={editingReservation.created_at ? editingReservation.created_at.substring(0, 16) : ''}
+                      onChange={(e) => {
+                        // Manter formato YYYY-MM-DDTHH:MM:SS para compatibilidade com backend
+                        const newValue = e.target.value + ':00';
+                        setEditingReservation({ ...editingReservation, created_at: newValue });
+                      }}
                       className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     />
                   </div>
