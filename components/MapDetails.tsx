@@ -48,6 +48,7 @@ export default function MapDetails() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [selectedBlockLots, setSelectedBlockLots] = useState<Lot[]>([]); // Lotes da quadra selecionada
   const [isLoadingBlockLots, setIsLoadingBlockLots] = useState(false);
+  const [allLotsInMap, setAllLotsInMap] = useState<Lot[]>([]); // Todos os lotes do mapa para validação
   
   // Estados para seleção múltipla
   const [multiSelectMode, setMultiSelectMode] = useState(false);
@@ -161,6 +162,48 @@ export default function MapDetails() {
       setIsLoadingBlockLots(false);
     }
   }, [mapId, loadLotsForBlock]);
+
+  // Função para carregar todos os lotes do mapa (para validação de exclusão)
+  const loadAllLotsInMap = useCallback(async () => {
+    if (!mapId) return;
+
+    try {
+      const response = await axios.get(`${API_URL}/mapas/lotes`, {
+        params: { mapId },
+        timeout: 15000,
+      });
+
+      console.log('📦 Resposta completa da API /mapas/lotes:', response.data);
+
+      // A API retorna [{ mapId, lots: [...] }] ou diretamente [...]
+      let lotsArray: Lot[] = [];
+      
+      if (response.data && Array.isArray(response.data)) {
+        if (response.data.length > 0 && response.data[0].lots) {
+          // Formato: [{ mapId, lots: [...] }]
+          lotsArray = response.data[0].lots;
+        } else {
+          // Formato: [...]
+          lotsArray = response.data;
+        }
+        
+        console.log('✅ Lotes processados:', lotsArray.map(lot => ({
+          id: lot.id,
+          lotNumber: lot.lotNumber,
+          blockId: lot.blockId,
+          blockIdType: typeof lot.blockId,
+          status: lot.status
+        })));
+        
+        setAllLotsInMap(lotsArray);
+      } else {
+        setAllLotsInMap([]);
+      }
+    } catch (error) {
+      console.error('[MapDetails] ❌ Erro ao carregar todos os lotes:', error);
+      setAllLotsInMap([]);
+    }
+  }, [mapId]);
 
   // Função para carregar apenas as estatísticas dos lotes (otimizada)
   const loadLotStats = useCallback(async () => {
@@ -367,14 +410,16 @@ export default function MapDetails() {
       setSelectedBlockLots([]);
       setSelectedBlockId('');
       setReservations([]);
-      
-      // Carregar novos dados
-      if (mapId && mapId.trim() !== '') {
-        loadBlocks(mapId);
-        loadLotStats();
-        loadMapImage(mapId);
-      }
     }
+    
+    // Carregar dados sempre que mapId estiver definido
+    if (mapId && mapId.trim() !== '') {
+      loadBlocks(mapId);
+      loadLotStats();
+      loadMapImage(mapId);
+      loadAllLotsInMap();
+    }
+    
     previousMapIdRef.current = mapId;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapId]);
@@ -492,6 +537,38 @@ export default function MapDetails() {
         alert('❌ Erro ao deletar quadra. Verifique sua conexão e tente novamente.');
       }
     }
+  };
+
+  // Funções de validação para exclusão
+  const hasReservedOrSoldLotsInBlock = (blockId: string): boolean => {
+    console.log('🔎 TODOS OS LOTES:', allLotsInMap.map(lot => ({
+      lotId: lot.id,
+      lotNumber: lot.lotNumber,
+      blockId: lot.blockId,
+      blockIdType: typeof lot.blockId,
+      status: lot.status,
+      compara: `"${lot.blockId}" === "${blockId}" ? ${String(lot.blockId) === String(blockId)}`
+    })));
+    
+    const lotsInBlock = allLotsInMap.filter(lot => String(lot.blockId) === String(blockId));
+    const hasReservedOrSold = lotsInBlock.some(lot => 
+      lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD
+    );
+    
+    console.log('🔍 Verificando quadra:', {
+      blockId,
+      blockIdType: typeof blockId,
+      totalLotsInMap: allLotsInMap.length,
+      lotsInBlock: lotsInBlock.length,
+      lotsInBlockDetails: lotsInBlock.map(l => ({ id: l.id, number: l.lotNumber, status: l.status, blockId: l.blockId })),
+      hasReservedOrSold
+    });
+    
+    return hasReservedOrSold;
+  };
+
+  const hasReservedOrSoldLotsInMap = (): boolean => {
+    return (lotStats.reserved > 0 || lotStats.sold > 0);
   };
 
   const handleAddLotToBlock = (blockId: string) => {
@@ -1288,8 +1365,20 @@ export default function MapDetails() {
             </button>
             {mapId && (
               <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full lg:w-auto px-5 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+                onClick={() => {
+                  if (hasReservedOrSoldLotsInMap()) {
+                    return;
+                  }
+                  setShowDeleteConfirm(true);
+                }}
+                disabled={hasReservedOrSoldLotsInMap()}
+                style={hasReservedOrSoldLotsInMap() ? { pointerEvents: 'none' } : {}}
+                className={`w-full lg:w-auto px-5 py-3 text-white font-semibold rounded-xl shadow-[var(--shadow-md)] transition-all flex items-center justify-center gap-2 ${
+                  hasReservedOrSoldLotsInMap() 
+                    ? 'bg-gray-400 cursor-not-allowed opacity-60' 
+                    : 'bg-red-500 hover:bg-red-600 hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 cursor-pointer'
+                }`}
+                title={hasReservedOrSoldLotsInMap() ? 'Não é possível excluir o loteamento pois possui lotes reservados ou vendidos' : 'Excluir Loteamento'}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1417,7 +1506,10 @@ export default function MapDetails() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {blocks.map((block) => (
+              {blocks.map((block) => {
+                const isBlockDeletionDisabled = hasReservedOrSoldLotsInBlock(block.id);
+                
+                return (
                 <div
                   key={block.id}
                   onClick={() => setSelectedBlockId(selectedBlockId === block.id ? '' : block.id)}
@@ -1455,10 +1547,19 @@ export default function MapDetails() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (isBlockDeletionDisabled) {
+                          return;
+                        }
                         handleDeleteBlock(block.id);
                       }}
-                      className="p-1.5 bg-red-500/80 hover:bg-red-600 rounded-lg cursor-pointer"
-                      title="Excluir quadra"
+                      disabled={isBlockDeletionDisabled}
+                      style={isBlockDeletionDisabled ? { pointerEvents: 'none' } : {}}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        isBlockDeletionDisabled
+                          ? 'bg-gray-400/60 cursor-not-allowed opacity-40'
+                          : 'bg-red-500/80 hover:bg-red-600 cursor-pointer'
+                      }`}
+                      title={isBlockDeletionDisabled ? 'Não é possível excluir a quadra pois possui lotes reservados ou vendidos' : 'Excluir quadra'}
                     >
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1466,7 +1567,8 @@ export default function MapDetails() {
                     </button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
         )}
       </div>
