@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
       params = [mapId];
     } else if (withLots) {
       // Buscar apenas mapas que tenham pelo menos um lote cadastrado em qualquer quadra
-      console.log('[API /mapas] Buscando mapas com lotes...');
       if (minimal) {
         query = `
           SELECT DISTINCT m.id, m.name, m.description, m.width, m.height, m.created_at, m.updated_at
@@ -60,8 +59,6 @@ export async function GET(request: NextRequest) {
     if (!Array.isArray(rows)) {
       return NextResponse.json([], { status: 200 });
     }
-    
-    console.log(`[API /mapas] Query retornou ${rows.length} mapas. withLots=${withLots}, minimal=${minimal}`);
 
     // Formatar resposta (mesmo formato do n8n)
     const formattedMaps = rows.map((map: any) => {

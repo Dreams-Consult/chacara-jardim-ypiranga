@@ -173,8 +173,6 @@ export default function MapDetails() {
         timeout: 15000,
       });
 
-      console.log('📦 Resposta completa da API /mapas/lotes:', response.data);
-
       // A API retorna [{ mapId, lots: [...] }] ou diretamente [...]
       let lotsArray: Lot[] = [];
       
@@ -186,14 +184,6 @@ export default function MapDetails() {
           // Formato: [...]
           lotsArray = response.data;
         }
-        
-        console.log('✅ Lotes processados:', lotsArray.map(lot => ({
-          id: lot.id,
-          lotNumber: lot.lotNumber,
-          blockId: lot.blockId,
-          blockIdType: typeof lot.blockId,
-          status: lot.status
-        })));
         
         setAllLotsInMap(lotsArray);
       } else {
@@ -546,29 +536,11 @@ export default function MapDetails() {
   };
 
   // Funções de validação para exclusão
-  const hasReservedOrSoldLotsInBlock = (blockId: string): boolean => {
-    console.log('🔎 TODOS OS LOTES:', allLotsInMap.map(lot => ({
-      lotId: lot.id,
-      lotNumber: lot.lotNumber,
-      blockId: lot.blockId,
-      blockIdType: typeof lot.blockId,
-      status: lot.status,
-      compara: `"${lot.blockId}" === "${blockId}" ? ${String(lot.blockId) === String(blockId)}`
-    })));
-    
+  const hasReservedOrSoldLotsInBlock = (blockId: string): boolean => {    
     const lotsInBlock = allLotsInMap.filter(lot => String(lot.blockId) === String(blockId));
     const hasReservedOrSold = lotsInBlock.some(lot => 
       lot.status === LotStatus.RESERVED || lot.status === LotStatus.SOLD
     );
-    
-    console.log('🔍 Verificando quadra:', {
-      blockId,
-      blockIdType: typeof blockId,
-      totalLotsInMap: allLotsInMap.length,
-      lotsInBlock: lotsInBlock.length,
-      lotsInBlockDetails: lotsInBlock.map(l => ({ id: l.id, number: l.lotNumber, status: l.status, blockId: l.blockId })),
-      hasReservedOrSold
-    });
     
     return hasReservedOrSold;
   };
@@ -965,14 +937,7 @@ export default function MapDetails() {
 
     if (!confirm(`Deseja bloquear ${availableLots.length} lote(s)?`)) return;
 
-    try {
-      console.log('Bloqueando lotes:', availableLots.map(lot => ({
-        id: lot.id,
-        mapId: lot.mapId || mapId,
-        blockId: lot.blockId,
-        lotNumber: lot.lotNumber
-      })));
-      
+    try {      
       await Promise.all(availableLots.map(lot =>
         axios.patch('/api/mapas/lotes/atualizar', {
           id: lot.id,
@@ -1023,12 +988,6 @@ export default function MapDetails() {
     if (!confirm(`Deseja desbloquear ${blockedLots.length} lote(s)?`)) return;
 
     try {
-      console.log('Desbloqueando lotes:', blockedLots.map(lot => ({
-        id: lot.id,
-        mapId: lot.mapId || mapId,
-        blockId: lot.blockId,
-        lotNumber: lot.lotNumber
-      })));
       
       await Promise.all(blockedLots.map(lot =>
         axios.patch('/api/mapas/lotes/atualizar', {
@@ -1086,12 +1045,6 @@ export default function MapDetails() {
     if (!confirm(`Deseja EXCLUIR ${deletableLots.length} lote(s)? Esta ação não pode ser desfeita!`)) return;
 
     try {
-      console.log('Excluindo lotes:', deletableLots.map(lot => ({
-        id: lot.id,
-        lotNumber: lot.lotNumber,
-        status: lot.status
-      })));
-      
       await Promise.all(deletableLots.map(lot =>
         axios.delete(`${API_URL}/mapas/lotes/deletar`, {
           params: {

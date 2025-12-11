@@ -41,8 +41,6 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const userId = searchParams.get('userId');
 
-    console.log('[API /reservas GET] Params:', { page, limit, status, userId, minimal, mapId, blockId });
-
     if (minimal) {
       // Retornar apenas campos essenciais para tooltip em /maps/
       let query = 'SELECT id, customer_name, seller_name, status, created_at FROM purchase_requests';
@@ -127,8 +125,6 @@ export async function GET(request: NextRequest) {
       filterParams.push(parseInt(userId));
     }
 
-    console.log('[API /reservas GET] Filters:', { whereConditions, filterParams });
-
     // Adicionar WHERE clause se houver condições
     if (whereConditions.length > 0) {
       const whereClause = ' WHERE ' + whereConditions.join(' AND ');
@@ -140,8 +136,6 @@ export async function GET(request: NextRequest) {
     const [countResult] = await connection.execute(countQuery, filterParams);
     const totalCount = (countResult as any[])[0].total;
 
-    console.log('[API /reservas GET] Total count:', totalCount);
-
     // Adicionar ordenação e paginação
     query += ' ORDER BY created_at DESC';
     
@@ -151,9 +145,6 @@ export async function GET(request: NextRequest) {
     
     // Usar interpolação direta para LIMIT e OFFSET (seguro pois são inteiros validados)
     query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`;
-
-    console.log('[API /reservas GET] Query:', query);
-    console.log('[API /reservas GET] Filter params:', filterParams);
 
     const [reservations] = await connection.execute(query, filterParams);
 

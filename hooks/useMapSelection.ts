@@ -32,19 +32,14 @@ export const useMapSelection = () => {
         // Buscar apenas mapas com lotes cadastrados (filtrado no servidor)
         const response = await axios.get(`${API_URL}/mapas?minimal=true&withLots=true`);
         const mapsData = response.data;
-        
-        console.log('[useMapSelection] Resposta da API com withLots=true:', mapsData);
 
         // Validar se mapsData é um array
         if (!Array.isArray(mapsData)) {
-          console.warn('⚠️ [Página Pública] API não retornou array de mapas:', mapsData);
           setMaps([]);
           setLots([]);
           setSelectedMap(null);
           return;
         }
-        
-        console.log(`[useMapSelection] Total de mapas com lotes: ${mapsData.length}`);
 
         if (mapsData.length > 0) {
           // Processar apenas os mapas (já filtrados pela API)

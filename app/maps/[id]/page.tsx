@@ -151,9 +151,8 @@ export default function MapViewPage() {
   };
 
   const handlePurchaseSuccess = async (reservationId?: string) => {
-    console.log('[MapView] Reserva criada, ID recebido:', reservationId);
-    setIsPurchaseModalOpen(false);
-    setSelectedLots([]);
+    setShowPurchaseModal(false);
+    setSelectedLot(null);
     
     // Redirecionar para a página da reserva se o ID for retornado
     if (reservationId) {
@@ -162,10 +161,8 @@ export default function MapViewPage() {
       
       // Aguardar um pouco para garantir que a reserva foi salva no banco
       await new Promise(resolve => setTimeout(resolve, 800));
-      console.log('[MapView] Redirecionando para:', `/reservations?reservationId=${reservationId}`);
       router.push(`/reservations?reservationId=${reservationId}`);
     } else {
-      console.log('[MapView] Nenhum ID retornado, recarregando dados');
       // Recarregar todos os lotes do mapa
       loadMapData();
     }

@@ -60,8 +60,6 @@ export default function LotSelector({
       const response = await fetch(`/api/reservas?limit=1000`);
       const data = await response.json();
       
-      console.log('API response:', data);
-      
       // A API retorna: { reservations: [...], totalCount: N }
       let reservation = null;
       
@@ -86,8 +84,6 @@ export default function LotSelector({
           );
         });
       }
-      
-      console.log('Reservation found for lot', lotId, ':', reservation);
       
       setLotReservation(reservation || null);
     } catch (error) {
@@ -917,17 +913,6 @@ export default function LotSelector({
                   const isAdmin = userRole === 'admin' || userRole === 'dev';
                   const isResponsibleSeller = reservation && userId && String(reservation.user_id) === String(userId);
                   const canViewReservation = isAdmin || isResponsibleSeller;
-                  
-                  // Debug temporário
-                  console.log('DEBUG PERMISSÃO:', {
-                    userRole,
-                    userId,
-                    reservationUserId: reservation?.user_id,
-                    isAdmin,
-                    isResponsibleSeller,
-                    canViewReservation,
-                    hasReservation: !!reservation
-                  });
                   
                   return reservation && canViewReservation ? (
                     <button

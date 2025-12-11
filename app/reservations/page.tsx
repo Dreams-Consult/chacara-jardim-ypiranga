@@ -454,7 +454,7 @@ export default function ReservationsPage() {
         installments: lotInstallments[lot.id] || null
       })) || [];
 
-      console.log(editingReservation.created_at ? editingReservation.created_at.replace('T', ' ') : editingReservation.created_at)
+
 
       await axios.put(`${API_URL}/reservas/atualizar`, {
         id: editingReservation.id,

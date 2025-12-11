@@ -167,7 +167,6 @@ export default function AdminMapsLotsPage() {
 
   // Função para sucesso na compra única
   const handleSinglePurchaseSuccess = async (reservationId?: string) => {
-    console.log('[Maps] Reserva única criada, ID recebido:', reservationId);
     setSingleLotPurchase(null);
     handlePurchaseSuccess(reservationId);
     
@@ -178,10 +177,8 @@ export default function AdminMapsLotsPage() {
       
       // Aguardar um pouco para garantir que a reserva foi salva no banco
       await new Promise(resolve => setTimeout(resolve, 800));
-      console.log('[Maps] Redirecionando para:', `/reservations?reservationId=${reservationId}`);
       router.push(`/reservations?reservationId=${reservationId}`);
     } else {
-      console.log('[Maps] Nenhum ID retornado, recarregando dados');
       // Recarregar reservas e estatísticas após sucesso
       setTimeout(() => {
         fetchReservations();
@@ -576,7 +573,6 @@ export default function AdminMapsLotsPage() {
           lots={selectedLots} // Mudado de lot para lots
           onClose={handlePurchaseClose}
           onSuccess={async (reservationId) => {
-            console.log('[Maps] Reserva criada, ID recebido:', reservationId);
             const returnedId = handlePurchaseSuccess(reservationId);
             
             // Redirecionar para a página da reserva se o ID for retornado
@@ -588,10 +584,8 @@ export default function AdminMapsLotsPage() {
               
               // Aguardar um pouco para garantir que a reserva foi salva no banco
               await new Promise(resolve => setTimeout(resolve, 800));
-              console.log('[Maps] Redirecionando para:', `/reservations?reservationId=${id}`);
               router.push(`/reservations?reservationId=${id}`);
             } else {
-              console.log('[Maps] Nenhum ID retornado, recarregando dados');
               // Recarregar reservas e estatísticas após sucesso
               setTimeout(() => {
                 fetchReservations();

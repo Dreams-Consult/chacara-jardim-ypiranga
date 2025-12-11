@@ -166,7 +166,6 @@ export function usePurchaseForm(
 
       // Retornar o ID da reserva criada
       const reservationId = response.data?.purchaseRequestId || response.data?.id || response.data?.reservationId;
-      console.log('[usePurchaseForm] Reserva criada com ID:', reservationId);
       onSuccess(reservationId);
     } catch (err) {
       console.error('[usePurchaseForm] ❌ Erro ao enviar reserva:', err);

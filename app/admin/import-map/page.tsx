@@ -209,6 +209,9 @@ export default function ImportMapPage() {
 
       setSuccess(response.data);
       setJsonContent('');
+      
+      // Mostrar mensagem de sucesso
+      alert(`✅ Loteamento importado com sucesso!\n\nO loteamento foi cadastrado e está disponível para visualização.`);
     } catch (err: any) {
       console.error('[ImportMap] ❌ Erro na importação:', err);
 
