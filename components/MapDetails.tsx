@@ -414,6 +414,12 @@ export default function MapDetails() {
     
     // Carregar dados sempre que mapId estiver definido
     if (mapId && mapId.trim() !== '') {
+      // Atualizar o mapa atual baseado no mapId da URL
+      const selectedMap = allMaps.find(m => m.id === mapId);
+      if (selectedMap) {
+        setMap(selectedMap);
+      }
+      
       loadBlocks(mapId);
       loadLotStats();
       loadMapImage(mapId);
@@ -777,8 +783,12 @@ export default function MapDetails() {
             setIsEditingImage(false);
             setImageFile(null);
             setImagePreview('');
-            setIsUploadingImage(false);
-            loadMapImage(mapId); // Recarregar apenas a imagem
+            
+            // Aguardar um pouco para o servidor processar antes de recarregar
+            setTimeout(async () => {
+              await loadMapImage(mapId); // Recarregar apenas a imagem
+              setIsUploadingImage(false);
+            }, 500);
           } else {
             // Para imagem, obter dimensões
             const img = new Image();
@@ -802,8 +812,12 @@ export default function MapDetails() {
               setIsEditingImage(false);
               setImageFile(null);
               setImagePreview('');
-              setIsUploadingImage(false);
-              loadMapImage(mapId); // Recarregar apenas a imagem
+              
+              // Aguardar um pouco para o servidor processar antes de recarregar
+              setTimeout(async () => {
+                await loadMapImage(mapId); // Recarregar apenas a imagem
+                setIsUploadingImage(false);
+              }, 500);
             };
             img.onerror = () => {
               alert('Erro ao processar imagem');
