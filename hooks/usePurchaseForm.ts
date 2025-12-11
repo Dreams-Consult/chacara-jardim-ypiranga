@@ -157,14 +157,17 @@ export function usePurchaseForm(
         requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;
       }
 
-      await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
+      const response = await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
           'Content-Type': 'application/json',
         },
         timeout: 10000,
       });
 
-      onSuccess();
+      // Retornar o ID da reserva criada
+      const reservationId = response.data?.purchaseRequestId || response.data?.id || response.data?.reservationId;
+      console.log('[usePurchaseForm] Reserva criada com ID:', reservationId);
+      onSuccess(reservationId);
     } catch (err) {
       console.error('[usePurchaseForm] ❌ Erro ao enviar reserva:', err);
 

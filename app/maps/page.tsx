@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import InteractiveMap from '@/components/InteractiveMap';
 import LotSelector from '@/components/LotSelector';
 import PurchaseModal from '@/components/PurchaseModal';
@@ -11,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminMapsLotsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const {
     maps,
     blocks,
@@ -164,14 +166,28 @@ export default function AdminMapsLotsPage() {
   };
 
   // Função para sucesso na compra única
-  const handleSinglePurchaseSuccess = () => {
+  const handleSinglePurchaseSuccess = async (reservationId?: string) => {
+    console.log('[Maps] Reserva única criada, ID recebido:', reservationId);
     setSingleLotPurchase(null);
-    handlePurchaseSuccess();
-    // Recarregar reservas e estatísticas após sucesso
-    setTimeout(() => {
-      fetchReservations();
-      loadMapStats(true);
-    }, 500);
+    handlePurchaseSuccess(reservationId);
+    
+    // Redirecionar para a página da reserva se o ID for retornado
+    if (reservationId) {
+      // Mostrar mensagem de sucesso
+      alert(`✅ Reserva criada com sucesso!\n\nSua reserva foi registrada e você será redirecionado para visualizá-la.`);
+      
+      // Aguardar um pouco para garantir que a reserva foi salva no banco
+      await new Promise(resolve => setTimeout(resolve, 800));
+      console.log('[Maps] Redirecionando para:', `/reservations?reservationId=${reservationId}`);
+      router.push(`/reservations?reservationId=${reservationId}`);
+    } else {
+      console.log('[Maps] Nenhum ID retornado, recarregando dados');
+      // Recarregar reservas e estatísticas após sucesso
+      setTimeout(() => {
+        fetchReservations();
+        loadMapStats(true);
+      }, 500);
+    }
   };
 
   // Função para bloquear/desbloquear lote
@@ -559,12 +575,29 @@ export default function AdminMapsLotsPage() {
         <PurchaseModal
           lots={selectedLots} // Mudado de lot para lots
           onClose={handlePurchaseClose}
-          onSuccess={() => {
-            handlePurchaseSuccess();
-            setTimeout(() => {
-              fetchReservations();
-              loadMapStats(true);
-            }, 500);
+          onSuccess={async (reservationId) => {
+            console.log('[Maps] Reserva criada, ID recebido:', reservationId);
+            const returnedId = handlePurchaseSuccess(reservationId);
+            
+            // Redirecionar para a página da reserva se o ID for retornado
+            if (returnedId || reservationId) {
+              const id = returnedId || reservationId;
+              
+              // Mostrar mensagem de sucesso
+              alert(`✅ Reserva criada com sucesso!\n\nSua reserva foi registrada e você será redirecionado para visualizá-la.`);
+              
+              // Aguardar um pouco para garantir que a reserva foi salva no banco
+              await new Promise(resolve => setTimeout(resolve, 800));
+              console.log('[Maps] Redirecionando para:', `/reservations?reservationId=${id}`);
+              router.push(`/reservations?reservationId=${id}`);
+            } else {
+              console.log('[Maps] Nenhum ID retornado, recarregando dados');
+              // Recarregar reservas e estatísticas após sucesso
+              setTimeout(() => {
+                fetchReservations();
+                loadMapStats(true);
+              }, 500);
+            }
           }}
         />
       )}

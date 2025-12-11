@@ -241,14 +241,20 @@ export const useMapSelection = () => {
     }
   }, [selectedLots]);
 
-  const handlePurchaseSuccess = useCallback(() => {
+  const handlePurchaseSuccess = useCallback((reservationId?: string) => {
     setShowPurchaseModal(false);
     // Recarregar dados manualmente após sucesso
     if (selectedMap) {
       loadBlocksForMap(selectedMap.id);
     }
-    alert(`${selectedLots.length === 1 ? 'Seu interesse foi registrado' : 'Seus interesses foram registrados'} com sucesso! ${selectedLots.length === 1 ? 'O lote foi reservado' : 'Os lotes foram reservados'}. Entraremos em contato em breve.`);
+    
+    // Se não tiver reservationId (será redirecionado pela página), mostrar alerta
+    if (!reservationId) {
+      alert(`${selectedLots.length === 1 ? 'Seu interesse foi registrado' : 'Seus interesses foram registrados'} com sucesso! ${selectedLots.length === 1 ? 'O lote foi reservado' : 'Os lotes foram reservados'}. Entraremos em contato em breve.`);
+    }
+    
     setSelectedLots([]);
+    return reservationId;
   }, [selectedLots.length, selectedMap]);
 
   const handlePurchaseClose = useCallback(() => {

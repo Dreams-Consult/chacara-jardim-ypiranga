@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface PurchaseModalProps {
   lots: Lot[]; // Mudado de lot: Lot para lots: Lot[]
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (reservationId?: string) => void;
   onToggleLotStatus?: (lotId: string, currentStatus: LotStatus) => Promise<void>;
 }
 
