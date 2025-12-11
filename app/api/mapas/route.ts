@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const minimal = searchParams.get('minimal') === 'true';
     const mapId = searchParams.get('id');
+    const withLots = searchParams.get('withLots') === 'true'; // Apenas mapas com lotes
 
     // Construir query baseada nos parâmetros
     let query: string;
@@ -26,6 +27,26 @@ export async function GET(request: NextRequest) {
       // Buscar mapa específico por ID (sempre com imageUrl)
       query = `SELECT id, name, description, image_url, width, height, created_at, updated_at FROM maps WHERE id = ?`;
       params = [mapId];
+    } else if (withLots) {
+      // Buscar apenas mapas que tenham pelo menos um lote cadastrado em qualquer quadra
+      console.log('[API /mapas] Buscando mapas com lotes...');
+      if (minimal) {
+        query = `
+          SELECT DISTINCT m.id, m.name, m.description, m.width, m.height, m.created_at, m.updated_at
+          FROM maps m
+          INNER JOIN blocks b ON b.mapId = m.id
+          INNER JOIN lots l ON l.block_id = b.id
+          ORDER BY m.created_at DESC
+        `;
+      } else {
+        query = `
+          SELECT DISTINCT m.id, m.name, m.description, m.image_url, m.width, m.height, m.created_at, m.updated_at
+          FROM maps m
+          INNER JOIN blocks b ON b.mapId = m.id
+          INNER JOIN lots l ON l.block_id = b.id
+          ORDER BY m.created_at DESC
+        `;
+      }
     } else if (minimal) {
       // Buscar todos sem image_url
       query = `SELECT id, name, description, width, height, created_at, updated_at FROM maps ORDER BY created_at DESC`;
@@ -39,6 +60,8 @@ export async function GET(request: NextRequest) {
     if (!Array.isArray(rows)) {
       return NextResponse.json([], { status: 200 });
     }
+    
+    console.log(`[API /mapas] Query retornou ${rows.length} mapas. withLots=${withLots}, minimal=${minimal}`);
 
     // Formatar resposta (mesmo formato do n8n)
     const formattedMaps = rows.map((map: any) => {

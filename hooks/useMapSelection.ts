@@ -29,9 +29,11 @@ export const useMapSelection = () => {
 
     const fetchMaps = async () => {
       try {
-        // Buscar apenas campos necessários (sem imageUrl para economizar dados)
-        const response = await axios.get(`${API_URL}/mapas?minimal=true`);
+        // Buscar apenas mapas com lotes cadastrados (filtrado no servidor)
+        const response = await axios.get(`${API_URL}/mapas?minimal=true&withLots=true`);
         const mapsData = response.data;
+        
+        console.log('[useMapSelection] Resposta da API com withLots=true:', mapsData);
 
         // Validar se mapsData é um array
         if (!Array.isArray(mapsData)) {
@@ -41,9 +43,11 @@ export const useMapSelection = () => {
           setSelectedMap(null);
           return;
         }
+        
+        console.log(`[useMapSelection] Total de mapas com lotes: ${mapsData.length}`);
 
         if (mapsData.length > 0) {
-          // Processar apenas os mapas (sem lotes)
+          // Processar apenas os mapas (já filtrados pela API)
           const allMaps: Map[] = mapsData
             .filter((mapData) => mapData && mapData.mapId)
             .map((mapData) => ({
