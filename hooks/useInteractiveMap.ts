@@ -67,6 +67,11 @@ export function useInteractiveMap({
     const img = imageRef.current;
     if (!canvas || !img || !imageLoaded) return;
 
+    // Verificar se a imagem está realmente pronta para ser desenhada
+    if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+      return;
+    }
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -79,7 +84,12 @@ export function useInteractiveMap({
     ctx.translate(offset.x, offset.y);
     ctx.scale(scale, scale);
 
-    ctx.drawImage(img, 0, 0);
+    try {
+      ctx.drawImage(img, 0, 0);
+    } catch (error) {
+      console.error('[useInteractiveMap] Erro ao desenhar imagem:', error);
+      return;
+    }
 
     // Lotes não são mais desenhados no mapa (lot.area.points removido)
     // lots.forEach((lot) => {
@@ -154,6 +164,8 @@ export function useInteractiveMap({
     if (!canvas || !img) return;
 
     if (!imageUrl || imageUrl.trim() === '') {
+      // Resetar quando não há URL
+      setImageLoaded(false);
       return;
     }
 
@@ -162,20 +174,38 @@ export function useInteractiveMap({
       return;
     }
 
+    // Resetar estado e zoom ao mudar URL
+    setImageLoaded(false);
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+
     const handleLoad = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      setImageLoaded(true);
+      // Verificar se a imagem realmente carregou
+      if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        setImageLoaded(true);
+      }
     };
 
     const handleError = () => {
       console.error('Erro ao carregar imagem do mapa');
+      setImageLoaded(false);
     };
 
+    // Limpar src anterior para forçar reload
+    img.src = '';
+    
     img.addEventListener('load', handleLoad);
     img.addEventListener('error', handleError);
 
+    // Setar nova src
     img.src = imageUrl;
+
+    // Se a imagem já estiver em cache e carregada
+    if (img.complete && img.naturalWidth > 0) {
+      handleLoad();
+    }
 
     return () => {
       img.removeEventListener('load', handleLoad);
@@ -183,9 +213,10 @@ export function useInteractiveMap({
     };
   }, [imageUrl]);
 
+  // Redesenhar quando imageLoaded mudar ou redraw mudar
   useEffect(() => {
     redraw();
-  }, [redraw]);
+  }, [redraw, imageLoaded]);
 
   const isPointInPolygon = (
     x: number,

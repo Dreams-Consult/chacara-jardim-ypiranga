@@ -31,49 +31,44 @@ export default function InteractiveMap({
   const [isPDF, setIsPDF] = useState(false);
   const [pdfImageUrl, setPdfImageUrl] = useState<string>('');
   const [isConverting, setIsConverting] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Detectar se é PDF e converter para imagem
+  // Detectar se é PDF e converter
   useEffect(() => {
-    if (imageUrl && imageUrl.startsWith('data:application/pdf')) {
+    // Resetar estados ao mudar imageUrl
+    setIsPDF(false);
+    setPdfImageUrl('');
+    setIsConverting(false);
+
+    if (!imageUrl || imageUrl.trim() === '') {
+      return;
+    }
+
+    if (imageUrl.startsWith('data:application/pdf')) {
       setIsPDF(true);
       setIsConverting(true);
-      setImageLoaded(false);
       
-      // Converter PDF para canvas usando pdf.js
       const loadPDF = async () => {
         try {
-          // Carregar pdf.js
           const pdfjsLib = await loadPdfJs();
-
-          // Carregar PDF
           const loadingTask = pdfjsLib.getDocument(imageUrl);
           const pdf = await loadingTask.promise;
-          
-          // Pegar primeira página
           const page = await pdf.getPage(1);
-          
-          // Aumentar escala para 4x - renderiza em alta resolução para zoom
           const scale = 4;
           const viewport = page.getViewport({ scale });
           
-          // Criar canvas temporário
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           canvas.height = viewport.height;
           canvas.width = viewport.width;
           
-          // Renderizar PDF no canvas
           if (context) {
             await page.render({
               canvasContext: context,
               viewport: viewport
             }).promise;
             
-            // Qualidade máxima no PNG
             const imageData = canvas.toDataURL('image/png', 1.0);
             setPdfImageUrl(imageData);
-            setImageLoaded(true);
           }
         } catch (error) {
           console.error('[InteractiveMap] Erro ao converter PDF:', error);
@@ -83,10 +78,6 @@ export default function InteractiveMap({
       };
 
       loadPDF();
-    } else {
-      setIsPDF(false);
-      setPdfImageUrl('');
-      setImageLoaded(false);
     }
   }, [imageUrl]);
 
@@ -119,38 +110,10 @@ export default function InteractiveMap({
     isEditMode,
     onAreaDrawn,
     selectedLotId,
-    selectedLotIds, // Novo: passa múltiplos lotes selecionados
+    selectedLotIds,
     drawingMode,
     previewArea,
   });
-
-  // Detectar quando a imagem foi carregada pelo hook (observando o canvas)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const checkCanvasLoaded = () => {
-      if (canvas.width > 0 && canvas.height > 0 && !isConverting) {
-        setImageLoaded(true);
-      }
-    };
-
-    // Verificar imediatamente
-    checkCanvasLoaded();
-
-    // Observar mudanças no canvas
-    const observer = new MutationObserver(checkCanvasLoaded);
-    observer.observe(canvas, { attributes: true });
-
-    return () => observer.disconnect();
-  }, [canvasRef, isConverting]);
-
-  // Resetar imageLoaded quando mudar a URL da imagem
-  useEffect(() => {
-    if (imageUrl) {
-      setImageLoaded(false);
-    }
-  }, [imageUrl]);
 
   // Adicionar listener de wheel com passive: false para permitir zoom com scroll
   useEffect(() => {
@@ -161,22 +124,16 @@ export default function InteractiveMap({
       e.preventDefault();
       e.stopPropagation();
 
-      // Aplicar zoom baseado no deltaY
       if (e.deltaY < 0) {
-        // Scroll para cima = Zoom In
         handleZoomIn();
       } else {
-        // Scroll para baixo = Zoom Out
         handleZoomOut();
       }
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-    };
-  }, [handleZoomIn, handleZoomOut]);
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [handleZoomIn, handleZoomOut, containerRef]);
 
   return (
     <div 
@@ -184,7 +141,8 @@ export default function InteractiveMap({
       className="relative"
       style={{ touchAction: 'none' }}
     >
-      {(isConverting || !imageLoaded) && effectiveImageUrl ? (
+      {/* Loading durante conversão de PDF */}
+      {isConverting ? (
         <div className="border-2 border-[var(--border)] rounded-lg bg-[var(--surface)] min-h-[500px] relative overflow-hidden">
           {/* Skeleton animado de fundo */}
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--surface)] via-[var(--border)] to-[var(--surface)] animate-pulse"></div>
@@ -206,14 +164,22 @@ export default function InteractiveMap({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              <p className="text-[var(--foreground)] font-semibold mb-1">
-                {isConverting ? 'Convertendo PDF...' : 'Carregando mapa...'}
-              </p>
+              <p className="text-[var(--foreground)] font-semibold mb-1">Convertendo PDF...</p>
               <p className="text-[var(--foreground)] opacity-60 text-sm">Por favor, aguarde</p>
             </div>
           </div>
         </div>
-      ) : effectiveImageUrl && effectiveImageUrl.trim() !== '' ? (
+      ) : !effectiveImageUrl || effectiveImageUrl.trim() === '' ? (
+        /* Sem imagem cadastrada */
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-gray-50">
+          <svg className="w-24 h-24 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p className="text-gray-600 font-medium mb-2">Nenhuma imagem do mapa carregada</p>
+          <p className="text-gray-500 text-sm">Adicione uma imagem ao mapa para começar a desenhar os lotes</p>
+        </div>
+      ) : (
+        /* Mapa pronto */
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={imageRef} src={effectiveImageUrl} alt="Map" className="hidden" />
@@ -237,17 +203,10 @@ export default function InteractiveMap({
             }}
           />
         </>
-      ) : (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-gray-50">
-          <svg className="w-24 h-24 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <p className="text-gray-600 font-medium mb-2">Nenhuma imagem do mapa carregada</p>
-          <p className="text-gray-500 text-sm">Adicione uma imagem ao mapa para começar a desenhar os lotes</p>
-        </div>
       )}
 
-      {!isConverting && imageLoaded && (
+      {/* Controles e informações: apenas quando NÃO está convertendo e tem URL válida */}
+      {!isConverting && effectiveImageUrl && effectiveImageUrl.trim() !== '' && (
         <>
           <div className="absolute top-4 right-4 flex flex-col gap-2">
             <button
