@@ -152,17 +152,36 @@ export default function InteractiveMap({
     }
   }, [imageUrl]);
 
-  // Handler para prevenir scroll da página ao usar zoom no mapa
-  const handleContainerWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  // Adicionar listener de wheel com passive: false para permitir zoom com scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Aplicar zoom baseado no deltaY
+      if (e.deltaY < 0) {
+        // Scroll para cima = Zoom In
+        handleZoomIn();
+      } else {
+        // Scroll para baixo = Zoom Out
+        handleZoomOut();
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleZoomIn, handleZoomOut]);
 
   return (
     <div 
       ref={containerRef} 
       className="relative"
-      onWheel={handleContainerWheel}
       style={{ touchAction: 'none' }}
     >
       {(isConverting || !imageLoaded) && effectiveImageUrl ? (
