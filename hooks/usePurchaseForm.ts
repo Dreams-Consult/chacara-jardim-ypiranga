@@ -21,7 +21,7 @@ interface FormData {
 
 export function usePurchaseForm(
   lots: Lot[], 
-  onSuccess: () => void, 
+  onSuccess: (reservationId?: string) => void, 
   lotPrices?: Record<string, number | null>, 
   lotFirstPayments?: Record<string, number | null>,
   lotInstallments?: Record<string, number | null>,

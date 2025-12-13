@@ -151,8 +151,8 @@ export default function MapViewPage() {
   };
 
   const handlePurchaseSuccess = async (reservationId?: string) => {
-    setShowPurchaseModal(false);
-    setSelectedLot(null);
+    setIsPurchaseModalOpen(false);
+    setSelectedLots([]);
     
     // Redirecionar para a página da reserva se o ID for retornado
     if (reservationId) {
