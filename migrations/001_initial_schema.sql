@@ -1,20 +1,11 @@
--- Schema completo do banco vale_dos_carajas
--- Data: 2025-11-22
--- Sistema de Gerenciamento de Loteamentos
---
--- ⚠️  IMPORTANTE: Este arquivo é apenas para REFERÊNCIA
--- ⚠️  NÃO execute este arquivo diretamente em produção!
--- ⚠️  Use o sistema de migrations: npm run migrate
--- ⚠️  Documentação: MIGRATIONS.md
+-- Migration: Initial database schema
+-- Created: 2024-01-01T00:00:00.000Z
+-- Description: Cria todas as tabelas iniciais do sistema
 
-DROP DATABASE IF EXISTS vale_dos_carajas;
-CREATE DATABASE vale_dos_carajas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE vale_dos_carajas;
-
--- ============================================
+-- ==========================================
 -- TABELA USERS
--- ============================================
-CREATE TABLE `users` (
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `users` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
@@ -32,10 +23,10 @@ CREATE TABLE `users` (
   KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
+-- ==========================================
 -- TABELA MAPS (Mapas/Loteamentos)
--- ============================================
-CREATE TABLE `maps` (
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `maps` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT,
@@ -51,10 +42,10 @@ CREATE TABLE `maps` (
   KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
+-- ==========================================
 -- TABELA BLOCKS (Quadras)
--- ============================================
-CREATE TABLE `blocks` (
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `blocks` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `mapId` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
@@ -69,16 +60,16 @@ CREATE TABLE `blocks` (
   CONSTRAINT `blocks_ibfk_1` FOREIGN KEY (`mapId`) REFERENCES `maps` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
+-- ==========================================
 -- TABELA LOTS (Lotes)
--- ============================================
-CREATE TABLE `lots` (
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `lots` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `block_id` INT NOT NULL,
   `map_id` INT NOT NULL,
   `lot_number` VARCHAR(50) NOT NULL,
   `size` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `price` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
   `status` ENUM('available', 'reserved', 'sold', 'unavailable') DEFAULT 'available',
   `description` TEXT,
   `features` JSON DEFAULT NULL,
@@ -96,10 +87,10 @@ CREATE TABLE `lots` (
   CONSTRAINT `lots_chk_2` CHECK (json_valid(`features`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
+-- ==========================================
 -- TABELA PURCHASE_REQUESTS (Solicitações de Compra)
--- ============================================
-CREATE TABLE `purchase_requests` (
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `purchase_requests` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `lot_id` BIGINT UNSIGNED NOT NULL,
   `map_id` INT NOT NULL,
@@ -111,7 +102,6 @@ CREATE TABLE `purchase_requests` (
   `payment_method` ENUM('cash', 'financing', 'installments') DEFAULT 'cash',
   `status` ENUM('pending', 'approved', 'rejected', 'completed', 'cancelled') DEFAULT 'pending',
   `notes` TEXT,
-  `contract` TEXT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -124,10 +114,10 @@ CREATE TABLE `purchase_requests` (
   CONSTRAINT `purchase_requests_ibfk_2` FOREIGN KEY (`map_id`) REFERENCES `maps` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
+-- ==========================================
 -- TABELA PURCHASE_REQUEST_LOTS (Relacionamento Múltiplos Lotes)
--- ============================================
-CREATE TABLE `purchase_request_lots` (
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `purchase_request_lots` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `purchase_request_id` BIGINT UNSIGNED NOT NULL,
   `lot_id` BIGINT UNSIGNED NOT NULL,
@@ -140,29 +130,15 @@ CREATE TABLE `purchase_request_lots` (
   CONSTRAINT `purchase_request_lots_ibfk_2` FOREIGN KEY (`lot_id`) REFERENCES `lots` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- DADOS INICIAIS
--- ============================================
-
--- Inserir usuário admin padrão (senha: admin123)
-INSERT INTO `users` (`username`, `password`, `email`, `first_name`, `last_name`, `role`, `first_login`) 
-VALUES ('admin', MD5('admin123'), 'admin@example.com', 'Administrador', 'Sistema', 'admin', 0);
-
--- ============================================
+-- ==========================================
 -- ÍNDICES ADICIONAIS PARA PERFORMANCE
--- ============================================
+-- ==========================================
+CREATE INDEX IF NOT EXISTS idx_map_status ON lots(map_id, status);
+CREATE INDEX IF NOT EXISTS idx_purchase_created ON purchase_requests(created_at, status);
 
--- Índice composto para busca rápida de lotes disponíveis por mapa
-CREATE INDEX idx_map_status ON lots(map_id, status);
-
--- Índice para busca de reservas por período
-CREATE INDEX idx_purchase_created ON purchase_requests(created_at, status);
-
--- ============================================
+-- ==========================================
 -- VIEWS ÚTEIS
--- ============================================
-
--- View para estatísticas de lotes por mapa
+-- ==========================================
 CREATE OR REPLACE VIEW vw_map_statistics AS
 SELECT 
     m.id AS map_id,
@@ -179,7 +155,6 @@ LEFT JOIN lots l ON m.id = l.map_id
 LEFT JOIN blocks b ON m.id = b.mapId
 GROUP BY m.id, m.name;
 
--- View para detalhes completos de lotes
 CREATE OR REPLACE VIEW vw_lot_details AS
 SELECT 
     l.id,
@@ -200,75 +175,3 @@ SELECT
 FROM lots l
 INNER JOIN blocks b ON l.block_id = b.id
 INNER JOIN maps m ON l.map_id = m.id;
-
--- ============================================
--- TRIGGERS PARA AUDITORIA
--- ============================================
-
--- Trigger para atualizar status do lote ao criar reserva
-DELIMITER $$
-CREATE TRIGGER after_purchase_request_insert
-AFTER INSERT ON purchase_requests
-FOR EACH ROW
-BEGIN
-    IF NEW.status = 'approved' THEN
-        UPDATE lots SET status = 'reserved' WHERE id = NEW.lot_id;
-    END IF;
-END$$
-
--- Trigger para atualizar status do lote ao mudar status da reserva
-CREATE TRIGGER after_purchase_request_update
-AFTER UPDATE ON purchase_requests
-FOR EACH ROW
-BEGIN
-    IF NEW.status = 'completed' AND OLD.status != 'completed' THEN
-        UPDATE lots SET status = 'sold' WHERE id = NEW.lot_id;
-    ELSEIF NEW.status = 'cancelled' AND OLD.status != 'cancelled' THEN
-        UPDATE lots SET status = 'available' WHERE id = NEW.lot_id;
-    ELSEIF NEW.status = 'approved' AND OLD.status = 'pending' THEN
-        UPDATE lots SET status = 'reserved' WHERE id = NEW.lot_id;
-    END IF;
-END$$
-
-DELIMITER ;
-
--- ============================================
--- VERIFICAÇÃO FINAL
--- ============================================
-
--- Mostrar todas as tabelas criadas
-SHOW TABLES;
-
--- Verificar AUTO_INCREMENT
-SELECT 
-    TABLE_NAME,
-    COLUMN_NAME,
-    COLUMN_TYPE,
-    EXTRA
-FROM INFORMATION_SCHEMA.COLUMNS
-WHERE TABLE_SCHEMA = 'vale_dos_carajas'
-  AND COLUMN_NAME = 'id'
-ORDER BY TABLE_NAME;
-
--- Verificar constraints UNIQUE
-SELECT 
-    TABLE_NAME,
-    CONSTRAINT_NAME,
-    GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION) AS columns
-FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE TABLE_SCHEMA = 'vale_dos_carajas'
-  AND CONSTRAINT_NAME LIKE 'unique%'
-GROUP BY TABLE_NAME, CONSTRAINT_NAME
-ORDER BY TABLE_NAME;
-
--- ============================================
--- RESULTADO ESPERADO
--- ============================================
--- ✅ Todas as tabelas com AUTO_INCREMENT nos IDs
--- ✅ LOTS: Unique por (map_id, block_id, lot_number)
--- ✅ BLOCKS: Unique por (mapId, name)
--- ✅ Foreign keys configuradas com ON DELETE CASCADE
--- ✅ Índices para performance otimizada
--- ✅ Views para relatórios
--- ✅ Triggers para automação de status
--- ✅ Usuário admin criado (username: admin, password: admin123)

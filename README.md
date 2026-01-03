@@ -30,14 +30,23 @@ O sistema utiliza variáveis de ambiente para configurações sensíveis como cr
 
 3. **Nunca commite o arquivo `.env.local`** - ele está no `.gitignore` para sua segurança.
 
-### Instalação
+### Instalação e Migrations
 
 ```bash
+# Instalar dependências
 npm install
+
+# Executar migrations do banco de dados
+npm run migrate
+
+# Iniciar servidor de desenvolvimento
 npm run dev
 ```
 
 O servidor estará disponível em http://localhost:3000
+
+> 📚 **Sobre Migrations**: O sistema utiliza migrations para gerenciar alterações no schema do banco de dados.
+> Para mais detalhes, consulte [MIGRATIONS.md](./MIGRATIONS.md)
 
 ## 📋 Funcionalidades Implementadas
 
@@ -138,6 +147,7 @@ Para instruções completas, veja **[QUICKSTART.md](./QUICKSTART.md)**
 ### Guias de Uso
 - **[QUICKSTART.md](./QUICKSTART.md)**: Guia rápido de início
 - **[INSTRUCTIONS.md](./INSTRUCTIONS.md)**: Manual completo do sistema
+- **[MIGRATIONS.md](./MIGRATIONS.md)**: Sistema de migrations do banco de dados
 
 ### Importação de Dados
 - **[EXCEL_IMPORT_GUIDE.md](./EXCEL_IMPORT_GUIDE.md)**: Guia completo de importação via Excel
