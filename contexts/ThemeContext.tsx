@@ -1,0 +1,55 @@
+'use client';
+
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+type Theme = 'light' | 'dark';
+
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => Theme;
+  setTheme: (theme: Theme) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Aplicar tema padrão ao montar
+    document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
+
+  // Função pública para atualizar tema (usada pelo AuthContext)
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setThemeState(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    return newTheme;
+  };
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}

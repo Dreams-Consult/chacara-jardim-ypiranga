@@ -17,7 +17,7 @@ const initializeSampleData = (): void => {
   // Criar mapa de exemplo
   const sampleMap: Map = {
     id: '1762192028364',
-    name: 'Mapa de Exemplo - Chácara Jardim Ipiranga',
+    name: 'Mapa de Exemplo - Imobiliária Vale dos Carajás',
     description: 'Mapa de exemplo para testes. Substitua pela imagem real.',
     imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjQwMCIgeT0iMzAwIiBmb250LXNpemU9IjI0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5Ij5NYXBhIGRlIEV4ZW1wbG88L3RleHQ+PC9zdmc+',
     imageType: 'image',
@@ -33,14 +33,6 @@ const initializeSampleData = (): void => {
       id: '1',
       mapId: '1762192028364',
       lotNumber: '1',
-      area: {
-        points: [
-          { x: 100, y: 100 },
-          { x: 200, y: 100 },
-          { x: 200, y: 200 },
-          { x: 100, y: 200 },
-        ],
-      },
       size: 250,
       price: 50000,
       status: LotStatus.AVAILABLE,
@@ -52,14 +44,6 @@ const initializeSampleData = (): void => {
       id: '2',
       mapId: '1762192028364',
       lotNumber: '2',
-      area: {
-        points: [
-          { x: 220, y: 100 },
-          { x: 320, y: 100 },
-          { x: 320, y: 200 },
-          { x: 220, y: 200 },
-        ],
-      },
       size: 250,
       price: 55000,
       status: LotStatus.AVAILABLE,
@@ -71,14 +55,6 @@ const initializeSampleData = (): void => {
       id: '3',
       mapId: '1762192028364',
       lotNumber: '3',
-      area: {
-        points: [
-          { x: 100, y: 220 },
-          { x: 200, y: 220 },
-          { x: 200, y: 320 },
-          { x: 100, y: 320 },
-        ],
-      },
       size: 250,
       price: 52000,
       status: LotStatus.RESERVED,
@@ -93,8 +69,6 @@ const initializeSampleData = (): void => {
   localStorage.setItem(STORAGE_KEYS.LOTS, serializeData(sampleLots));
   localStorage.setItem(STORAGE_KEYS.PURCHASES, serializeData([]));
   localStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
-
-  console.log('Dados de exemplo inicializados com sucesso!');
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

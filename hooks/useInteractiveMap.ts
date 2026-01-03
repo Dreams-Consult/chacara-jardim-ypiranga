@@ -39,6 +39,12 @@ export function useInteractiveMap({
   const [initialScale, setInitialScale] = useState(1);
   const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 });
   const [pinchCenter, setPinchCenter] = useState<{ x: number; y: number } | null>(null);
+  
+  // Estados para melhorar pan em mobile
+  const [lastTouchTime, setLastTouchTime] = useState(0);
+  const [touchVelocity, setTouchVelocity] = useState({ x: 0, y: 0 });
+  const [lastTouchPos, setLastTouchPos] = useState({ x: 0, y: 0 });
+  const animationFrameRef = useRef<number | null>(null);
 
   // Estados para desenho de retângulo
   const [isDrawingRect, setIsDrawingRect] = useState(false);
@@ -51,51 +57,20 @@ export function useInteractiveMap({
     isHovered: boolean,
     isSelected: boolean
   ) => {
-    if (lot.area.points.length < 3) return;
-
-    ctx.beginPath();
-    ctx.moveTo(lot.area.points[0].x, lot.area.points[0].y);
-    lot.area.points.forEach((point) => {
-      ctx.lineTo(point.x, point.y);
-    });
-    ctx.closePath();
-
-
-    let fillColor = 'rgba(34, 197, 94, 0.3)'; // Disponível (verde)
-    let strokeColor = '#22c55e';
-
-    if (lot.status === LotStatus.RESERVED) {
-      fillColor = 'rgba(251, 191, 36, 0.3)'; // Amarelo
-      strokeColor = '#fbbf24';
-    } else if (lot.status === LotStatus.SOLD) {
-      fillColor = 'rgba(239, 68, 68, 0.3)'; // Vermelho
-      strokeColor = '#ef4444';
-    } else if (lot.status === LotStatus.BLOCKED) {
-      fillColor = 'rgba(107, 114, 128, 0.3)'; // Cinza
-      strokeColor = '#6b7280';
-    }
-
-    if (isHovered) {
-      fillColor = fillColor.replace('0.3', '0.5');
-      strokeColor = '#000';
-    }
-
-    if (isSelected) {
-      fillColor = 'rgba(59, 130, 246, 0.5)';
-      strokeColor = '#3b82f6';
-    }
-
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = isHovered || isSelected ? 3 : 2;
-    ctx.stroke();
+    // Lotes agora não possuem área desenhada (lot.area.points removido)
+    // Função mantida para compatibilidade mas não desenha nada
+    return;
   };
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     const img = imageRef.current;
     if (!canvas || !img || !imageLoaded) return;
+
+    // Verificar se a imagem está realmente pronta para ser desenhada
+    if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -109,12 +84,18 @@ export function useInteractiveMap({
     ctx.translate(offset.x, offset.y);
     ctx.scale(scale, scale);
 
-    ctx.drawImage(img, 0, 0);
+    try {
+      ctx.drawImage(img, 0, 0);
+    } catch (error) {
+      console.error('[useInteractiveMap] Erro ao desenhar imagem:', error);
+      return;
+    }
 
-    lots.forEach((lot) => {
-      const isSelected = lot.id === selectedLotId || selectedLotIds.includes(lot.id);
-      drawLot(ctx, lot, lot.id === hoveredLot?.id, isSelected);
-    });
+    // Lotes não são mais desenhados no mapa (lot.area.points removido)
+    // lots.forEach((lot) => {
+    //   const isSelected = lot.id === selectedLotId || selectedLotIds.includes(lot.id);
+    //   drawLot(ctx, lot, lot.id === hoveredLot?.id, isSelected);
+    // });
 
     // Desenho de polígono (modo antigo)
     if (isEditMode && drawingMode === 'polygon' && drawingPoints.length > 0) {
@@ -183,23 +164,48 @@ export function useInteractiveMap({
     if (!canvas || !img) return;
 
     if (!imageUrl || imageUrl.trim() === '') {
+      // Resetar quando não há URL
+      setImageLoaded(false);
       return;
     }
 
+    // Não tentar carregar PDFs diretamente - aguardar conversão
+    if (imageUrl.startsWith('data:application/pdf')) {
+      return;
+    }
+
+    // Resetar estado e zoom ao mudar URL
+    setImageLoaded(false);
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+
     const handleLoad = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      setImageLoaded(true);
+      // Verificar se a imagem realmente carregou
+      if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        setImageLoaded(true);
+      }
     };
 
     const handleError = () => {
       console.error('Erro ao carregar imagem do mapa');
+      setImageLoaded(false);
     };
 
+    // Limpar src anterior para forçar reload
+    img.src = '';
+    
     img.addEventListener('load', handleLoad);
     img.addEventListener('error', handleError);
 
+    // Setar nova src
     img.src = imageUrl;
+
+    // Se a imagem já estiver em cache e carregada
+    if (img.complete && img.naturalWidth > 0) {
+      handleLoad();
+    }
 
     return () => {
       img.removeEventListener('load', handleLoad);
@@ -207,9 +213,10 @@ export function useInteractiveMap({
     };
   }, [imageUrl]);
 
+  // Redesenhar quando imageLoaded mudar ou redraw mudar
   useEffect(() => {
     redraw();
-  }, [redraw]);
+  }, [redraw, imageLoaded]);
 
   const isPointInPolygon = (
     x: number,
@@ -255,12 +262,9 @@ export function useInteractiveMap({
 
     if (isEditMode && drawingMode === 'polygon') {
       setDrawingPoints([...drawingPoints, { x, y }]);
-    } else if (!isEditMode) {
-      const clickedLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
-      if (clickedLot && onLotClick) {
-        onLotClick(clickedLot);
-      }
     }
+    // Removido: cliques em áreas do mapa quando não está em modo de edição
+    // As seleções devem ser feitas pelo componente LotSelector
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -288,13 +292,9 @@ export function useInteractiveMap({
 
     if (isEditMode) return;
 
-    const { x, y } = getCanvasCoordinates(e);
-    const hoveredLot = lots.find((lot) => isPointInPolygon(x, y, lot.area.points));
-    setHoveredLot(hoveredLot || null);
-
-    if (hoveredLot) {
-      canvas.style.cursor = 'pointer';
-    } else {
+    // Removido: hover nas áreas do mapa quando não está em modo de edição
+    // O hover agora é feito pelo componente LotSelector
+    if (canvas) {
       canvas.style.cursor = 'default';
     }
   };
@@ -344,12 +344,6 @@ export function useInteractiveMap({
           { x: maxX, y: maxY },
           { x: minX, y: maxY },
         ];
-
-        console.log('📐 Retângulo criado:', {
-          start: rectStart,
-          end: finalPosition,
-          points: rectanglePoints
-        });
 
         onAreaDrawn({ points: rectanglePoints });
       }
@@ -433,13 +427,29 @@ export function useInteractiveMap({
       setInitialScale(scale);
       setInitialOffset({ x: offset.x, y: offset.y });
       setPinchCenter({ x: centerX, y: centerY });
+      
+      // Cancela qualquer animação de momentum
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     } else if (e.touches.length === 1 && !isEditMode) {
       // Pan: salva posição inicial
+      const touch = e.touches[0];
       setIsPanning(true);
       setPanStart({
-        x: e.touches[0].clientX - offset.x,
-        y: e.touches[0].clientY - offset.y,
+        x: touch.clientX - offset.x,
+        y: touch.clientY - offset.y,
       });
+      setLastTouchPos({ x: touch.clientX, y: touch.clientY });
+      setLastTouchTime(Date.now());
+      setTouchVelocity({ x: 0, y: 0 });
+      
+      // Cancela qualquer animação de momentum
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     }
   };
 
@@ -484,20 +494,89 @@ export function useInteractiveMap({
       setScale(newScale);
       setOffset({ x: newOffsetX, y: newOffsetY });
     } else if (e.touches.length === 1 && isPanning && !isEditMode) {
-      // Pan
+      // Pan com suavização usando requestAnimationFrame
       e.preventDefault();
-      setOffset({
-        x: e.touches[0].clientX - panStart.x,
-        y: e.touches[0].clientY - panStart.y,
+      
+      const touch = e.touches[0];
+      const now = Date.now();
+      const timeDelta = now - lastTouchTime;
+      
+      if (timeDelta > 0) {
+        const deltaX = touch.clientX - lastTouchPos.x;
+        const deltaY = touch.clientY - lastTouchPos.y;
+        
+        // Calcula velocidade para momentum
+        const velocityX = deltaX / timeDelta;
+        const velocityY = deltaY / timeDelta;
+        
+        setTouchVelocity({ x: velocityX, y: velocityY });
+        setLastTouchPos({ x: touch.clientX, y: touch.clientY });
+        setLastTouchTime(now);
+      }
+      
+      // Usa requestAnimationFrame para suavizar o movimento
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
+      animationFrameRef.current = requestAnimationFrame(() => {
+        setOffset({
+          x: touch.clientX - panStart.x,
+          y: touch.clientY - panStart.y,
+        });
       });
     }
   };
 
   const handleTouchEnd = () => {
+    // Aplica efeito de momentum/inertia após soltar o toque
+    if (isPanning && (Math.abs(touchVelocity.x) > 0.1 || Math.abs(touchVelocity.y) > 0.1)) {
+      let currentVelocityX = touchVelocity.x;
+      let currentVelocityY = touchVelocity.y;
+      let currentOffset = { ...offset };
+      
+      const applyMomentum = () => {
+        // Reduz a velocidade gradualmente (friction)
+        currentVelocityX *= 0.92;
+        currentVelocityY *= 0.92;
+        
+        // Para quando a velocidade for muito baixa
+        if (Math.abs(currentVelocityX) < 0.1 && Math.abs(currentVelocityY) < 0.1) {
+          animationFrameRef.current = null;
+          return;
+        }
+        
+        // Aplica a velocidade ao offset
+        currentOffset.x += currentVelocityX * 16; // ~16ms por frame
+        currentOffset.y += currentVelocityY * 16;
+        
+        setOffset({ ...currentOffset });
+        
+        // Continua a animação
+        animationFrameRef.current = requestAnimationFrame(applyMomentum);
+      };
+      
+      // Inicia a animação de momentum
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      animationFrameRef.current = requestAnimationFrame(applyMomentum);
+    }
+    
     setInitialPinchDistance(null);
     setPinchCenter(null);
     setIsPanning(false);
+    setTouchVelocity({ x: 0, y: 0 });
   };
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -511,11 +590,63 @@ export function useInteractiveMap({
   }, [handleWheel]);
 
   const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev + 0.2, 5));
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Zoom centralizado no centro do canvas visível
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Converte para coordenadas do canvas
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const canvasCenterX = centerX * scaleX;
+    const canvasCenterY = centerY * scaleY;
+
+    // Ponto na imagem original sob o centro
+    const imagePointX = (canvasCenterX - offset.x) / scale;
+    const imagePointY = (canvasCenterY - offset.y) / scale;
+
+    // Nova escala
+    const newScale = Math.min(scale + 0.2, 5);
+
+    // Novo offset para manter o ponto central fixo
+    const newOffsetX = canvasCenterX - imagePointX * newScale;
+    const newOffsetY = canvasCenterY - imagePointY * newScale;
+
+    setScale(newScale);
+    setOffset({ x: newOffsetX, y: newOffsetY });
   };
 
   const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev - 0.2, 0.5));
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Zoom centralizado no centro do canvas visível
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Converte para coordenadas do canvas
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const canvasCenterX = centerX * scaleX;
+    const canvasCenterY = centerY * scaleY;
+
+    // Ponto na imagem original sob o centro
+    const imagePointX = (canvasCenterX - offset.x) / scale;
+    const imagePointY = (canvasCenterY - offset.y) / scale;
+
+    // Nova escala
+    const newScale = Math.max(scale - 0.2, 0.5);
+
+    // Novo offset para manter o ponto central fixo
+    const newOffsetX = canvasCenterX - imagePointX * newScale;
+    const newOffsetY = canvasCenterY - imagePointY * newScale;
+
+    setScale(newScale);
+    setOffset({ x: newOffsetX, y: newOffsetY });
   };
 
   const handleResetZoom = () => {

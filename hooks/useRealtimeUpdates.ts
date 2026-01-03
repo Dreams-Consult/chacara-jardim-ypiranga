@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 /**
  * Hook para receber atualizações em tempo real via polling
  * Verifica mudanças no servidor a cada X segundos
  */
-export function useRealtimeUpdates(onUpdate: () => void, intervalMs: number = 5000) {
+export function useRealtimeUpdates(onUpdate: () => void, intervalMs: number = 10000) {
   useEffect(() => {
     const interval = setInterval(() => {
       onUpdate();
@@ -22,7 +20,7 @@ export function useRealtimeUpdates(onUpdate: () => void, intervalMs: number = 50
  */
 export function useSSE(endpoint: string, onMessage: (data: unknown) => void) {
   useEffect(() => {
-    const eventSource = new EventSource(`${API_URL}${endpoint}`);
+    const eventSource = new EventSource(endpoint);
 
     eventSource.onmessage = (event) => {
       try {

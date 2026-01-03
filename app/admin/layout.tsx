@@ -5,52 +5,63 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout, canAccessUsers } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Estado para controlar visibilidade do sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Inicializar showLotManagement lendo localStorage (só roda uma vez)
-  const [showLotManagement, setShowLotManagement] = useState(() => {
-    // Durante SSR, retornar false
-    // Durante CSR, ler do localStorage
-    return false; // Sempre false no SSR e primeira renderização no client
-  });
+  // Inicializar showLotManagement como false para evitar hydration mismatch
+  const [showLotManagement, setShowLotManagement] = useState(false);
 
-  // Após montar, verificar localStorage
+  // Garantir que o componente está montado antes de renderizar
   useEffect(() => {
-    const visited = localStorage.getItem('hasVisitedMapManagement') === 'true';
-    if (visited) {
-      // Agendar atualização para próximo tick para evitar setState síncrono
-      Promise.resolve().then(() => setShowLotManagement(true));
-    }
+    setMounted(true);
+    // Dar tempo para o AuthContext restaurar a sessão do localStorage
+    const timer = setTimeout(() => {
+      setIsCheckingAuth(false);
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Após montar, verificar localStorage (apenas no cliente)
+  useEffect(() => {
+    if (mounted) {
+      const visited = localStorage.getItem('hasVisitedMapManagement') === 'true';
+      if (visited) {
+        setShowLotManagement(true);
+      }
+    }
+  }, [mounted]);
 
   // Fechar sidebar ao mudar de página em mobile
   useEffect(() => {
-    Promise.resolve().then(() => setSidebarOpen(false));
+    setSidebarOpen(false);
   }, [pathname]);
 
   // Validar sessão e redirecionar
   useEffect(() => {
+    // Não verificar até que a checagem de autenticação termine
+    if (isCheckingAuth) return;
+    
     if (!isAuthenticated && pathname !== '/login') {
-      console.log('[AdminLayout] ⚠️ Usuário não autenticado - redirecionando para login');
       router.push('/login');
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [isAuthenticated, pathname, router, isCheckingAuth]);
 
-  // Marcar como visitado quando entrar em map-management
+  // Marcar como visitado quando entrar em map-details
   useEffect(() => {
-    if (pathname === '/admin/map-management' && !showLotManagement) {
+    if (mounted && pathname === '/admin/map-details' && !showLotManagement) {
       localStorage.setItem('hasVisitedMapManagement', 'true');
-      // Agendar atualização para próximo tick
-      Promise.resolve().then(() => setShowLotManagement(true));
+      setShowLotManagement(true);
     }
-  }, [pathname, showLotManagement]);
+  }, [pathname, showLotManagement, mounted]);
 
   const handleLogout = () => {
     logout();
@@ -61,9 +72,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!user) return null;
 
     const styles = {
-      [UserRole.DEV]: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      [UserRole.ADMIN]: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-      [UserRole.VENDEDOR]: 'bg-green-500/20 text-green-300 border-green-500/30',
+      [UserRole.DEV]: 'bg-purple-500 text-white border-purple-600 shadow-md',
+      [UserRole.ADMIN]: 'bg-blue-500 text-white border-blue-600 shadow-md',
+      [UserRole.VENDEDOR]: 'bg-emerald-500 text-white border-emerald-600 shadow-md',
     };
 
     const labels = {
@@ -79,22 +90,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   };
 
+  // Não renderizar até montar no cliente (evita hydration mismatch)
+  // if (!mounted || isCheckingAuth) {
+  //   return (
+  //     <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+  //         <p className="text-[var(--foreground)] opacity-70">Carregando...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   if (!isAuthenticated || !user) {
     return null;
   }
 
   const isActive = (path: string) => {
-    if (path === '/admin/dashboard') {
-      return pathname === path;
-    }
-    return pathname?.startsWith(path);
+    if (!pathname) return false;
+    
+    // Comparação exata para rotas específicas
+    if (pathname === path) return true;
+    
+    // Para rotas com sub-páginas, verifica se começa com path seguido de /
+    // Isso garante que /dashboard não ative /dashboard-admin por exemplo
+    if (pathname.startsWith(path + '/')) return true;
+    
+    return false;
   };
 
   // Verificar se há ferramentas disponíveis para o usuário
   const hasToolsAvailable = user.role !== UserRole.VENDEDOR || canAccessUsers;
 
   return (
-    <div suppressHydrationWarning className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-[var(--background)]">
+      <ThemeToggle />
       <div className="flex">
         {/* Overlay para mobile */}
         {sidebarOpen && (
@@ -106,13 +136,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Sidebar */}
         <aside className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          w-64 bg-[var(--card-bg)] min-h-screen border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col
+          fixed inset-y-0 left-0 z-50
+          w-64 bg-[var(--card-bg)] border-r border-[var(--border)] shadow-[var(--shadow-md)] flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           {/* Header do Sidebar */}
-          <div className="p-6 border-b border-[var(--border)]">
+          <div className="flex-shrink-0 p-6 border-b border-[var(--border)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-xl flex items-center justify-center">
@@ -121,8 +151,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-white">Admin</h1>
-                  <p className="text-xs text-white/70">Vale dos Carajás</p>
+                  <h1 className="text-lg font-bold text-[var(--foreground)]">Admin</h1>
+                  <p className="text-xs text-[var(--foreground)] opacity-70">Vale dos Carajás</p>
                 </div>
               </div>
               {/* Botão fechar (mobile) */}
@@ -138,13 +168,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          <nav className="p-4 space-y-2">
+          {/* Área de Navegação com Scroll */}
+          <div className="flex-1 overflow-y-auto">
+            <nav className="p-4 space-y-2">
             {/* Dashboard - apenas para ADMIN e DEV */}
             {user.role !== UserRole.VENDEDOR && (
               <Link
-                href="/admin/dashboard"
+                href="/dashboard"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all cursor-pointer ${
-                  isActive('/admin/dashboard')
+                  isActive('/dashboard')
                     ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                     : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                 }`}
@@ -158,9 +190,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Mapas e Lotes - para todos */}
             <Link
-              href="/admin/maps"
+              href="/maps"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all cursor-pointer ${
-                isActive('/admin/maps')
+                isActive('/maps')
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                   : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
               }`}
@@ -168,14 +200,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
-              <span>Mapas e Lotes</span>
+              <span>Reservar Lotes</span>
             </Link>
 
             {/* Reservas - para todos */}
             <Link
-              href="/admin/reservations"
+              href="/reservations"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all cursor-pointer ${
-                isActive('/admin/reservations')
+                isActive('/reservations')
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
                   : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
               }`}
@@ -183,7 +215,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
-              <span>{user.role === UserRole.VENDEDOR ? 'Minhas Reservas' : 'Reservas'}</span>
+              <span>{user.role === UserRole.VENDEDOR ? 'Minhas Vendas e Reservas' : 'Vendas e Reservas'}</span>
             </Link>
           </nav>
 
@@ -202,25 +234,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {user.role !== UserRole.VENDEDOR && (
                   <>
                     <Link
-                      href="/admin/map-management"
-                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                        pathname === '/admin/map-management'
-                          ? 'bg-[var(--surface)] text-[var(--primary)]'
-                          : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                      href="/admin/map-details"
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                        isActive('/admin/map-details')
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                       </svg>
-                      <span>Gerenciar Mapas</span>
+                      <span>Gerenciar Loteamentos</span>
+                    </Link>
+                    <Link
+                      href="/admin/import-map"
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                        isActive('/admin/import-map')
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span>Importar Loteamento</span>
                     </Link>
                     {showLotManagement && (
                       <Link
                         href="/admin/lot-management"
-                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                          pathname?.startsWith('/admin/lot-management')
-                            ? 'bg-[var(--surface)] text-[var(--primary)]'
-                            : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                          isActive('/admin/lot-management')
+                            ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                            : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                         }`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,10 +279,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {canAccessUsers && (
                   <Link
                     href="/admin/users"
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                      pathname === '/admin/users'
-                        ? 'bg-[var(--surface)] text-[var(--primary)]'
-                        : 'text-[var(--foreground)]/70 hover:bg-[var(--surface)]/50 hover:text-[var(--foreground)]'
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                      isActive('/admin/users')
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white shadow-[var(--shadow-md)]'
+                        : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-sm)]'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,16 +294,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
           )}
+          </div>
 
-          {/* User Info & Logout */}
-          <div className="mt-auto border-t border-[var(--border)] p-4">
-            <div className="bg-[var(--surface)]/50 rounded-lg p-3">
+          {/* User Info & Logout - Sempre Visível */}
+          <div className="flex-shrink-0 border-t border-[var(--border)] p-4">
+            <div className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)] shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                   {user?.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)] truncate">{user?.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {getRoleBadge()}
                   </div>
@@ -266,7 +312,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-sm font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -278,29 +324,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 w-full lg:w-auto">
+        <main className="flex-1 lg:ml-64">
           {/* Header com botão de menu (mobile) */}
-          <div className="lg:hidden sticky top-0 z-30 bg-[var(--card-bg)] border-b border-[var(--border)] px-4 py-3 flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 text-[var(--foreground)]/70 hover:text-[var(--foreground)] hover:bg-[var(--surface)]/50 rounded-lg transition-colors"
-              aria-label="Abrir menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          <div className="lg:hidden sticky top-0 z-30 bg-[var(--card-bg)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 text-[var(--foreground)]/70 hover:text-[var(--foreground)] hover:bg-[var(--surface)]/50 rounded-lg transition-colors"
+                aria-label="Abrir menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-[var(--foreground)]">Admin</h1>
-                <p className="text-xs text-[var(--foreground)]/60">Vale dos Carajás</p>
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold text-[var(--foreground)]">Admin</h1>
+                  <p className="text-xs text-[var(--foreground)]/60">Vale dos Carajás</p>
+                </div>
               </div>
             </div>
+            
+            {/* Theme Toggle Mobile */}
+            <ThemeToggle variant="inline" />
           </div>
 
           {children}

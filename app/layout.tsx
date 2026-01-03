@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeSync } from "@/components/ThemeSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vale dos Carajás - Chácara Jardim Ipiranga",
-  description: "Loteamento de chácaras em ambiente natural preservado",
+  title: "Imobiliária Vale dos Carajás",
+  description: "Sistema de gerenciamento de loteamentos",
 };
 
 export const viewport: Viewport = {
@@ -36,9 +38,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ThemeSync />
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

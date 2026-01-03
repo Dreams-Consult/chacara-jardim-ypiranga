@@ -1,6 +1,5 @@
 {
-  "homepage": "https://Dreams-Consult.github.io/chacara-jardim-ypiranga",
-  "name": "chacara-jardim-ypiranga",
+  "name": "vale-dos-carajas",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,15 +7,22 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "next build && gh-pages -d out -t"
+    "deploy": "next build && gh-pages -d out -t",
+    "hostgator:deploy": "npm run build && pm2 restart vale-dos-carajas || pm2 start npm --name vale-dos-carajas -- start",
+    "generate:excel": "node scripts/generate-excel-template.js",
+    "migrate": "node scripts/migrate.js run",
+    "migrate:status": "node scripts/migrate.js status",
+    "migrate:create": "node scripts/migrate.js create"
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "mysql2": "^3.15.3",
     "next": "16.0.1",
     "pdfjs-dist": "^3.11.174",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-pdf": "^10.2.0"
+    "react-pdf": "^10.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -27,6 +33,10 @@
     "eslint-config-next": "16.0.1",
     "gh-pages": "^6.3.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "canvas": "^2.11.2"
   }
 }

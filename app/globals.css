@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-:root {
-  /* Paleta Natural Escura - Inspirada em Vale dos Carajás */
+/* Tema Escuro (padrão) - Paleta Natural Inspirada em Vale dos Carajás */
+:root[data-theme="dark"] {
   --background: #1a4a42;
   --foreground: #ffffff;
 
@@ -39,16 +39,72 @@
   --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a1f1e;
-    --foreground: #f5f5f0;
-    --card-bg: #2a2f2e;
-    --surface: #232827;
-    --surface-hover: #2d3332;
-    --border: rgba(45, 122, 79, 0.35);
-    --border-strong: rgba(45, 122, 79, 0.6);
-  }
+/* Tema Claro - Alto Contraste */
+:root[data-theme="light"] {
+  --background: #f8f9fa;
+  --foreground: #1a1a1a;
+
+  /* Cores principais adaptadas para light */
+  --primary: #1e5a37;
+  --primary-light: #2d7a4f;
+  --primary-dark: #0f3d24;
+
+  --secondary: #7d5a3f;
+  --secondary-light: #9d7456;
+  --secondary-dark: #5e4330;
+
+  --accent: #d4a574;
+  --accent-light: #c49563;
+
+  /* Cores de status */
+  --success: #1e7e34;
+  --success-dark: #155d27;
+  --warning: #d66a1f;
+  --warning-dark: #b35419;
+  --danger: #b02836;
+  --danger-dark: #8c1f2a;
+
+  /* Backgrounds light */
+  --card-bg: #ffffff;
+  --surface: #f1f3f5;
+  --surface-hover: #e9ecef;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  /* Sombras suaves */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Fallback para :root sem data-theme (light por padrão) */
+:root {
+  --background: #f8f9fa;
+  --foreground: #1a1a1a;
+  --primary: #1e5a37;
+  --primary-light: #2d7a4f;
+  --primary-dark: #0f3d24;
+  --secondary: #7d5a3f;
+  --secondary-light: #9d7456;
+  --secondary-dark: #5e4330;
+  --accent: #d4a574;
+  --accent-light: #c49563;
+  --success: #1e7e34;
+  --success-dark: #155d27;
+  --warning: #d66a1f;
+  --warning-dark: #b35419;
+  --danger: #b02836;
+  --danger-dark: #8c1f2a;
+  --card-bg: #ffffff;
+  --surface: #f1f3f5;
+  --surface-hover: #e9ecef;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 body {
@@ -71,10 +127,10 @@ canvas {
   touch-action: none;
 }
 
-/* Transições suaves */
+/* Transições suaves
 * {
   transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
-}
+} */
 
 /* Botões com estilo vibrante */
 button {
@@ -94,13 +150,12 @@ button:active:not(:disabled) {
 input, textarea, select {
   font-size: 16px;
   font-weight: 600;
-  color: #1c1c1c;
 }
 
-input::placeholder, textarea::placeholder {
+/* input::placeholder, textarea::placeholder {
   color: rgba(28, 28, 28, 0.5);
   font-weight: 500;
-}
+} */
 
 /* Scrollbar customizada vibrante */
 ::-webkit-scrollbar {

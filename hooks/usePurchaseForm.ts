@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { Lot } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 interface FormData {
   customerName: string;
@@ -16,73 +16,32 @@ interface FormData {
   sellerCPF: string;
   paymentMethod: string;
   otherPayment: string;
+  contract: string;
 }
 
-export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
-  // Carregar dados do vendedor logado do localStorage
-  const getSellerData = () => {
-    if (typeof window === 'undefined') return null;
-
-    const currentUser = localStorage.getItem('currentUser');
-    const userData = localStorage.getItem('userData');
-
-    if (currentUser) {
-      try {
-        return JSON.parse(currentUser);
-      } catch (error) {
-        console.error('[usePurchaseForm] Erro ao parsear currentUser:', error);
-      }
-    }
-
-    if (userData) {
-      try {
-        return JSON.parse(userData);
-      } catch (error) {
-        console.error('[usePurchaseForm] Erro ao parsear userData:', error);
-      }
-    }
-
-    return null;
-  };
-
-  const sellerData = getSellerData();
-
+export function usePurchaseForm(
+  lots: Lot[], 
+  onSuccess: (reservationId?: string) => void, 
+  lotPrices?: Record<string, number | null>, 
+  lotFirstPayments?: Record<string, number | null>,
+  lotInstallments?: Record<string, number | null>,
+  userId?: string
+) {
   const [formData, setFormData] = useState<FormData>({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
     customerCPF: '',
     message: '',
-    sellerName: sellerData?.name || '',
-    sellerEmail: sellerData?.email || '',
-    sellerPhone: sellerData?.phone || '',
-    sellerCPF: sellerData?.cpf || '',
+    sellerName: '',
+    sellerEmail: '',
+    sellerPhone: '',
+    sellerCPF: '',
     paymentMethod: '',
     otherPayment: '',
+    contract: '',
   });
 
-  // Atualizar dados do vendedor quando o componente montar
-  useEffect(() => {
-    const seller = getSellerData();
-    if (seller) {
-      console.log('[usePurchaseForm] ✅ Dados do vendedor carregados automaticamente:', {
-        name: seller.name,
-        email: seller.email,
-        cpf: seller.cpf,
-      });
-
-      // React 19: usar Promise.resolve().then() para setState assíncrono
-      Promise.resolve().then(() => {
-        setFormData(prev => ({
-          ...prev,
-          sellerName: seller.name || prev.sellerName,
-          sellerEmail: seller.email || prev.sellerEmail,
-          sellerPhone: seller.phone || prev.sellerPhone,
-          sellerCPF: seller.cpf || prev.sellerCPF,
-        }));
-      });
-    }
-  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,23 +79,36 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
     setIsSubmitting(true);
     setError(null);
 
-    // Validar CPF do cliente (obrigatório)
-    if (!formData.customerCPF || !validateCPF(formData.customerCPF)) {
-      setError('CPF do cliente é obrigatório e deve ser válido.');
+    // Validar nome do cliente (obrigatório)
+    if (!formData.customerName || formData.customerName.trim() === '') {
+      setError('Nome do cliente é obrigatório.');
       setIsSubmitting(false);
       return;
     }
 
-    // Validar CPF do vendedor (obrigatório)
-    if (!formData.sellerCPF || !validateCPF(formData.sellerCPF)) {
-      setError('CPF do vendedor é obrigatório e deve ser válido.');
+    // Validar nome do vendedor (obrigatório)
+    if (!formData.sellerName || formData.sellerName.trim() === '') {
+      setError('Nome do vendedor é obrigatório.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar CPF do cliente se fornecido
+    if (formData.customerCPF && !validateCPF(formData.customerCPF)) {
+      setError('CPF do cliente inválido.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar CPF do vendedor se fornecido
+    if (formData.sellerCPF && !validateCPF(formData.sellerCPF)) {
+      setError('CPF do vendedor inválido.');
       setIsSubmitting(false);
       return;
     }
 
     try {
       // 🔍 VERIFICAR SE TODOS OS LOTES ESTÃO DISPONÍVEIS ANTES DE RESERVAR
-      console.log(`[usePurchaseForm] 🔍 Verificando disponibilidade de ${lots.length} lote(s)...`);
 
       const unavailableLots: string[] = [];
       for (const lot of lots) {
@@ -149,63 +121,52 @@ export function usePurchaseForm(lots: Lot[], onSuccess: () => void) {
       if (unavailableLots.length > 0) {
         setError(`Os seguintes lotes não estão mais disponíveis: ${unavailableLots.join(', ')}. Por favor, remova-os da seleção.`);
         setIsSubmitting(false);
-        console.log(`[usePurchaseForm] ❌ Lotes indisponíveis:`, unavailableLots);
         return;
       }
 
-      console.log(`[usePurchaseForm] ✅ Todos os ${lots.length} lote(s) estão disponíveis, prosseguindo com a reserva...`);
+      // Preparar detalhes dos lotes com map_id, block_id, preço, firstPayment e installments
+      const lotDetails = lots.map(lot => ({
+        lotId: lot.id,
+        mapId: lot.mapId,
+        blockId: lot.blockId || null,
+        price: lotPrices?.[lot.id] || lot.price,
+        firstPayment: lotFirstPayments?.[lot.id] || null,
+        installments: lotInstallments?.[lot.id] || null,
+      }));
 
-      // Criar UMA ÚNICA reserva com MÚLTIPLOS lotes
-      const sellerInfo = getSellerData();
-
-      const requestData = {
-        lots: lots.map(lot => ({
-          id: lot.id,
-          mapId: lot.mapId,
-          lotNumber: lot.lotNumber,
-          area: lot.area,
-          status: 'reserved',
-          price: lot.price,
-          size: lot.size,
-          description: lot.description,
-          features: lot.features,
-          createdAt: lot.createdAt,
-          updatedAt: lot.updatedAt,
-        })),
-        customer: {
-          name: formData.customerName,
-          email: formData.customerEmail,
-          phone: formData.customerPhone,
-          cpf: formData.customerCPF,
-          message: formData.message || null,
-        },
-        seller: {
-          id: sellerInfo.id, // ID do vendedor do localStorage
-          name: formData.sellerName,
-          email: formData.sellerEmail,
-          phone: formData.sellerPhone,
-          cpf: formData.sellerCPF,
-        },
-        purchaseRequest: {
-          paymentMethod: formData.otherPayment || formData.paymentMethod,
-          lotIds: lots.map(lot => lot.id), // Array de IDs dos lotes
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        }
+      // Criar objeto de requisição apenas com campos obrigatórios e preenchidos
+      const requestData: any = {
+        lotIds: lots.map(lot => lot.id),
+        lotDetails,
+        customerName: formData.customerName,
+        sellerName: formData.sellerName,
       };
 
-      console.log(`[usePurchaseForm] 📤 Enviando reserva única com ${lots.length} lote(s) e ID do vendedor:`, sellerInfo?.id);
+      // Adicionar campos opcionais apenas se preenchidos
+      if (formData.customerEmail) requestData.customerEmail = formData.customerEmail;
+      if (formData.customerPhone) requestData.customerPhone = formData.customerPhone;
+      if (formData.customerCPF) requestData.customerCPF = formData.customerCPF;
+      if (formData.sellerEmail) requestData.sellerEmail = formData.sellerEmail;
+      if (formData.sellerPhone) requestData.sellerPhone = formData.sellerPhone;
+      if (formData.sellerCPF) requestData.sellerCPF = formData.sellerCPF;
+      if (formData.message) requestData.message = formData.message;
+      if (formData.contract) requestData.contract = formData.contract;
+      if (userId) requestData.userId = userId;
+      
+      if (formData.paymentMethod || formData.otherPayment) {
+        requestData.paymentMethod = formData.otherPayment || formData.paymentMethod;
+      }
 
-      await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
+      const response = await axios.post(`${API_URL}/mapas/lotes/reservar`, requestData, {
         headers: {
           'Content-Type': 'application/json',
         },
         timeout: 10000,
       });
 
-      console.log(`[usePurchaseForm] ✅ Reserva enviada com sucesso para ${lots.length} lote(s)`);
-
-      onSuccess();
+      // Retornar o ID da reserva criada
+      const reservationId = response.data?.purchaseRequestId || response.data?.id || response.data?.reservationId;
+      onSuccess(reservationId);
     } catch (err) {
       console.error('[usePurchaseForm] ❌ Erro ao enviar reserva:', err);
 

@@ -6,13 +6,15 @@ import axios from 'axios';
 import { Map, Lot, LotStatus, UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = '/api';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [maps, setMaps] = useState<Map[]>([]);
   const [allLots, setAllLots] = useState<Lot[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [totalFirstPayments, setTotalFirstPayments] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboardData = async () => {
@@ -72,21 +74,9 @@ export default function DashboardPage() {
             }
 
             return data.lots.map((lot: LotData) => {
-              let parsedArea = lot.area;
-              if (lot.area && typeof lot.area.points === 'string') {
-                try {
-                  parsedArea = {
-                    ...lot.area,
-                    points: JSON.parse(lot.area.points as unknown as string),
-                  };
-                } catch (e) {
-                  console.error('Erro ao parsear area.points:', e);
-                }
-              }
-
+              // lot.area não existe mais no retorno da API
               return {
                 ...lot,
-                area: parsedArea,
                 mapId: map.id,
                 createdAt: new Date(lot.createdAt),
                 updatedAt: new Date(lot.updatedAt),
@@ -103,6 +93,32 @@ export default function DashboardPage() {
       const lotsArrays = await Promise.all(allLotsPromises);
       const flatLots = lotsArrays.flat();
       setAllLots(flatLots);
+
+      // Carregar total de pagamentos de entrada das reservas
+      try {
+        const reservationsResponse = await axios.get(`${API_URL}/reservas`, { timeout: 10000 });
+        const reservationsData = Array.isArray(reservationsResponse.data) ? reservationsResponse.data : [];
+        setReservations(reservationsData);
+        
+        // Somar first_payment de cada lote das reservas concluídas (completed)
+        const totalPayments = reservationsData.reduce((sum: number, reservation: any) => {
+          if (reservation.status === 'completed' && reservation.lots && Array.isArray(reservation.lots)) {
+            // Somar first_payment de todos os lotes desta reserva
+            const reservationTotal = reservation.lots.reduce((lotSum: number, lot: any) => {
+              const lotFirstPayment = parseFloat(lot.first_payment) || 0;
+              return lotSum + lotFirstPayment;
+            }, 0);
+            return sum + reservationTotal;
+          }
+          return sum;
+        }, 0);
+        
+        setTotalFirstPayments(totalPayments);
+      } catch (error) {
+        console.error('Erro ao carregar total de pagamentos de entrada:', error);
+        setTotalFirstPayments(0);
+        setReservations([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -113,8 +129,7 @@ export default function DashboardPage() {
   // Redirecionar vendedores para a página de mapas
   useEffect(() => {
     if (user?.role === UserRole.VENDEDOR) {
-      console.log('⚠️ Vendedor não tem acesso ao dashboard - redirecionando');
-      router.push('/admin/maps');
+      router.push('/maps');
       return;
     }
   }, [user, router]);
@@ -137,13 +152,36 @@ export default function DashboardPage() {
   const soldLots = allLots.filter((lot) => lot.status === LotStatus.SOLD).length;
   const blockedSlots = allLots.filter((lot) => lot.status === LotStatus.BLOCKED).length;
 
-  const totalValue = allLots.reduce((sum, lot) => sum + lot.price, 0);
   const availableValue = allLots
     .filter((lot) => lot.status === LotStatus.AVAILABLE)
     .reduce((sum, lot) => sum + lot.price, 0);
-  const soldValue = allLots
-    .filter((lot) => lot.status === LotStatus.SOLD)
-    .reduce((sum, lot) => sum + lot.price, 0);
+  
+  // Calcular valor reservado usando agreed_price das reservas
+  const reservedValue = reservations
+    .filter((res: any) => res.status === 'pending')
+    .reduce((sum: number, res: any) => {
+      if (res.lots && Array.isArray(res.lots)) {
+        return sum + res.lots.reduce((lotSum: number, lot: any) => {
+          return lotSum + (parseFloat(lot.agreed_price) || parseFloat(lot.price) || 0);
+        }, 0);
+      }
+      return sum;
+    }, 0);
+  
+  // Calcular valor vendido usando agreed_price das reservas
+  const soldValue = reservations
+    .filter((res: any) => res.status === 'completed')
+    .reduce((sum: number, res: any) => {
+      if (res.lots && Array.isArray(res.lots)) {
+        return sum + res.lots.reduce((lotSum: number, lot: any) => {
+          return lotSum + (parseFloat(lot.agreed_price) || parseFloat(lot.price) || 0);
+        }, 0);
+      }
+      return sum;
+    }, 0);
+
+  // Valor total = disponíveis (preço base) + reservados (agreed_price) + vendidos (agreed_price)
+  const totalValue = availableValue + reservedValue + soldValue;
 
   if (isLoading) {
     return (
@@ -162,13 +200,12 @@ export default function DashboardPage() {
     );
   }
 
-  console.log(maps)
 
   return (
     <div className="p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-white/70">Visão geral de todos os mapas e lotes</p>
+        <p className="text-white/70">Visão geral dos loteamentos</p>
       </div>
 
       {/* Estatísticas Principais */}
@@ -181,7 +218,7 @@ export default function DashboardPage() {
               </svg>
             </div>
           </div>
-          <p className="text-white/90 text-sm font-medium mb-1">Total de Mapas</p>
+          <p className="text-white/90 text-sm font-medium mb-1">Total de Loteamentos</p>
           <p className="text-white text-4xl font-bold">{maps.length}</p>
         </div>
 
@@ -251,7 +288,7 @@ export default function DashboardPage() {
       {/* Estatísticas de Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-[var(--card-bg)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -336,17 +373,27 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[var(--primary)]/20 to-[var(--primary-light)]/20 border border-[var(--primary)]/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Total dos Lotes</p>
-              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR')}</p>
+              <p className="text-white text-3xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Disponível para Venda</p>
-              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR')}</p>
+              <p className="text-white text-2xl font-bold">R$ {availableValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+              <p className="text-white/70 text-sm font-medium mb-1">Valor dos Lotes Reservados</p>
+              <p className="text-white text-2xl font-bold">R$ {reservedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
               <p className="text-white/70 text-sm font-medium mb-1">Valor Já Vendido</p>
-              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR')}</p>
+              <p className="text-white text-2xl font-bold">R$ {soldValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+              <p className="text-white/70 text-sm font-medium mb-1">Total de Entradas Recebidas</p>
+              <p className="text-white text-2xl font-bold">R$ {totalFirstPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </div>

@@ -17,15 +17,25 @@ export enum LotStatus {
 export interface Lot {
   id: string;
   mapId: string;
+  blockId?: string; // ID da quadra/bloco (opcional)
+  blockName?: string; // Nome da quadra associada (opcional)
   mapName?: string; // Nome do mapa associado (opcional)
   lotNumber: string;
-  area: LotArea;
   status: LotStatus;
   price: number;
   pricePerM2?: number; // Preço por metro quadrado
   size: number; // Área em m²
   description?: string;
   features?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Block {
+  id: string;
+  mapId: string;
+  name: string;
+  description?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +52,16 @@ export interface Map {
   updatedAt: Date;
 }
 
+export interface PurchaseRequestLot {
+  id: string;
+  lotId: string;
+  purchaseRequestId: string;
+  agreedPrice?: number;
+  firstPayment?: number; // Valor de entrada específico para este lote
+  installments?: number; // Número de parcelas específico para este lote
+  createdAt: Date;
+}
+
 export interface PurchaseRequest {
   id: string;
   lotId: string;
@@ -50,8 +70,10 @@ export interface PurchaseRequest {
   customerPhone: string;
   customerCPF?: string;
   message?: string;
+  contract?: string;
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
   createdAt: Date;
+  lots?: PurchaseRequestLot[]; // Lotes associados com suas informações específicas
 }
 
 export enum UserRole {
@@ -75,7 +97,9 @@ export interface User {
   creci?: string;
   role: UserRole;
   status: UserStatus;
+  active?: boolean;
   password?: string;
+  theme_preference?: 'light' | 'dark';
   createdAt: Date;
   updatedAt: Date;
 }

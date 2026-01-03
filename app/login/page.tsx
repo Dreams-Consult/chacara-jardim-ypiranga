@@ -10,6 +10,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -87,10 +88,8 @@ function LoginForm() {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || "{}");
 
         if (!currentUser.first_login) {
-          console.log('[Login] ✅ Login bem-sucedido, redirecionando...');
-          router.push('/admin/dashboard');
+          router.push('/dashboard');
         }else {
-          console.log('[Login] Primeiro login detectado, redirecionando para atualização de senha...');
           router.push(`/password?userId=${currentUser.id}`);
         }
       } else {
@@ -116,7 +115,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-[var(--card-bg)] rounded-2xl shadow-xl p-8 border border-[var(--border)]">
           {/* Logo e Título */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -124,10 +123,10 @@ function LoginForm() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Chácara Jardim Ipiranga
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+              Imobiliária Vale dos Carajás
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-[var(--foreground)] opacity-70 mt-2">
               Sistema de Gerenciamento
             </p>
           </div>
@@ -135,7 +134,7 @@ function LoginForm() {
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="cpf" className="block text-sm font-medium text-[var(--foreground)] opacity-90 mb-2">
                 CPF
               </label>
               <input
@@ -145,24 +144,43 @@ function LoginForm() {
                 onChange={handleCPFChange}
                 required
                 maxLength={14}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--foreground)] border-2 border-[var(--border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-[var(--foreground)]/40"
                 placeholder="000.000.000-00"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[var(--foreground)] opacity-90 mb-2">
                 Senha
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="text-black w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all placeholder:text-gray-400"
+                  placeholder="Digite sua senha"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {isPending && (

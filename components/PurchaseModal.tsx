@@ -1,13 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Lot } from '@/types';
+import { Lot, LotStatus } from '@/types';
 import { usePurchaseForm } from '@/hooks/usePurchaseForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PurchaseModalProps {
   lots: Lot[]; // Mudado de lot: Lot para lots: Lot[]
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (reservationId?: string) => void;
+  onToggleLotStatus?: (lotId: string, currentStatus: LotStatus) => Promise<void>;
 }
 
 // Funções auxiliares para validação e máscara de CPF
@@ -68,6 +70,16 @@ const paymentOptions = [
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={2} />
     </svg>
   ) },
+  { label: 'Carnê', value: 'carne', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ) },
+  { label: 'Financiamento', value: 'financing', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+  ) },
   { label: 'Outro', value: 'outro', icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={2} />
@@ -76,12 +88,45 @@ const paymentOptions = [
   ) },
 ];
 
-export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModalProps) {
-  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess);
+export default function PurchaseModal({ lots, onClose, onSuccess, onToggleLotStatus }: PurchaseModalProps) {
+  const { user } = useAuth();
+  const [isTogglingBlock, setIsTogglingBlock] = React.useState(false);
+  
+  // Estados simplificados - apenas preços dos lotes
+  const [lotPrices] = React.useState<Record<string, number | null>>(
+    lots.reduce((acc, lot) => ({ ...acc, [lot.id]: lot.price }), {})
+  );
+  
+  const { formData, setFormData, isSubmitting, error, handleSubmit } = usePurchaseForm(lots, onSuccess, lotPrices, {}, {}, user?.id);
   const [cpfError, setCpfError] = React.useState<string>('');
+  const [sellerCpfError, setSellerCpfError] = React.useState<string>('');
 
-  // Calcular preço total de todos os lotes
-  const totalPrice = lots.reduce((sum, lot) => sum + lot.price, 0);
+  // Função para bloquear/desbloquear lote
+  const handleToggleLotStatus = async (lot: Lot) => {
+    if (!onToggleLotStatus) return;
+    
+    const action = lot.status === LotStatus.BLOCKED ? 'desbloquear' : 'bloquear';
+    if (!confirm(`Deseja ${action} o lote ${lot.lotNumber}?`)) {
+      return;
+    }
+
+    setIsTogglingBlock(true);
+    try {
+      await onToggleLotStatus(lot.id, lot.status);
+      alert(`✅ Lote ${lot.lotNumber} ${lot.status === LotStatus.BLOCKED ? 'desbloqueado' : 'bloqueado'} com sucesso!`);
+      // Não chamar onSuccess() para evitar a mensagem de reserva
+      // Apenas fechar o modal e o componente pai irá recarregar os dados
+      onClose();
+    } catch (error) {
+      console.error('Erro ao alterar status do lote:', error);
+      alert('❌ Erro ao alterar status do lote. Tente novamente.');
+    } finally {
+      setIsTogglingBlock(false);
+    }
+  };
+
+  // Calcular preço total e área
+  const totalPrice = Object.values(lotPrices).reduce((sum: number, price) => sum + (price || 0), 0);
   const totalArea = lots.reduce((sum, lot) => sum + lot.size, 0);
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,46 +145,35 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
     }
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const numbers = e.target.value.replace(/\D/g, '');
-    let formatted = numbers;
+  const handleSellerCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setFormData({ ...formData, sellerCPF: formatted });
 
-    if (numbers.length <= 2) {
-      formatted = numbers;
-    } else if (numbers.length <= 6) {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    } else if (numbers.length <= 10) {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    if (formatted.length === 14) {
+      if (!validateCPF(formatted)) {
+        setSellerCpfError('CPF inválido');
+      } else {
+        setSellerCpfError('');
+      }
     } else {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+      setSellerCpfError('');
     }
-
-    setFormData({ ...formData, customerPhone: formatted });
   };
 
-  // Função auxiliar para atualizar paymentMethod e limpar otherPayment se necessário
-  const handlePaymentMethodChange = (value: string) => {
-  if (value !== 'outro') {
-    setFormData({ ...formData, paymentMethod: value, otherPayment: '' });
-  } else {
-    setFormData({ ...formData, paymentMethod: value });
-  }
-}
-
   return (
-    <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)]">
-        <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
+    <div className="fixed inset-0 bg-[var(--foreground)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-[var(--card-bg)] rounded-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-y-auto shadow-[var(--shadow-xl)] border border-[var(--border)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="sticky top-0 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-white p-4 sm:p-6 rounded-t-2xl shadow-[var(--shadow-md)] z-10">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Manifestar Interesse</h2>
-                <p className="text-white/90 text-sm">
+                <h2 className="text-lg sm:text-2xl font-bold">Manifestar Interesse</h2>
+                <p className="text-white opacity-90 text-xs sm:text-sm">
                   {lots.length === 1 ? `Lote ${lots[0].lotNumber}` : `${lots.length} Lotes Selecionados`}
                 </p>
               </div>
@@ -156,28 +190,46 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
           </div>
         </div>
 
-        <div className="p-6">
-          {/* Informações dos lotes selecionados */}
-          <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--primary-light)]/10 border border-[var(--primary)]/15 rounded-2xl p-5 mb-6">
-            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">
+        <div className="p-4 sm:p-6">
+          {/* Informações dos lotes selecionados - APENAS VISUALIZAÇÃO */}
+          <div className="bg-blue-500/30 border-2 border-blue-400 rounded-2xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-lg">
+            <h3 className="text-base font-bold text-[var(--foreground)] mb-3">
               {lots.length === 1 ? 'Lote Selecionado' : 'Lotes Selecionados'}
             </h3>
-            <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+            <div className="space-y-3 mb-4 max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {lots.map((lot) => (
-                <div key={lot.id} className="bg-white/80 rounded-lg p-2 border border-[var(--border)] flex justify-between items-center">
-                  <span className="text-sm font-medium text-[var(--surface)]">Lote {lot.lotNumber}</span>
-                  <span className="text-sm text-[var(--surface)]">{lot.size}m² - R$ {lot.price.toLocaleString('pt-BR')}</span>
+                <div key={lot.id} className="rounded-lg p-3 border border-blue-300/50">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-[var(--foreground)]">Lote {lot.lotNumber}</span>
+                      {lot.blockName && (
+                        <span className="text-xs text-[var(--foreground)] opacity-80 bg-white/20 px-2 py-0.5 rounded">
+                          Quadra: {lot.blockName}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-[var(--foreground)]">{lot.size}m²</span>
+                  </div>
+                  
+                  {lot.price && (
+                    <div className="mt-2 text-right">
+                      <span className="text-xs text-[var(--foreground)] opacity-70">R$ </span>
+                      <span className="text-sm font-semibold text-[var(--foreground)]">
+                        {lot.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--surface)] mb-1">Área Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">{totalArea}m²</p>
+              <div className="rounded-xl p-3 border border-blue-300/50">
+                <p className="text-xs font-medium text-[var(--foreground)] opacity-70 mb-1">Área Total</p>
+                <p className="text-lg font-bold text-[var(--foreground)]">{totalArea}m²</p>
               </div>
-              <div className="bg-white/80 rounded-xl p-3 border border-[var(--border)]">
-                <p className="text-xs font-medium text-[var(--surface)] mb-1">Preço Total</p>
-                <p className="text-lg font-bold text-[var(--surface)]">R$ {totalPrice.toLocaleString('pt-BR')}</p>
+              <div className="rounded-xl p-3 border border-blue-300/50">
+                <p className="text-xs font-medium text-[var(--foreground)] opacity-70 mb-1">Preço Total</p>
+                <p className="text-lg font-bold text-[var(--foreground)]">R$ {totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
@@ -193,119 +245,95 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Nome Completo *</label>
-              <input
-                type="text"
-                required
-                value={formData.customerName}
-                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="Seu nome completo"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Email *</label>
-              <input
-                type="email"
-                required
-                value={formData.customerEmail}
-                onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Telefone *</label>
-              <input
-                type="tel"
-                required
-                value={formData.customerPhone}
-                onChange={handlePhoneChange}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                placeholder="(00) 00000-0000"
-                maxLength={15}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">CPF *</label>
-              <input
-                type="text"
-                required
-                value={formData.customerCPF}
-                onChange={handleCPFChange}
-                className={`w-full px-4 py-2.5 border rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 transition-all ${
-                  cpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
-                }`}
-                placeholder="000.000.000-00"
-                maxLength={14}
-              />
-              {cpfError && (
-                <p className="text-red-600 text-sm mt-1">❌ {cpfError}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Mensagem</label>
-              <textarea
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                rows={4}
-                placeholder="Deixe uma mensagem ou dúvida"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">Forma de Pagamento *</label>
-              <div className="flex gap-3">
-                {paymentOptions.map(option => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors font-medium
-                      ${formData.paymentMethod === option.value
-                        ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
-                        : 'bg-white text-[var(--surface)] border-[var(--border)] hover:text-white hover:bg-[var(--primary)]/10'}
-                    `}
-                    onClick={() => handlePaymentMethodChange(option.value)}
-                  >
-                    {option.icon}
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-
-              <input type="hidden" name="paymentMethod" value={formData.paymentMethod || ''} required />
-              {!formData.paymentMethod && (
-                <p className="text-red-600 text-sm mt-1">❌ Selecione uma forma de pagamento</p>
-              )}
-
-              {formData.paymentMethod === 'outro' && (
-                <div className="mt-3">
-                  <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
-                    Especifique a forma de pagamento *
-                  </label>
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Dados do Cliente
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[var(--foreground)] opacity-80 text-sm font-semibold mb-2">Nome Completo *</label>
                   <input
-                    maxLength={30}
                     type="text"
                     required
-                    value={formData.otherPayment || ''}
-                    onChange={e => setFormData({ ...formData, otherPayment: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-[var(--foreground)] bg-white focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
-                    placeholder="Descreva a forma de pagamento"
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder:text-gray-400"
+                    placeholder="Nome do cliente"
                   />
                 </div>
-              )}
+
+                <div>
+                  <label className="block text-[var(--foreground)] opacity-80 text-sm font-semibold mb-2">CPF</label>
+                  <input
+                    type="text"
+                    value={formData.customerCPF}
+                    onChange={handleCPFChange}
+                    className={`w-full px-4 py-2.5 bg-[var(--surface)] border-2 rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] font-mono placeholder:text-gray-400 ${
+                      cpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
+                    }`}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {cpfError && (
+                    <p className="text-red-600 text-sm mt-1">❌ {cpfError}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Dados do Vendedor
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[var(--foreground)] opacity-80 text-sm font-semibold mb-2">Nome do Vendedor *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.sellerName || ''}
+                    onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-[var(--surface)] border-2 border-[var(--border)] rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] placeholder:text-gray-400"
+                    placeholder="Nome do vendedor"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[var(--foreground)] opacity-80 text-sm font-semibold mb-2">CPF do Vendedor</label>
+                  <input
+                    type="text"
+                    value={formData.sellerCPF || ''}
+                    onChange={handleSellerCPFChange}
+                    className={`w-full px-4 py-2.5 bg-[var(--surface)] border-2 rounded-lg text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] font-mono placeholder:text-gray-400 ${
+                      sellerCpfError ? 'border-red-500 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'
+                    }`}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {sellerCpfError && (
+                    <p className="text-red-600 text-sm mt-1">❌ {sellerCpfError}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </form>
+
+            <div className="sticky bottom-0 bg-[var(--card-bg)] border-t border-[var(--border)] p-4 sm:p-6 flex flex-col sm:flex-row gap-3 rounded-b-2xl">
               <button
                 type="submit"
-                disabled={isSubmitting || cpfError !== ''}
-                className="flex-1 px-5 py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] cursor-pointer"
+                disabled={isSubmitting || cpfError !== '' || sellerCpfError !== ''}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }}
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--success)] text-white rounded-xl hover:bg-[var(--success)]/90 font-semibold text-sm sm:text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] disabled:bg-[var(--foreground)]/20 disabled:cursor-not-allowed disabled:hover:shadow-[var(--shadow-md)] cursor-pointer"
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -315,18 +343,51 @@ export default function PurchaseModal({ lots, onClose, onSuccess }: PurchaseModa
                     </svg>
                     Enviando...
                   </span>
-                ) : 'Enviar Interesse'}
+                ) : 'Criar Reserva'}
               </button>
+              
+              {/* Botão de bloquear/desbloquear - apenas para admin/dev, um único lote, e status disponível ou bloqueado */}
+              {onToggleLotStatus && lots.length === 1 && (user?.role === 'admin' || user?.role === 'dev') && (lots[0].status === LotStatus.AVAILABLE || lots[0].status === LotStatus.BLOCKED) && (
+                <button
+                  type="button"
+                  onClick={() => handleToggleLotStatus(lots[0])}
+                  disabled={isTogglingBlock || isSubmitting}
+                  className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 ${
+                    lots[0].status === LotStatus.BLOCKED
+                      ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/40'
+                      : 'bg-gray-500/20 text-gray-600 dark:text-gray-400 hover:bg-gray-500/30 border border-gray-500/40'
+                  }`}
+                  title={lots[0].status === LotStatus.BLOCKED ? 'Desbloquear lote' : 'Bloquear lote'}
+                >
+                  {isTogglingBlock ? (
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        {lots[0].status === LotStatus.BLOCKED ? (
+                          <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+                        ) : (
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        )}
+                      </svg>
+                      {lots[0].status === LotStatus.BLOCKED ? 'Desbloquear' : 'Bloquear'}
+                    </>
+                  )}
+                </button>
+              )}
+              
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="flex-1 px-5 py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border)] rounded-xl hover:bg-[var(--foreground)]/5 font-semibold text-sm sm:text-base shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancelar
               </button>
             </div>
-          </form>
         </div>
       </div>
     </div>
